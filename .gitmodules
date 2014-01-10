@@ -1,0 +1,3 @@
+[submodule "BlipKit"]
+	path = BlipKit
+	url = https://github.com/detomon/BlipKit/
