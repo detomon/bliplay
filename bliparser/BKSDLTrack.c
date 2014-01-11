@@ -211,6 +211,8 @@ void BKSDLContextUnloadData (BKSDLContext * ctx)
 
 	for (BKInt i = 0; i < ctx -> numWaveforms; i ++) {
 		BKDataDispose (ctx -> waveforms [i]);
+		free (ctx -> waveforms [i]);
+		ctx -> waveforms [i] = NULL;
 	}
 
 	ctx -> numWaveforms = 0;
@@ -218,6 +220,7 @@ void BKSDLContextUnloadData (BKSDLContext * ctx)
 	for (BKInt i = 0; i < ctx -> numInstruments; i ++) {
 		BKInstrumentDispose (ctx -> instruments [i]);
 		free (ctx -> instruments [i]);
+		ctx -> instruments [i] = NULL;
 	}
 
 	ctx -> numInstruments = 0;
@@ -228,6 +231,7 @@ void BKSDLContextUnloadData (BKSDLContext * ctx)
 		BKDividerDispose (& track -> divider);
 		BKInterpreterDispose (& track -> interpreter);
 		free (track);
+		ctx -> tracks [i] = NULL;
 	}
 
 	ctx -> numTracks = 0;
@@ -263,7 +267,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	BKCompiler     compiler;
 	BKSDLTrack   * track = NULL;
 	BKBlipCommand  item;
-	BKInt          globalVolume = 0;
+	BKInt          globalVolume = BK_MAX_VOLUME;
 	BKInstrument * instrument;
 	BKData       * dataObject;
 
@@ -295,24 +299,24 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					return -1;
 				}
 
-				BKInt waveform = BK_SQUARE;
+				BKInt waveform     = BK_SQUARE;
 				BKInt masterVolume = 0;
-				char const * type = item.args [1].arg;
+				char const * type  = item.args [1].arg;
 
 				if (strcmp (type, "square") == 0) {
-					waveform = BK_SQUARE;
+					waveform     = BK_SQUARE;
 					masterVolume = BK_MAX_VOLUME * 0.15;
 				}
 				else if (strcmp (type, "triangle") == 0) {
-					waveform = BK_TRIANGLE;
+					waveform     = BK_TRIANGLE;
 					masterVolume = BK_MAX_VOLUME * 0.30;
 				}
 				else if (strcmp (type, "noise") == 0) {
-					waveform = BK_NOISE;
+					waveform     = BK_NOISE;
 					masterVolume = BK_MAX_VOLUME * 0.15;
 				}
 				else if (strcmp (type, "sawtooth") == 0) {
-					waveform = BK_SAWTOOTH;
+					waveform     = BK_SAWTOOTH;
 					masterVolume = BK_MAX_VOLUME * 0.15;
 				}
 
@@ -328,6 +332,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 
 						BKTrackAttach (& track -> track, & ctx -> ctx);
 						BKContextAttachDivider (& ctx -> ctx, & track -> divider, BK_CLOCK_TYPE_BEAT);
+
 						track -> interpreter.instruments   = ctx -> instruments;
 						track -> interpreter.waveforms     = ctx -> waveforms;
 						track -> interpreter.samples       = ctx -> samples;

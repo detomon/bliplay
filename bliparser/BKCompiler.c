@@ -507,10 +507,11 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 
 			item = bsearch (arg0, waveforms, NUM_WAVEFORMS, sizeof (strval), (void *) cmdcmp);
 
-			// custom waveform
+			// named waveform
 			if (item) {
 				item_list_add (cmds, item -> value);
 			}
+			// custom waveform
 			else {
 				value0 = atoix (arg0, 0);
 				value0 |= BK_INTR_CUSTOM_WAVEFOMR_FLAG;
