@@ -87,11 +87,12 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 	return instrument;
 }
 
-static BKInt parseWaveform (BKSDLContext * ctx, BKBlipReader * parser, BKData * waveform)
+static BKData * parseWaveform (BKSDLContext * ctx, BKBlipReader * parser)
 {
+	BKData      * waveform;
 	BKBlipCommand item;
-	BKFrame      sequence [256];
-	BKInt        length = 0;
+	BKFrame       sequence [256];
+	BKInt         length = 0;
 
 	while (BKBlipReaderNextCommand (parser, & item)) {
 		if (strcmp (item.name, "wave") == 0 && strcmp (item.args [0].arg, "end") == 0) {
@@ -99,13 +100,30 @@ static BKInt parseWaveform (BKSDLContext * ctx, BKBlipReader * parser, BKData * 
 		}
 		else if (strcmp (item.name, "s") == 0) {
 			length = (BKInt) item.argCount;
+			length = BKMin (length, 256);
 
 			for (BKInt i = 0; i < length; i ++)
 				sequence [i] = atoi (item.args [i].arg) * (BK_MAX_VOLUME / 255);
 		}
 	}
 
-	return BKDataInitWithFrames (waveform, sequence, (BKInt) length, 1, 1);
+	if (length < 2)
+		return NULL;
+
+	waveform = malloc (sizeof (BKData));
+
+	if (waveform == NULL)
+		return NULL;
+
+	BKDataInit (waveform);
+
+	if (BKDataInitWithFrames (waveform, sequence, (BKInt) length, 1, 1) != 0) {
+		BKDataDispose (waveform);
+		free (waveform);
+		waveform = NULL;
+	}
+
+	return waveform;
 }
 
 static BKEnum numBitsParamFromNumBitsName (char const * numBitsString)
@@ -147,13 +165,21 @@ static BKEnum numBitsParamFromNumBitsName (char const * numBitsString)
 	return param;
 }
 
-static BKInt parseSample (BKSDLContext * ctx, BKBlipReader * parser, BKData * sample)
+static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 {
+	BKData      * sample;
 	BKBlipCommand item;
 	BKInt         length = 0;
-	BKInt         pitch = 0;
+	BKInt         pitch  = 0;
 	BKInt         numChannels;
 	BKEnum        format;
+
+	sample = malloc (sizeof (BKData));
+
+	if (sample == NULL)
+		return NULL;
+
+	BKDataInit (sample);
 
 	while (BKBlipReaderNextCommand (parser, & item)) {
 		if (strcmp (item.name, "samp") == 0 && strcmp (item.args [0].arg, "end") == 0) {
@@ -162,25 +188,30 @@ static BKInt parseSample (BKSDLContext * ctx, BKBlipReader * parser, BKData * sa
 		else if (strcmp (item.name, "s") == 0) {
 			length = (BKInt) item.argCount;
 
-			if (length >= 3) {
+			if (length >= 2) {
 				numChannels = atoi (item.args [0].arg);
 				format      = numBitsParamFromNumBitsName (item.args [1].arg);
 
-				BKDataInitWithData (sample, item.args [2].arg, item.args [2].size, numChannels, format);
-			}
-			else {
-				return -1;
+				BKDataSetData (sample, item.args [2].arg, item.args [2].size, numChannels, format);
 			}
 		}
 		else if (strcmp (item.name, "p") == 0) {
-			pitch = atoi (item.args [0].arg);
+			pitch = atoi (item.args [0].arg) * (BK_FINT20_UNIT / 100);
 		}
+	}
+
+	BKDataGetAttr (sample, BK_NUM_FRAMES, & length);
+
+	if (length < 2) {
+		BKDataDispose (sample);
+		free (sample);
+		return NULL;
 	}
 
 	BKDataSetAttr (sample, BK_SAMPLE_PITCH, pitch);
 	BKDataNormalize (sample);
 
-	return 0;
+	return sample;
 }
 
 static BKEnum beatCallback (BKCallbackInfo * info, BKSDLUserData * userInfo)
@@ -270,6 +301,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	BKInt          globalVolume = BK_MAX_VOLUME;
 	BKInstrument * instrument;
 	BKData       * dataObject;
+	BKInt          index;
 
 	BKBlipReaderInit (& parser, data, size, NULL, NULL);
 
@@ -360,33 +392,71 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 				if (instrument == NULL)
 					return -1;
 
-				ctx -> instruments [ctx -> numInstruments ++] = instrument;
+				// use specific slot
+				if (item.argCount >= 3) {
+					index = atoi (item.args [2].arg);
+				}
+				else {
+					index = ctx -> numInstruments ++;
+				}
+
+				// clear used slot
+				if (ctx -> instruments [index]) {
+					BKInstrumentDispose (ctx -> instruments [index]);
+					free (ctx -> instruments [index]);
+				}
+
+				ctx -> instruments [index] = instrument;
 			}
 		}
 		// waveform
 		else if (strcmp (item.name, "wave") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
-				dataObject = malloc (sizeof (BKData));
+				dataObject = parseWaveform (ctx, & parser);
 
 				if (dataObject == NULL)
 					return -1;
 
-				parseWaveform (ctx, & parser, dataObject);
+				// use specific slot
+				if (item.argCount >= 3) {
+					index = atoi (item.args [2].arg);
+				}
+				else {
+					index = ctx -> numWaveforms ++;
+				}
 
-				ctx -> waveforms [ctx -> numWaveforms ++] = dataObject;
+				// clear used slot
+				if (ctx -> waveforms [index]) {
+					BKDataDispose (ctx -> waveforms [index]);
+					free (ctx -> waveforms [index]);
+				}
+
+				ctx -> waveforms [index] = dataObject;
 			}
 		}
 		// sample
 		else if (strcmp (item.name, "samp") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
-				dataObject = malloc (sizeof (BKData));
+				dataObject = parseSample (ctx, & parser);
 
 				if (dataObject == NULL)
 					return -1;
 
-				parseSample (ctx, & parser, dataObject);
+				// use specific slot
+				if (item.argCount >= 3) {
+					index = atoi (item.args [2].arg);
+				}
+				else {
+					index = ctx -> numSamples ++;
+				}
 
-				ctx -> samples [ctx -> numSamples ++] = dataObject;
+				// clear used slot
+				if (ctx -> samples [index]) {
+					BKDataDispose (ctx -> samples [index]);
+					free (ctx -> samples [index]);
+				}
+
+				ctx -> samples [index] = dataObject;
 			}
 		}
 		else if (strcmp (item.name, "volume") == 0) {
