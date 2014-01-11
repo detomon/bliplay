@@ -60,6 +60,7 @@ enum
 	BKIntrSampleRepeat,
 	BKIntrReturn,
 	BKIntrGroup,
+	BKIntrGroupJump,
 	BKIntrCall,
 	BKIntrJump,
 	BKIntrEnd,

@@ -63,7 +63,7 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 	BKInstrumentInit (instrument);
 
 	while (BKBlipReaderNextCommand (parser, & item)) {
-		if (strcmp (item.name, "i") == 0 && strcmp (item.args [0].arg, "end") == 0) {
+		if (strcmp (item.name, "instr") == 0 && strcmp (item.args [0].arg, "end") == 0) {
 			break;
 		}
 		else if (strcmp (item.name, "v") == 0) {
@@ -94,7 +94,7 @@ static BKInt parseWaveform (BKSDLContext * ctx, BKBlipReader * parser, BKData * 
 	BKInt        length = 0;
 
 	while (BKBlipReaderNextCommand (parser, & item)) {
-		if (strcmp (item.name, "w") == 0 && strcmp (item.args [0].arg, "end") == 0) {
+		if (strcmp (item.name, "wave") == 0 && strcmp (item.args [0].arg, "end") == 0) {
 			break;
 		}
 		else if (strcmp (item.name, "s") == 0) {
@@ -156,7 +156,7 @@ static BKInt parseSample (BKSDLContext * ctx, BKBlipReader * parser, BKData * sa
 	BKEnum        format;
 
 	while (BKBlipReaderNextCommand (parser, & item)) {
-		if (strcmp (item.name, "s") == 0 && strcmp (item.args [0].arg, "end") == 0) {
+		if (strcmp (item.name, "samp") == 0 && strcmp (item.args [0].arg, "end") == 0) {
 			break;
 		}
 		else if (strcmp (item.name, "s") == 0) {
@@ -274,7 +274,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	BKBlipReaderInit (& parser, data, size, NULL, NULL);
 
 	while (BKBlipReaderNextCommand (& parser, & item)) {
-		if (strcmp (item.name, "t") == 0) {
+		if (strcmp (item.name, "track") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
 				BKCompilerInit (& compiler);
 
@@ -329,7 +329,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 				BKTrackSetAttr (& track -> track, BK_VOLUME, BK_MAX_VOLUME);
 
 				while (BKBlipReaderNextCommand (& parser, & item)) {
-					if (strcmp (item.name, "t") == 0 && strcmp (item.args [0].arg, "end") == 0) {
+					if (strcmp (item.name, "track") == 0 && strcmp (item.args [0].arg, "end") == 0) {
 						BKCompilerTerminate (& compiler, & track -> interpreter);
 
 						BKTrackAttach (& track -> track, & ctx -> ctx);
@@ -353,7 +353,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// instrument
-		else if (strcmp (item.name, "i") == 0) {
+		else if (strcmp (item.name, "instr") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
 				instrument = parseInstrument (ctx, & parser);
 
@@ -364,7 +364,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// waveform
-		else if (strcmp (item.name, "w") == 0) {
+		else if (strcmp (item.name, "wave") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
 				dataObject = malloc (sizeof (BKData));
 
@@ -377,7 +377,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// sample
-		else if (strcmp (item.name, "s") == 0) {
+		else if (strcmp (item.name, "samp") == 0) {
 			if (strcmp (item.args [0].arg, "begin") == 0) {
 				dataObject = malloc (sizeof (BKData));
 
@@ -389,10 +389,10 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 				ctx -> samples [ctx -> numSamples ++] = dataObject;
 			}
 		}
-		else if (strcmp (item.name, "gv") == 0) {
+		else if (strcmp (item.name, "volume") == 0) {
 			globalVolume = atoi (item.args [0].arg) * (BK_MAX_VOLUME / 255);
 		}
-		else if (strcmp (item.name, "gs") == 0) {
+		else if (strcmp (item.name, "stepticks") == 0) {
 			ctx -> speed = atoi (item.args [0].arg);
 		}
 	}

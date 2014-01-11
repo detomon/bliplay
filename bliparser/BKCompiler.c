@@ -67,29 +67,30 @@ static strval notes [] =
  */
 static strval commands [] =
 {
-	{"a",  BKIntrAttack},
-	{"as", BKIntrArpeggioSpeed},
-	{"at", BKIntrAttackTicks},
-	{"d",  BKIntrSample},
-	{"dc", BKIntrDutyCycle},
-	{"dr", BKIntrSampleRepeat},
-	{"e",  BKIntrEffect},
-	{"g",  BKIntrGroup},
-	{"i",  BKIntrInstrument},
-	{"m",  BKIntrMute},
-	{"mt", BKIntrMuteTicks},
-	{"p",  BKIntrPanning},
-	{"pt", BKIntrPitch},
-	{"pw", BKIntrPhaseWrap},
-	{"r",  BKIntrRelease},
-	{"rt", BKIntrReleaseTicks},
-	{"s",  BKIntrStep},
-	{"st", BKIntrStepTicks},
-	{"t",  BKIntrTicks},
-	{"v",  BKIntrVolume},
-	{"vm", BKIntrMasterVolume},
-	{"w",  BKIntrWaveform},
-	{"x",  BKIntrEnd},
+	{"a",   BKIntrAttack},
+	{"as",  BKIntrArpeggioSpeed},
+	{"at",  BKIntrAttackTicks},
+	{"d",   BKIntrSample},
+	{"dc",  BKIntrDutyCycle},
+	{"dr",  BKIntrSampleRepeat},
+	{"e",   BKIntrEffect},
+	{"g",   BKIntrGroupJump},
+	{"grp", BKIntrGroup},
+	{"i",   BKIntrInstrument},
+	{"m",   BKIntrMute},
+	{"mt",  BKIntrMuteTicks},
+	{"p",   BKIntrPanning},
+	{"pt",  BKIntrPitch},
+	{"pw",  BKIntrPhaseWrap},
+	{"r",   BKIntrRelease},
+	{"rt",  BKIntrReleaseTicks},
+	{"s",   BKIntrStep},
+	{"st",  BKIntrStepTicks},
+	{"t",   BKIntrTicks},
+	{"v",   BKIntrVolume},
+	{"vm",  BKIntrMasterVolume},
+	{"w",   BKIntrWaveform},
+	{"x",   BKIntrEnd},
 };
 
 #define NUM_COMMANDS (sizeof (commands) / sizeof (strval))
@@ -249,7 +250,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 			case BKIntrSample:        argCount = 1; break;
 			case BKIntrSampleRepeat:  argCount = 1; break;
 			case BKIntrReturn:        argCount = 0; break;
-			case BKIntrGroup:         argCount = 1; break;
+			case BKIntrGroupJump:     argCount = 1; break;
 			case BKIntrJump:          argCount = 1; break;
 			case BKIntrEnd:           argCount = 0; break;
 		}
@@ -264,7 +265,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 				* allCmds ++ = * cmdPtr ++;
 		}
 		// command is group jump
-		else if (cmd == BKIntrGroup) {
+		else if (cmd == BKIntrGroupJump) {
 			value = * cmdPtr ++;
 
 			if (value < item_list_length (compiler -> groupOffsets)) {
@@ -355,11 +356,13 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 
 				return 0;
 			}
-			// play group
-			else {
-				item_list_add (cmds, item -> value);
-				item_list_add (cmds, atoix (arg0, 0));
-			}
+
+			break;
+		}
+		case BKIntrGroupJump: {
+			// jump to group
+			item_list_add (cmds, item -> value);
+			item_list_add (cmds, atoix (arg0, 0));
 
 			break;
 		}
