@@ -1,21 +1,27 @@
 bliplay
 =======
 
-This program was build to play more complex sound files to test the BlipKit
-library. It reads a CSV like file format. Some examples are located in
-`examples`.
+This program was build to play CSV like sound files to test the BlipKit library.
+Some example files are located in `examples`.
 
-Checkout BlipKit
-----------------
+1. Install SDL
+--------------
+
+For simplyfing the audio output on a wide range of systems the program uses SDL
+(<http://www.libsdl.org>). If not already, you have to install it to be able to
+run the program.
+
+2. Checkout BlipKit
+-------------------
 
 BlipKit is the core library which generates the sound. It is added as a `git`
-submodule. With this commands, the source is fetched:
+submodule. The source is fetched with this commands:
 
 	$ git submodule init
 	$ git submodule update
 
-Building and running
---------------------
+3. Building
+-----------
 
 First execute `autogen.sh` in the base directory to generate the build system:
 
@@ -29,16 +35,9 @@ Then execute `make` to build the program in the `bliplay` directory:
 
 	$ make
 
-Options
--------
+4. Playing files
+----------------
 
-The play speed can be adjusted with the options `s`:
+Files can be played like this:
 
-	bliplay$ ./bliplay -s 32 -p ../examples/hyperion-star-racer.blip
-
-More TODO...
-
-File format
------------
-
-TODO
+	bliplay$ ./bliplay -p examples/wysiwyg.blip
