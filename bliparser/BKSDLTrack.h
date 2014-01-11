@@ -38,6 +38,7 @@ typedef struct {
 	BKDivider     divider;
 	BKInterpreter interpreter;
 	BKSDLUserData userData;
+	BKInt         initWaveform;
 } BKSDLTrack;
 
 typedef struct {

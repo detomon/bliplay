@@ -322,6 +322,8 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 
 				masterVolume = (masterVolume * globalVolume) >> BK_VOLUME_SHIFT;
 
+				track -> initWaveform = waveform;
+
 				BKTrackSetAttr (& track -> track, BK_WAVEFORM, waveform);
 				BKTrackSetAttr (& track -> track, BK_MASTER_VOLUME, masterVolume);
 				BKTrackSetAttr (& track -> track, BK_VOLUME, BK_MAX_VOLUME);
