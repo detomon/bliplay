@@ -310,6 +310,16 @@ void BKSDLContextDispose (BKSDLContext * ctx)
 	memset (ctx, 0, sizeof (BKSDLContext));
 }
 
+static BKInt BKSDLContextFindEmptySlot (void ** slots, BKInt numSlots)
+{
+	for (BKInt i = 0; i < numSlots; i ++) {
+		if (slots [i] == NULL)
+			return i;
+	}
+
+	return -1;
+}
+
 BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 {
 	BKBlipReader   parser;
@@ -403,20 +413,25 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// instrument
-		else if (strcmp (item.name, "instr") == 0) {
-			if (strcmp (item.args [0].arg, "begin") == 0) {
+		else if (strcmpx (item.name, "instr") == 0) {
+			if (strcmpx (item.args [0].arg, "begin") == 0) {
+				// use specific slot
+				if (item.argCount >= 2) {
+					index = atoix (item.args [1].arg, 0);
+				}
+				else {
+					index = BKSDLContextFindEmptySlot (ctx -> instruments, 256);
+
+					if (index == -1)
+						return -1;
+				}
+
+				ctx -> numInstruments = BKMax (ctx -> numInstruments, index + 1);
+
 				instrument = parseInstrument (ctx, & parser);
 
 				if (instrument == NULL)
 					return -1;
-
-				// use specific slot
-				if (item.argCount >= 3) {
-					index = atoi (item.args [2].arg);
-				}
-				else {
-					index = ctx -> numInstruments ++;
-				}
 
 				// clear used slot
 				if (ctx -> instruments [index]) {
@@ -428,20 +443,25 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// waveform
-		else if (strcmp (item.name, "wave") == 0) {
-			if (strcmp (item.args [0].arg, "begin") == 0) {
+		else if (strcmpx (item.name, "wave") == 0) {
+			if (strcmpx (item.args [0].arg, "begin") == 0) {
+				// use specific slot
+				if (item.argCount >= 2) {
+					index = atoix (item.args [1].arg, 0);
+				}
+				else {
+					index = BKSDLContextFindEmptySlot (ctx -> waveforms, 256);
+
+					if (index == -1)
+						return -1;
+				}
+
+				ctx -> numWaveforms = BKMax (ctx -> numWaveforms, index + 1);
+
 				dataObject = parseWaveform (ctx, & parser);
 
 				if (dataObject == NULL)
 					return -1;
-
-				// use specific slot
-				if (item.argCount >= 3) {
-					index = atoi (item.args [2].arg);
-				}
-				else {
-					index = ctx -> numWaveforms ++;
-				}
 
 				// clear used slot
 				if (ctx -> waveforms [index]) {
@@ -453,20 +473,25 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 			}
 		}
 		// sample
-		else if (strcmp (item.name, "samp") == 0) {
-			if (strcmp (item.args [0].arg, "begin") == 0) {
+		else if (strcmpx (item.name, "samp") == 0) {
+			if (strcmpx (item.args [0].arg, "begin") == 0) {
+				// use specific slot
+				if (item.argCount >= 2) {
+					index = atoix (item.args [1].arg, 0);
+				}
+				else {
+					index = BKSDLContextFindEmptySlot (ctx -> samples, 256);
+
+					if (index == -1)
+						return -1;
+				}
+
+				ctx -> numSamples = BKMax (ctx -> numSamples, index + 1);
+
 				dataObject = parseSample (ctx, & parser);
 
 				if (dataObject == NULL)
 					return -1;
-
-				// use specific slot
-				if (item.argCount >= 3) {
-					index = atoi (item.args [2].arg);
-				}
-				else {
-					index = ctx -> numSamples ++;
-				}
 
 				// clear used slot
 				if (ctx -> samples [index]) {
