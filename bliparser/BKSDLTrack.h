@@ -28,6 +28,12 @@
 #include "BlipKit.h"
 #include "BKCompiler.h"
 
+#define BK_NUM_INSTR_SLOTS 256
+#define BK_NUM_WAVE_SLOTS  256
+#define BK_NUM_SAMP_SLOTS  256
+#define BK_NUM_TRACK_SLOTS 256
+#define BK_MAX_WAVE_LENGTH 256
+
 typedef struct {
 	BKTrack       * track;
 	BKInterpreter * interpreter;
@@ -44,13 +50,13 @@ typedef struct {
 typedef struct {
 	BKContext      ctx;
 	BKUInt         speed;
-	BKInstrument * instruments [256];
+	BKInstrument * instruments [BK_NUM_INSTR_SLOTS];
 	BKUInt         numInstruments;
-	BKData       * waveforms [256];
+	BKData       * waveforms [BK_NUM_WAVE_SLOTS];
 	BKUInt         numWaveforms;
-	BKData       * samples [256];
+	BKData       * samples [BK_NUM_SAMP_SLOTS];
 	BKUInt         numSamples;
-	BKSDLTrack   * tracks [256];
+	BKSDLTrack   * tracks [BK_NUM_TRACK_SLOTS];
 	BKUInt         numTracks;
 } BKSDLContext;
 

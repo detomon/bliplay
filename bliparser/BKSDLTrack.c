@@ -69,8 +69,8 @@ static BKInt parseSequence (BKSDLContext * ctx, BKBlipCommand * item, BKInt * se
 static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser)
 {
 	BKInstrument * instrument;
-	BKBlipCommand   item;
-	BKInt sequence [256];
+	BKBlipCommand  item;
+	BKInt sequence [BK_MAX_WAVE_LENGTH];
 	BKInt sequenceLength, repeatBegin, repeatLength;
 
 	instrument = malloc (sizeof (BKInstrument));
@@ -86,18 +86,22 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 		}
 		else if (strcmpx (item.name, "v") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_VOLUME, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "a") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
+			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_ARPEGGIO, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "p") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_PANNING, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "dc") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, 1);
+			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 	}
@@ -336,6 +340,9 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	while (BKBlipReaderNextCommand (& parser, & item)) {
 		if (strcmpx (item.name, "track") == 0) {
 			if (strcmpx (item.args [0].arg, "begin") == 0) {
+				if (ctx -> numTracks >= BK_NUM_TRACK_SLOTS)
+					return -1;
+
 				BKCompilerInit (& compiler);
 
 				track = malloc (sizeof (BKSDLTrack));
@@ -420,7 +427,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					index = atoix (item.args [1].arg, 0);
 				}
 				else {
-					index = BKSDLContextFindEmptySlot (ctx -> instruments, 256);
+					index = BKSDLContextFindEmptySlot ((void **) ctx -> instruments, BK_NUM_INSTR_SLOTS);
 
 					if (index == -1)
 						return -1;
@@ -450,7 +457,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					index = atoix (item.args [1].arg, 0);
 				}
 				else {
-					index = BKSDLContextFindEmptySlot (ctx -> waveforms, 256);
+					index = BKSDLContextFindEmptySlot ((void **) ctx -> waveforms, BK_NUM_WAVE_SLOTS);
 
 					if (index == -1)
 						return -1;
@@ -480,7 +487,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					index = atoix (item.args [1].arg, 0);
 				}
 				else {
-					index = BKSDLContextFindEmptySlot (ctx -> samples, 256);
+					index = BKSDLContextFindEmptySlot ((void **) ctx -> samples, BK_NUM_SAMP_SLOTS);
 
 					if (index == -1)
 						return -1;
