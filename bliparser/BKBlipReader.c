@@ -309,19 +309,8 @@ static BKInt BKBlipReaderReadBase64 (BKBlipReader * reader, BKBlipArgument * arg
 	return -1;
 }
 
-static BKInt BKBlipReaderReadArg (BKBlipReader * reader, BKBlipArgument * arg)
+static BKInt BKBlipReaderReadSingleArg (BKBlipReader * reader, BKBlipArgument * arg, int c)
 {
-	int c;
-
-	arg -> arg  = (char *) reader -> bufferPtr;
-	arg -> size = 0;
-
-	c = BKBlipReaderGetCharTrimWhitespace (reader);
-
-	// only as first character
-	if (c == '!')
-		return BKBlipReaderReadBase64 (reader, arg);
-
 	do {
 		switch (c) {
 			case '\\':
@@ -346,6 +335,54 @@ static BKInt BKBlipReaderReadArg (BKBlipReader * reader, BKBlipArgument * arg)
 		arg -> size ++;
 
 		c = BKBlipReaderGetChar (reader);
+	}
+	while (c != -1);
+
+	return 0;
+}
+
+static BKInt BKBlipReaderSkipLine (BKBlipReader * reader)
+{
+	int c;
+
+	do {
+		c = BKBlipReaderGetChar (reader);
+
+		if (c == '\n')
+			break;
+	}
+	while (c != -1);
+
+	return 0;
+}
+
+static BKInt BKBlipReaderReadArg (BKBlipReader * reader, BKBlipArgument * arg)
+{
+	int c;
+
+	arg -> arg  = (char *) reader -> bufferPtr;
+	arg -> size = 0;
+
+	do {
+		c = BKBlipReaderGetCharTrimWhitespace (reader);
+
+		// comment line
+		if (c == '#') {
+			if (BKBlipReaderSkipLine (reader) == -1)
+				return -1;
+
+			continue;
+		}
+		// base64 encoded data
+		else if (c == '!') {
+			return BKBlipReaderReadBase64 (reader, arg);
+		}
+		// normal arg
+		else {
+			return BKBlipReaderReadSingleArg (reader, arg, c);
+		}
+
+		break;
 	}
 	while (c != -1);
 
