@@ -508,7 +508,10 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 		case BKIntrWaveform: {
 			item_list_add (cmds, item -> value);
 
-			item = bsearch (arg0, waveforms, NUM_WAVEFORMS, sizeof (strval), (void *) cmdcmp);
+			item = NULL;
+
+			if (arg0)
+				item = bsearch (arg0, waveforms, NUM_WAVEFORMS, sizeof (strval), (void *) cmdcmp);
 
 			// named waveform
 			if (item) {

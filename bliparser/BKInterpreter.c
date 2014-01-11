@@ -340,13 +340,41 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 				break;
 			}
 			case BKIntrWaveform: {
+				BKData * waveform;
+				BKInt masterVolume = 0;
+
 				value0 = * (opcode ++);
+
 				if (value0 & BK_INTR_CUSTOM_WAVEFOMR_FLAG) {
 					value0 &= ~BK_INTR_CUSTOM_WAVEFOMR_FLAG;
-					BKTrackSetPtr (track, BK_WAVEFORM, value0 > -1 ? interpreter -> waveforms [value0] : NULL);
+					waveform = interpreter -> waveforms [value0];
+					value0 = BK_CUSTOM;
+					if (waveform == NULL)
+						value0 = BK_SQUARE;
+				}
+
+				if (value0 == BK_CUSTOM) {
+					BKTrackSetPtr (track, BK_WAVEFORM, waveform);
 				} else {
 					BKTrackSetAttr (track, BK_WAVEFORM, value0);
 				}
+
+				switch (value0) {
+					case BK_SQUARE:
+					case BK_NOISE:
+					case BK_SAWTOOTH:
+					case BK_CUSTOM: {
+						masterVolume = BK_MAX_VOLUME * 0.15;
+						break;
+					}
+					case BK_TRIANGLE: {
+						masterVolume = BK_MAX_VOLUME * 0.30;
+						break;
+					}
+				}
+
+				BKTrackSetAttr (track, BK_MASTER_VOLUME, masterVolume);
+
 				break;
 			}
 			case BKIntrSample: {
