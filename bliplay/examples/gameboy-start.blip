@@ -1,9 +1,8 @@
-gv:255;
-gs:18;
+stepticks:18;
 
-t:begin:square;
+track:begin:square;
 
-	g:begin;
+	grp:begin;
 		dc:8;
 		e:vs;v:255;
 		a:c5;s:1;
@@ -11,9 +10,9 @@ t:begin:square;
 		e:vs:160;v:0;
 		s:31;
 		e:vs;
-	g:end;
+	grp:end;
 
 	g:0;
 	x;
 
-t:end;
+track:end;

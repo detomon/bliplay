@@ -1,47 +1,46 @@
-gv:255;
-gs:36;
+stepticks:36;
 
 # snare high;
-i:begin;
+instr:begin;
 	//v:18:0:255:221:170:136:102:85:85:85:68:68:51:51:51:34:34:17:17:0;
 	v:15:0:255:220:210:180:150:120:80:75:70:65:50:40:30:20:10;
 	a:5:0:-800:1200:-1200:0;
-i:end;
+instr:end;
 
 # snare low;
-i:begin;
+instr:begin;
 	v:18:0:255:255:255:192:164:128:120:100:80:68:51:51:51:34:34:17:17:0;
 	a:3:0:-800:800:250:0;
-i:end;
+instr:end;
 
 # lead;
-i:begin;
+instr:begin;
 	a:1:1:1200:0;
-i:end;
+instr:end;
 
 # echo;
-i:begin;
+instr:begin;
 	v:0:1:255:64:64:64:64:64;
-i:end;
+instr:end;
 
 # Lead Bass;
-i:begin
+instr:begin
 	v:25:0:255:240:230:220:210:200:190:180:170:160:150:140:130:120:110:100:90:80:70:60:50:40:30:20:10;
-i:end;
+instr:end;
 
 # bass;
-w:begin;
+wave:begin;
 	s:0:85:170:255:212:170:127:85:42:0:85:170:127:85:42:0;
-w:end;
+wave:end;
 
 # organ;
-w:begin;
+wave:begin;
 	s:0:34:102:221:136:170:204:255:0:34:68:102:0:34:187:255;
-w:end;
+wave:end;
 
-t:begin:square;
+track:begin:square;
 
-g:begin;
+grp:begin;
 
 	a:c3;s:1;r;s:1;
 	a:c3;s:1;r;
@@ -84,9 +83,9 @@ g:begin;
 	a:d#3;s:2;r;
 	a:g3;s:3;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	a:c3;s:1;r;s:1;
 	a:c3;s:1;r;
@@ -130,9 +129,9 @@ g:begin;
 	a:g#2;s:2;r;
 	a:a#2;s:2;r;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	a:c3;s:1;r;s:1;
 	a:d#3;s:1;r;
@@ -176,9 +175,9 @@ g:begin;
 	a:g3;s:1;r;s:1;
 	a:g3;s:1;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	a:c3;s:1;r;s:1;
 	a:d#3;s:1;r;
@@ -222,9 +221,9 @@ g:begin;
 	a:c4;s:1;r;s:1;
 	a:c4;s:1;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	i:3;
 	as:12;
@@ -237,7 +236,7 @@ g:begin;
 	a:g#3;s:4;r;s:4;
 	a:c#3;s:4;r;s:4;
 
-g:end;
+grp:end;
 
 s:64;
 i:2;
@@ -253,11 +252,11 @@ g:1;
 dc:2;
 g:4;
 
-t:end;
+track:end;
 
-t:begin:square;
+track:begin:square;
 
-g:begin;
+grp:begin;
 
 	a:c2;s:1;r;s:1;
 	a:c3;s:1;r;s:1;
@@ -295,9 +294,9 @@ g:begin;
 	a:b2;s:1;r;s:1;
 	a:c3;s:1;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	a:c2;s:1;r;s:1;
 	a:c3;s:1;r;s:1;
@@ -335,7 +334,7 @@ g:begin;
 	a:c3;s:1;r;s:1;
 	a:c3;s:1;r;s:1;
 
-g:end;
+grp:end;
 
 dc:4;
 v:192;
@@ -349,11 +348,11 @@ s:64;
 s:64;
 s:64;
 
-t:end;
+track:end;
 
-t:begin:triangle;
+track:begin:triangle;
 
-g:begin;
+grp:begin;
 
 	e:pr;a:g2;e:pr:23;a:c1;s:1;r;s:1;
 	//a:g0;//s:1;//r;//s:1;
@@ -395,9 +394,9 @@ g:begin;
 	a:a#1;s:1;r;s:1;
 	a:a#0;s:1;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	e:pr;a:g2;e:pr:23;a:c1;s:1;r;s:1;
 	//a:c2;//s:1;//r;//s:1;
@@ -439,9 +438,9 @@ g:begin;
 	a:a#1;s:1;r;s:1;
 	a:a#0;s:1;r;s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	e:pr;a:g2;e:pr:23;a:c1;s:1;r;s:1;
 	//a:c1;//s:1;//r;//s:1;
@@ -482,15 +481,15 @@ g:begin;
 	a:g0;s:1;r;s:1;
 	a:g1;s:1;r;s:1;
 	a:g1;s:1;r;s:1;
-	
-g:end;
 
-g:begin;
+grp:end;
+
+grp:begin;
 	a:c2;s:16;r;
 	a:d2;s:16;r;
 	a:g2;s:16;r;
 	a:g#2;s:16;r;
-g:end;
+grp:end;
 
 g:0;
 g:0;
@@ -501,20 +500,11 @@ g:2;
 g:2;
 g:3;
 
-t:end;
+track:end;
 
-t:begin:noise;
+track:begin:noise;
 
-g:begin;
-
-	rt:12;p:+00;i:0;a:g6;s:1;r;s:1;
-	rt:5;p:-48;i:1;a:g5;s:1;r;s:1;
-	rt:12;p:+48;i:0;a:g4;s:1;r;s:1;
-	s:2;
-	p:+00;i:0;a:g6;s:2;r;
-	s:2;
-	rt:5;p:+00;i:1;a:g5;s:1;r;s:1;
-	p:+32;i:0;a:g5;s:1;r;s:1;
+grp:begin;
 
 	rt:12;p:+00;i:0;a:g6;s:1;r;s:1;
 	rt:5;p:-48;i:1;a:g5;s:1;r;s:1;
@@ -543,9 +533,18 @@ g:begin;
 	rt:5;p:+00;i:1;a:g5;s:1;r;s:1;
 	p:+32;i:0;a:g5;s:1;r;s:1;
 
-g:end;
+	rt:12;p:+00;i:0;a:g6;s:1;r;s:1;
+	rt:5;p:-48;i:1;a:g5;s:1;r;s:1;
+	rt:12;p:+48;i:0;a:g4;s:1;r;s:1;
+	s:2;
+	p:+00;i:0;a:g6;s:2;r;
+	s:2;
+	rt:5;p:+00;i:1;a:g5;s:1;r;s:1;
+	p:+32;i:0;a:g5;s:1;r;s:1;
 
-g:begin;
+grp:end;
+
+grp:begin;
 
 	rt:25;p:+00;i:0;a:g6;s:2;r;
 	s:2;
@@ -583,9 +582,9 @@ g:begin;
 	rt:4;p:-48;i:0;a:g5;s:1;r;s:1;
 	rt:48;p:+00;i:0;a:g6;s:2;r;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	s:4;
 	rt:6;p:+00;i:0;a:g6;s:1;r;s:1;
@@ -608,7 +607,7 @@ g:begin;
 	rt:35;p:+00;i:0;a:g6;s:2;r;
 	rt:35;p:+00;i:0;a:g6;s:2;r;
 
-g:end;
+grp:end;
 
 g:2;
 g:1;
@@ -619,11 +618,11 @@ g:1;
 g:1;
 g:2;
 
-t:end;
+track:end;
 
-t:begin:sawtooth;
+track:begin:sawtooth;
 
-g:begin;
+grp:begin;
 
 	s:1;
 	a:c1;s:1;r;s:1;
@@ -663,9 +662,9 @@ g:begin;
 	a:d#1;s:1;r;
 	//s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 
 	s:1;
 	a:c1;s:1;r;s:1;
@@ -705,15 +704,15 @@ g:begin;
 	a:g2;s:1;r;
 	//s:1;
 
-g:end;
+grp:end;
 
-g:begin;
+grp:begin;
 	e:vs;v:255;e:vs:200;v:128;a:c1;s:16;r;
 	e:vs;v:255;e:vs:200;v:128;a:d1;s:16;r;
 	e:vs;v:255;e:vs:200;v:128;a:g1;s:16;r;
 	e:vs;v:255;e:vs:200;v:128;a:g#1;s:16;r;
 	e.v2;v:255;
-g:end;
+grp:end;
 
 i:4;
 g:0;
@@ -725,4 +724,4 @@ g:1;
 g:1;
 g:2;
 
-t:end;
+track:end;

@@ -1,70 +1,69 @@
-gv:255;
-gs:24;
+stepticks:24;
 
-t:begin:square;
+track:begin:square;
 
-	g:begin;
+	grp:begin;
 		dc:1;
 		s:4;
 		e:vb:8:150;
 		a:c2;s:4;r;
 		s:8;
-	g:end;
-	
+	grp:end;
+
 	g:0;
 
-t:end;
+track:end;
 
-t:begin:square;
+track:begin:square;
 
-	g:begin;
+	grp:begin;
 		dc:8;
 		a:c2;s:1;r;
 		s:15;
-	g:end;
-	
+	grp:end;
+
 	g:0;
 
-t:end;
+track:end;
 
-t:begin:triangle;
+track:begin:triangle;
 
-	g:begin;
+	grp:begin;
 		a:c1;s:1;r;
 		s:7;
 		a:c2;s:1;r;
 		s:1;
 		a:c1;s:1;r;
 		s:5;
-	g:end;
+	grp:end;
 
 	g:0;
 
-t:end;
+track:end;
 
-t:begin:sawtooth;
+track:begin:sawtooth;
 
-	g:begin;
+	grp:begin;
 		s:8;
 		e:pr:18;
 		a:f2;s:2;
 		a:g3;s:2;
 		a:c1;s:2;r;
 		s:2;
-	g:end;
+	grp:end;
 
 	g:0;
 
-t:end;
+track:end;
 
-t:begin:noise;
+track:begin:noise;
 
-	g:begin;
+	grp:begin;
 		s:2;
 		a:c6;s:1;r;
 		s:13;
-	g:end;
-	
+	grp:end;
+
 	g:0;
 
-t:end;
+track:end;
