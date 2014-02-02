@@ -57,8 +57,10 @@ static void BKInterpreterEventsUnset (BKInterpreter * interpreter, BKInt eventMa
 	BKSize size;
 	BKTickEvent * tickEvent;
 
-	if (eventMask & BKIntrEventAttack)
+	if (eventMask & BKIntrEventAttack) {
 		interpreter -> flags &= ~BKInterpreterFlagHasAttackEvent;
+		interpreter -> nextNoteIndex = 0;
+	}
 
 	// remove events
 	for (BKInt i = 0; i < interpreter -> numEvents;) {
@@ -179,10 +181,12 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 							break;
 						}
 						case BKIntrEventAttack: {
-							BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNote);
+							for (BKInt i = 0; i < interpreter -> nextNoteIndex; i ++)
+								BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
 
 							if (interpreter -> flags & BKInterpreterFlagHasArpeggio)
 								BKTrackSetPtr (track, BK_ARPEGGIO, interpreter -> nextArpeggio);
+
 							break;
 						}
 						case BKIntrEventRelease: {
@@ -195,6 +199,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 							break;
 						}
 					}
+
+					interpreter -> nextNoteIndex = 0;
 
 					BKInterpreterEventSet (interpreter, tickEvent -> event, 0);
 				}
@@ -222,7 +228,10 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 				value0 = * (opcode ++);
 
 				if (interpreter -> flags & BKInterpreterFlagHasAttackEvent) {
-					interpreter -> nextNote = value0;
+					// overwrite last note value when more than 2
+					interpreter -> nextNoteIndex = BKMin (interpreter -> nextNoteIndex, 1);
+					interpreter -> nextNotes [interpreter -> nextNoteIndex] = value0;
+					interpreter -> nextNoteIndex ++;
 				}
 				else {
 					BKTrackSetAttr (track, BK_NOTE, value0);
@@ -262,6 +271,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 			case BKIntrRelease: {
 				BKInterpreterEventSet (interpreter, BKIntrEventRelease | BKIntrEventMute, 0);
 				BKTrackSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
+				interpreter -> nextNoteIndex = 0;
 				break;
 			}
 			case BKIntrReleaseTicks: {
@@ -273,6 +283,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 			case BKIntrMute: {
 				BKInterpreterEventSet (interpreter, BKIntrEventRelease | BKIntrEventMute, 0);
 				BKTrackSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
+				interpreter -> nextNoteIndex = 0;
 				break;
 			}
 			case BKIntrMuteTicks: {
@@ -440,9 +451,10 @@ void BKInterpreterDispose (BKInterpreter * interpreter)
 
 void BKInterpreterReset (BKInterpreter * interpreter)
 {
-	interpreter -> flags     = 0;
-	interpreter -> numSteps  = 0;
-	interpreter -> opcodePtr = interpreter -> opcode;
-	interpreter -> stackPtr  = interpreter -> stack;
-	interpreter -> numEvents = 0;
+	interpreter -> flags         = 0;
+	interpreter -> numSteps      = 0;
+	interpreter -> opcodePtr     = interpreter -> opcode;
+	interpreter -> stackPtr      = interpreter -> stack;
+	interpreter -> numEvents     = 0;
+	interpreter -> nextNoteIndex = 0;
 }

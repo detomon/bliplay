@@ -86,7 +86,8 @@ struct BKInterpreter
 	BKData       ** samples;
 	BKUInt          stepTickCount;
 	BKUInt          numSteps;
-	BKInt           nextNote;
+	BKUInt          nextNoteIndex;
+	BKInt           nextNotes [2];
 	BKInt           nextArpeggio [1 + BK_MAX_ARPEGGIO];
 	BKInt           numEvents;
 	BKTickEvent     events [BK_INTR_MAX_EVENTS];
