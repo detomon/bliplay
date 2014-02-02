@@ -53,7 +53,6 @@ static BKTickEvent * BKInterpreterEventGet (BKInterpreter * interpreter, BKInt e
 
 static void BKInterpreterEventsUnset (BKInterpreter * interpreter, BKInt eventMask)
 {
-	BKInt i;
 	BKSize size;
 	BKTickEvent * tickEvent;
 
@@ -123,8 +122,6 @@ static BKInt BKInterpreterEventSet (BKInterpreter * interpreter, BKInt event, BK
 
 static BKTickEvent * BKInterpreterEventGetNext (BKInterpreter * interpreter)
 {
-	BKInt i;
-	BKSize size;
 	BKInt ticks = BK_INT_MAX;
 	BKTickEvent * tickEvent, * nextEvent = NULL;
 
@@ -142,7 +139,6 @@ static BKTickEvent * BKInterpreterEventGetNext (BKInterpreter * interpreter)
 
 static void BKInterpreterEventsAdvance (BKInterpreter * interpreter, BKInt ticks)
 {
-	BKSize size;
 	BKTickEvent * tickEvent;
 
 	for (BKInt i = 0; i < interpreter -> numEvents; i ++) {
