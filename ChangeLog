@@ -1,3 +1,7 @@
+Changes in bliplay 0.1.1:
+
+* Fix portamento when setting attack ticks
+
 bliplay 0.1:
 
 First release
