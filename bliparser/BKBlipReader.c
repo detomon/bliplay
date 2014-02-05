@@ -28,6 +28,15 @@
 #define INIT_DATA_SIZE     0x200
 #define INIT_ARGS_SIZE     0x400
 
+/**
+ * Base64 conversion table
+ *
+ * Converts a base64 character to its representing integer value.
+ * '-' is the same as '+' and '_' is the same as '/'.
+ * Invalid characters have the value -1.
+ * Terminal characters (':', ';') which are used in the syntax have the value -2.
+ * '=' also counts as terminal character to stop parsing.
+ */
 static char const BKReaderBase64Table [256] =
 {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -225,37 +234,34 @@ static BKInt BKBlipReaderReadBase64 (BKBlipReader * reader, BKBlipArgument * arg
 	do {
 		c = BKBlipReaderGetChar (reader);
 
-		if (c != -1) {
-			bc = BKReaderBase64Table [c];
-
-			// valid char
-			if (bc >= 0) {
-				value = (value << 6) + bc;
-
-				if (++ count >= 4) {
-					if (BKBlipReaderBufferEnsureSpace (reader, 3) < 0)
-						return -1;
-
-					* reader -> bufferPtr ++ = (value >> 16) & 0xFF;
-					* reader -> bufferPtr ++ = (value >>  8) & 0xFF;
-					* reader -> bufferPtr ++ = (value >>  0) & 0xFF;
-
-					arg -> size += 3;
-					value = 0;
-					count = 0;
-				}
-			}
-			// terminating char
-			else if (bc == -2) {
-				break;
-			}
-			// error
-			else {
-				return -1;
-			}
-		}
-		else {
+		if (c == -1) {
 			return -1;
+		}
+
+		bc = BKReaderBase64Table [c];
+
+		// ignore invalid char
+		if (bc == -1) {
+			continue;
+		}
+		// terminal character
+		else if (bc == -2) {
+			break;
+		}
+
+		value = (value << 6) + bc;
+
+		if (++ count >= 4) {
+			if (BKBlipReaderBufferEnsureSpace (reader, 3) < 0)
+				return -1;
+
+			* reader -> bufferPtr ++ = (value >> 16) & 0xFF;
+			* reader -> bufferPtr ++ = (value >>  8) & 0xFF;
+			* reader -> bufferPtr ++ = (value >>  0) & 0xFF;
+
+			arg -> size += 3;
+			value = 0;
+			count = 0;
 		}
 	}
 	while (c != -1);
