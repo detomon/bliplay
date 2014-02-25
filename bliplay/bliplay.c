@@ -425,22 +425,22 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 	}
 
 	char const * data = "gv:255; \
-gs:14; \
+stepticks:14; \
  \
-t:begin:square; \
+track:begin:square; \
  \
-	g:begin; \
-		dc:8; \
+	grp:begin; \
+		dc:8;v:192; \
 		mt:8;a:c5;s:1;r;s:1; \
 		mt:8;a:c6;s:1;r;s:1; \
 		mt:8;a:c5;s:1;r;s:1; \
 		mt:8;a:c6;s:1;r;s:1; \
-	g:end; \
+	grp:end; \
  \
 	g:0; \
 	x; \
  \
-t:end;";
+track:end;";
 
 	BKInt dataSize = strlen (data);
 
