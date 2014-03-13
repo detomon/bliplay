@@ -69,8 +69,6 @@ BKInt BKBlipWriterInit (BKBlipWriter * writer, BKBlipWriterCallback write, void 
 		return -1;
 	}
 
-	//base64Table ();
-
 	return 0;
 }
 
