@@ -63,12 +63,12 @@ struct BKBlipCommand
 };
 
 /**
- * 
+ *
  */
 extern BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize, BKBlipReadCallback read, void * userInfo);
 
 /**
- * 
+ *
  */
 extern void BKBlipReaderDispose (BKBlipReader * reader);
 
@@ -76,5 +76,10 @@ extern void BKBlipReaderDispose (BKBlipReader * reader);
  *
  */
 extern BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * command);
+
+/**
+ *
+ */
+extern void BKBlipReaderReset (BKBlipReader * reader, char const * data, size_t dataSize);
 
 #endif /* ! _BK_BLIP_READER_H_ */

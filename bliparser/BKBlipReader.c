@@ -429,7 +429,8 @@ BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * command)
 	memset (command, 0, sizeof (BKBlipCommand));
 
 	do {
-		memset (reader -> argBuffer, 0, (reader -> argPtr - reader -> argBuffer) * sizeof (BKBlipArgument)); // clear prev args
+		 // clear previous args
+		memset (reader -> argBuffer, 0, (reader -> argPtr - reader -> argBuffer) * sizeof (BKBlipArgument));
 
 		reader -> bufferPtr = reader -> buffer;
 		reader -> argPtr    = reader -> argBuffer;
@@ -469,4 +470,19 @@ BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * command)
 	command -> argCount = (reader -> argPtr - reader -> argBuffer) - 1;
 
 	return 1;
+}
+
+void BKBlipReaderReset (BKBlipReader * reader, char const * data, size_t dataSize)
+{
+	reader -> data     = (unsigned char *) data;
+	reader -> dataPtr  = (unsigned char *) data;
+	reader -> dataSize = dataSize;
+
+	 // clear previous args
+	memset (reader -> argBuffer, 0, (reader -> argPtr - reader -> argBuffer) * sizeof (BKBlipArgument));
+
+	reader -> bufferPtr         = reader -> bufferPtr;
+	reader -> bufferCapacity    = INIT_BUFFER_SIZE;
+	reader -> argPtr            = reader -> argBuffer;
+	reader -> argBufferCapacity = INIT_ARGS_SIZE;
 }

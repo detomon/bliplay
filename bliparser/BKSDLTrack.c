@@ -350,6 +350,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 				if (track) {
 					memset (track, 0, sizeof (BKSDLTrack));
 					BKTrackInit (& track -> track, 0);
+					BKInterpreterInit (& track -> interpreter);
 
 					BKSDLUserData * userData = & track -> userData;
 					userData -> track        = & track -> track;
@@ -397,7 +398,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 
 				while (BKBlipReaderNextCommand (& parser, & item)) {
 					if (strcmpx (item.name, "track") == 0 && strcmpx (item.args [0].arg, "end") == 0) {
-						BKCompilerTerminate (& compiler, & track -> interpreter);
+						BKCompilerTerminate (& compiler, & track -> interpreter, BK_COMPILER_ADD_REPEAT);
 
 						BKTrackAttach (& track -> track, & ctx -> ctx);
 						BKContextAttachDivider (& ctx -> ctx, & track -> divider, BK_CLOCK_TYPE_BEAT);
