@@ -40,6 +40,12 @@ struct BKCompiler
 	BKInterpreter * interpreter;
 };
 
+enum
+{
+	BK_COMPILER_ADD_REPEAT = 1 << 0,
+	BK_COMPILER_ADD_END    = 1 << 1,
+};
+
 /**
  * Initialize compiler
  */
@@ -57,12 +63,23 @@ extern BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * item)
 
 /**
  * Compile commands and initialize interpreter
+ *
+ * Options may be one or more of `BK_COMPILER_ADD_REPEAT`, `BK_COMPILER_ADD_EXIT`
+ * Default is `BK_COMPILER_ADD_EXIT`
  */
-extern BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter);
+extern BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter, BKEnum options);
 
 /**
  * Compile all commands from parser and terminate compiler
+ *
+ * Options may be one or more of `BK_COMPILER_ADD_REPEAT`, `BK_COMPILER_ADD_EXIT`
+ * Default is `BK_COMPILER_ADD_EXIT`
  */
-extern BKInt BKCompilerCompile (BKCompiler * compiler, BKInterpreter * interpreter, BKBlipReader * parser);
+extern BKInt BKCompilerCompile (BKCompiler * compiler, BKInterpreter * interpreter, BKBlipReader * parser, BKEnum options);
+
+/**
+ * Reset compiler for compiling new data
+ */
+extern void BKCompilerReset (BKCompiler * compiler);
 
 #endif /* ! _BK_COMPILER_H_ */

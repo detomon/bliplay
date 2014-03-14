@@ -115,6 +115,52 @@ static BKInt item_list_add (BKInt ** list_ref, BKInt n)
 }
 
 /**
+ * Empty list
+ */
+static void item_list_empty (BKInt * list)
+{
+	item_list * listPtr;
+
+	if (list == NULL)
+		return;
+
+	listPtr = (void *) list - ((uintptr_t) & ((item_list *) 0) -> items);
+
+	listPtr -> length = 0;
+}
+
+/**
+ * Resize list
+ */
+static int item_list_resize (BKInt ** list_ref, BKInt capacity)
+{
+	BKInt     * list;
+	item_list * listPtr;
+
+	list = * list_ref;
+
+	if (list == NULL)
+		return 0;
+
+	listPtr = (void *) list - ((uintptr_t) & ((item_list *) 0) -> items);
+
+	if (listPtr -> capacity >= capacity)
+		return 0;
+
+	listPtr = realloc (listPtr, sizeof (item_list) + capacity * sizeof (BKInt));
+
+	if (listPtr == NULL)
+		return -1;
+
+	listPtr -> capacity = capacity;
+
+	list = listPtr -> items;
+	* list_ref = list;
+
+	return 0;
+}
+
+/**
  * Get length of item list
  */
 static BKUInt item_list_length (BKInt * list)

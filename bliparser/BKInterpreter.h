@@ -94,6 +94,11 @@ struct BKInterpreter
 };
 
 /**
+ * Initialize interpreter
+ */
+extern BKInt BKInterpreterInit (BKInterpreter * interpreter);
+
+/**
  * Apply commands to track and return steps to next event
  */
 extern BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track);

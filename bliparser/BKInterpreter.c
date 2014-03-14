@@ -149,6 +149,13 @@ static void BKInterpreterEventsAdvance (BKInterpreter * interpreter, BKInt ticks
 	}
 }
 
+BKInt BKInterpreterInit (BKInterpreter * interpreter)
+{
+	memset (interpreter, 0, sizeof (BKInterpreter));
+
+	return 0;
+}
+
 BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 {
 	BKInt         command;
@@ -416,8 +423,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 				break;
 			}
 			case BKIntrEnd: {
-				BKTrackSetAttr (track, BK_MUTE, 1);
-				BKInterpreterEventSet (interpreter, BKIntrEventMute, BK_INT_MAX);
+				//BKTrackSetAttr (track, BK_MUTE, 1);
+				BKInterpreterEventSet (interpreter, BKIntrEventStep, BK_INT_MAX);
 				opcode --; // Repeat command forever
 				run = 0;
 				break;

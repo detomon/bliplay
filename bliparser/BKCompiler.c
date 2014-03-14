@@ -292,29 +292,41 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
  */
 static BKInt BKCompilerCombine (BKCompiler * compiler, BKInterpreter * interpreter)
 {
-	BKUInt  numCmds = 0;
-	BKInt * cmds;
+	BKUInt      numCmds = 0;
+	BKInt     * cmds;
+	item_list * list;
 
 	compiler -> interpreter = interpreter;
 
 	numCmds += item_list_length (compiler -> cmds);
 	numCmds += item_list_length (compiler -> groupCmds);
 
-	interpreter -> opcode = item_list_alloc (numCmds);
-
 	if (interpreter -> opcode) {
-		cmds = interpreter -> opcode;
-		cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> cmds);
-		cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> groupCmds);
+		if (item_list_resize (& interpreter -> opcode, numCmds) < 0)
+			return -1;
 
-		interpreter -> opcodePtr = interpreter -> opcode;
-		interpreter -> stackPtr  = interpreter -> stack;
-		interpreter -> stackEnd  = (void *) interpreter -> stack + sizeof (interpreter -> stack);
-
-		return 0;
+		item_list_empty (interpreter -> opcode);
+	}
+	else {
+		interpreter -> opcode = item_list_alloc (numCmds);
 	}
 
-	return -1;
+	if (interpreter -> opcode == NULL)
+		return -1;
+
+	cmds = interpreter -> opcode;
+
+	list = (void *) cmds - ((uintptr_t) & ((item_list *) 0) -> items);
+	list -> length = numCmds;
+
+	cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> cmds);
+	cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> groupCmds);
+
+	interpreter -> opcodePtr = interpreter -> opcode;
+	interpreter -> stackPtr  = interpreter -> stack;
+	interpreter -> stackEnd  = (void *) interpreter -> stack + sizeof (interpreter -> stack);
+
+	return 0;
 }
 
 BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
@@ -552,17 +564,27 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 	return 0;
 }
 
-BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter)
+BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter, BKEnum options)
 {
-	memset (interpreter, 0, sizeof (BKInterpreter));
-
 	// Add return command if group is not terminated
 	if (compiler -> groupLevel > 0)
 		item_list_add (& compiler -> groupCmds, BKIntrReturn);
 
-	// add repeat command
-	item_list_add (& compiler -> cmds, BKIntrJump);
-	item_list_add (& compiler -> cmds, 0);
+	if (options & BK_COMPILER_ADD_REPEAT) {
+		// add repeat command
+		item_list_add (& compiler -> cmds, BKIntrJump);
+		item_list_add (& compiler -> cmds, 0);
+	}
+	else if (options & BK_COMPILER_ADD_END) {
+		// add exit command
+		item_list_add (& compiler -> cmds, BKIntrEnd);
+	}
+	else {
+		// add exit command
+		item_list_add (& compiler -> cmds, BKIntrEnd);
+	}
+
+	BKInterpreterReset (interpreter);
 
 	// combine commands and group commands into one array
 	if (BKCompilerCombine (compiler, interpreter) < 0)
@@ -583,12 +605,19 @@ static BKInt BKCompilerReadCommands (BKCompiler * compiler, BKBlipReader * parse
 	return 0;
 }
 
-BKInt BKCompilerCompile (BKCompiler * compiler, BKInterpreter * interpreter, BKBlipReader * parser)
+BKInt BKCompilerCompile (BKCompiler * compiler, BKInterpreter * interpreter, BKBlipReader * parser, BKEnum options)
 {
 	if (BKCompilerReadCommands (compiler, parser) < 0)
 		return -1;
 
-	BKCompilerTerminate (compiler, interpreter);
+	BKCompilerTerminate (compiler, interpreter, options);
 
 	return 0;
+}
+
+void BKCompilerReset (BKCompiler * compiler)
+{
+	item_list_empty (compiler -> cmds);
+	item_list_empty (compiler -> groupCmds);
+	item_list_empty (compiler -> groupOffsets);
 }
