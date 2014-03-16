@@ -59,16 +59,7 @@ static char const BKReaderBase64Table [256] =
 
 BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize)
 {
-	if (data == NULL) {
-		data     = "";
-		dataSize = 0;
-	}
-
 	memset (reader, 0, sizeof (BKBlipReader));
-
-	reader -> data     = (unsigned char *) data;
-	reader -> dataPtr  = (unsigned char *) data;
-	reader -> dataSize = dataSize;
 
 	reader -> buffer = malloc (INIT_BUFFER_SIZE);
 
@@ -82,10 +73,10 @@ BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSiz
 		return -1;
 	}
 
-	reader -> bufferPtr         = reader -> bufferPtr;
-	reader -> bufferCapacity    = INIT_BUFFER_SIZE;
-	reader -> argPtr            = reader -> argBuffer;
-	reader -> argBufferCapacity = INIT_ARGS_SIZE;
+	reader -> bufferPtr = reader -> buffer;
+	reader -> argPtr    = reader -> argBuffer;
+
+	BKBlipReaderReset (reader, data, dataSize);
 
 	memset (reader -> argBuffer, 0, INIT_ARGS_SIZE * sizeof (BKBlipArgument));
 
@@ -449,14 +440,20 @@ BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * command)
 
 void BKBlipReaderReset (BKBlipReader * reader, char const * data, size_t dataSize)
 {
+	if (data == NULL) {
+		data     = "";
+		dataSize = 0;
+	}
+
 	reader -> data     = (unsigned char *) data;
 	reader -> dataPtr  = (unsigned char *) data;
 	reader -> dataSize = dataSize;
 
 	 // clear previous args
-	memset (reader -> argBuffer, 0, (reader -> argPtr - reader -> argBuffer) * sizeof (BKBlipArgument));
+	if (reader -> argBuffer)
+		memset (reader -> argBuffer, 0, (reader -> argPtr - reader -> argBuffer) * sizeof (BKBlipArgument));
 
-	reader -> bufferPtr         = reader -> bufferPtr;
+	reader -> bufferPtr         = reader -> buffer;
 	reader -> bufferCapacity    = INIT_BUFFER_SIZE;
 	reader -> argPtr            = reader -> argBuffer;
 	reader -> argBufferCapacity = INIT_ARGS_SIZE;
