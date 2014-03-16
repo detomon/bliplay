@@ -13,6 +13,6 @@ track:begin:square;
 	grp:end;
 
 	g:0;
-	x;
+	z;
 
 track:end;

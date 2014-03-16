@@ -242,7 +242,8 @@ static BKEnum beatCallback (BKCallbackInfo * info, BKSDLUserData * userInfo)
 	BKInterpreter * interpreter;
 
 	interpreter = userInfo -> interpreter;
-	numSteps    = BKInterpreterTrackAdvance (interpreter, userInfo -> track);
+
+	BKInterpreterTrackAdvance (interpreter, userInfo -> track, & numSteps);
 
 	info -> divider = numSteps;
 

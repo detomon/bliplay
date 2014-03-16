@@ -35,6 +35,7 @@ enum {
 	BKIntrEventAttack  = 1 << 1,
 	BKIntrEventRelease = 1 << 2,
 	BKIntrEventMute    = 1 << 3,
+	BKIntrEventJump    = 1 << 4,
 };
 
 static BKTickEvent * BKInterpreterEventGet (BKInterpreter * interpreter, BKInt eventsMaks)
@@ -78,7 +79,7 @@ static void BKInterpreterEventsUnset (BKInterpreter * interpreter, BKInt eventMa
 
 static BKInt BKInterpreterEventSet (BKInterpreter * interpreter, BKInt event, BKInt ticks)
 {
-	BKTickEvent * tickEvent;
+	BKTickEvent * tickEvent, * otherEvent;
 
 	if (ticks == 0) {
 		BKInterpreterEventsUnset (interpreter, event);
@@ -105,10 +106,13 @@ static BKInt BKInterpreterEventSet (BKInterpreter * interpreter, BKInt event, BK
 		case BKIntrEventStep: {
 			// other events can't happen after step event
 			for (BKInt i = 0; i < interpreter -> numEvents; i ++) {
-				tickEvent = & interpreter -> events [i];
+				otherEvent = & interpreter -> events [i];
 
-				if (tickEvent -> ticks > ticks)
-					tickEvent -> ticks = ticks;
+				if (otherEvent -> event == BKIntrEventJump)
+					continue;
+
+				if (otherEvent -> ticks > ticks)
+					otherEvent -> ticks = ticks;
 			}
 			break;
 		}
@@ -134,6 +138,11 @@ static BKTickEvent * BKInterpreterEventGetNext (BKInterpreter * interpreter)
 		}
 	}
 
+	if (nextEvent) {
+		if (nextEvent -> event == BKIntrEventJump && interpreter -> numEvents == 1)
+			nextEvent = NULL;
+	}
+
 	return nextEvent;
 }
 
@@ -156,13 +165,14 @@ BKInt BKInterpreterInit (BKInterpreter * interpreter)
 	return 0;
 }
 
-BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
+BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, BKInt * outTicks)
 {
 	BKInt         command;
-	BKInt         value0;
+	BKInt         value0, value1;
 	BKInt         numSteps = 1;
 	BKInt         run = 1;
 	BKInt       * opcode;
+	BKInt         result = 1;
 	BKTickEvent * tickEvent;
 
 	opcode   = interpreter -> opcodePtr;
@@ -201,11 +211,28 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 							BKTrackSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
 							break;
 						}
+						case BKIntrEventJump: {
+							BKInterpreterEventSet (interpreter, ~0, 0);
+
+							interpreter -> jumpStackPtr --;
+							interpreter -> opcodePtr = & interpreter -> opcode [interpreter -> jumpStackPtr -> opcodeAddr];
+							interpreter -> stackPtr  = interpreter -> jumpStackPtr -> stackPtr;
+
+							opcode = interpreter -> opcodePtr;
+
+							BKTrackClear (track);
+
+							numSteps = 0;
+							tickEvent = NULL;
+
+							break;
+						}
 					}
 
 					interpreter -> nextNoteIndex = 0;
 
-					BKInterpreterEventSet (interpreter, tickEvent -> event, 0);
+					if (tickEvent)
+						BKInterpreterEventSet (interpreter, tickEvent -> event, 0);
 				}
 				else {
 					break;
@@ -219,7 +246,9 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 
 		if (numSteps) {
 			interpreter -> numSteps = numSteps;
-			return numSteps;
+			(* outTicks) = numSteps;
+
+			return 1;
 		}
 	}
 
@@ -410,11 +439,24 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 			}
 			case BKIntrCall: {
 				value0 = * (opcode ++);
+				value1 = * (opcode ++);
+
+				if (value1) {
+					if (interpreter -> jumpStackPtr < interpreter -> jumpStackEnd) {
+						BKInterpreterEventSet (interpreter, BKIntrEventJump, value1 * interpreter -> stepTickCount);
+
+						interpreter -> jumpStackPtr -> ticks      = value1;
+						interpreter -> jumpStackPtr -> opcodeAddr = opcode - interpreter -> opcode;
+						interpreter -> jumpStackPtr -> stackPtr   = interpreter -> stackPtr;
+						interpreter -> jumpStackPtr ++;
+					}
+				}
 
 				if (interpreter -> stackPtr < interpreter -> stackEnd) {
 					* (interpreter -> stackPtr ++) = opcode - interpreter -> opcode;
 					opcode = & interpreter -> opcode [value0];
 				}
+
 				break;
 			}
 			case BKIntrJump: {
@@ -427,6 +469,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 				BKInterpreterEventSet (interpreter, BKIntrEventStep, BK_INT_MAX);
 				opcode --; // Repeat command forever
 				run = 0;
+				result = 0;
 				break;
 			}
 		}
@@ -442,7 +485,9 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track)
 	interpreter -> numSteps  = numSteps;
 	interpreter -> opcodePtr = opcode;
 
-	return numSteps;
+	(* outTicks) = numSteps;
+
+	return result;
 }
 
 void BKInterpreterDispose (BKInterpreter * interpreter)
@@ -458,6 +503,9 @@ void BKInterpreterReset (BKInterpreter * interpreter)
 	interpreter -> numSteps      = 0;
 	interpreter -> opcodePtr     = interpreter -> opcode;
 	interpreter -> stackPtr      = interpreter -> stack;
+	interpreter -> stackEnd      = (void *) interpreter -> stack + sizeof (interpreter -> stack);
+	interpreter -> jumpStackPtr  = interpreter -> jumpStack;
+	interpreter -> jumpStackEnd  = (void *) interpreter -> jumpStack + sizeof (interpreter -> jumpStack);
 	interpreter -> numEvents     = 0;
 	interpreter -> nextNoteIndex = 0;
 }
