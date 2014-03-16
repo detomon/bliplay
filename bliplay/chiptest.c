@@ -123,7 +123,7 @@ int main (int argc, char * argv [])
 	BKCompilerInit (& compiler);
 	BKInterpreterInit (& interpreter);
 	BKInterpreterInit (& interpreter2);
-	BKBlipReaderInit (& reader, "", 0, NULL, NULL);
+	BKBlipReaderInit (& reader, NULL, 0);
 
 	BKContextInit (& ctx, numChannels, sampleRate);
 
