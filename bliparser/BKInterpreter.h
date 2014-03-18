@@ -67,6 +67,7 @@ enum
 	BKIntrJump,
 	BKIntrEnd,
 	BKIntrRepeat,
+	BKIntrSetRepeatStart,
 	BKIntrStepTicks,
 };
 
@@ -88,6 +89,7 @@ struct BKInterpreter
 	BKUInt          flags;
 	BKInt         * opcode;
 	BKInt         * opcodePtr;
+	BKInt           repeatStartAddr;
 	BKInt           stack [BK_INTR_STACK_SIZE];
 	BKInt         * stackPtr;
 	BKInt         * stackEnd;

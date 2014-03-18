@@ -429,16 +429,13 @@ stepticks:14; \
  \
 track:begin:square; \
  \
-	grp:begin; \
-		dc:8;v:192; \
-		mt:8;a:c5;s:1;r;s:1; \
-		mt:8;a:c6;s:1;r;s:1; \
-		mt:8;a:c5;s:1;r;s:1; \
-		mt:8;a:c6;s:1;r;s:1; \
-	grp:end; \
- \
-	g:0; \
-	x; \
+	dc:8;v:192; \
+	mt:8;a:c5;s:1;r;s:1; \
+	mt:8;a:c6;s:1;r;s:1; \
+	mt:8;a:c5;s:1;r;s:1; \
+	mt:8;a:c6;s:1;r;s:1; \
+	\
+	z; \
  \
 track:end;";
 

@@ -459,8 +459,17 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 				break;
 			}
+			case BKIntrSetRepeatStart: {
+				interpreter -> repeatStartAddr = opcode - interpreter -> opcode;
+				break;
+			}
 			case BKIntrJump: {
 				value0 = * (opcode ++);
+
+				// jump to repeat mark
+				if (value0 == -1)
+					value0 = interpreter -> repeatStartAddr;
+
 				opcode = & interpreter -> opcode [value0];
 				break;
 			}
@@ -499,13 +508,14 @@ void BKInterpreterDispose (BKInterpreter * interpreter)
 
 void BKInterpreterReset (BKInterpreter * interpreter)
 {
-	interpreter -> flags         = 0;
-	interpreter -> numSteps      = 0;
-	interpreter -> opcodePtr     = interpreter -> opcode;
-	interpreter -> stackPtr      = interpreter -> stack;
-	interpreter -> stackEnd      = (void *) interpreter -> stack + sizeof (interpreter -> stack);
-	interpreter -> jumpStackPtr  = interpreter -> jumpStack;
-	interpreter -> jumpStackEnd  = (void *) interpreter -> jumpStack + sizeof (interpreter -> jumpStack);
-	interpreter -> numEvents     = 0;
-	interpreter -> nextNoteIndex = 0;
+	interpreter -> flags           = 0;
+	interpreter -> numSteps        = 0;
+	interpreter -> opcodePtr       = interpreter -> opcode;
+	interpreter -> stackPtr        = interpreter -> stack;
+	interpreter -> stackEnd        = (void *) interpreter -> stack + sizeof (interpreter -> stack);
+	interpreter -> jumpStackPtr    = interpreter -> jumpStack;
+	interpreter -> jumpStackEnd    = (void *) interpreter -> jumpStack + sizeof (interpreter -> jumpStack);
+	interpreter -> numEvents       = 0;
+	interpreter -> nextNoteIndex   = 0;
+	interpreter -> repeatStartAddr = 0;
 }

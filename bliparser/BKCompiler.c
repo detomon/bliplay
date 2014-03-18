@@ -91,6 +91,7 @@ static strval commands [] =
 	{"vm",  BKIntrMasterVolume},
 	{"w",   BKIntrWaveform},
 	{"x",   BKIntrRepeat},
+	{"xb",  BKIntrSetRepeatStart},
 	{"z",   BKIntrEnd},
 };
 
@@ -553,9 +554,14 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 			item_list_add (cmds, BKMax (atoix (arg0, 0), 1));
 			break;
 		}
+		case BKIntrSetRepeatStart: {
+			item_list_add (cmds, item -> value);
+			break;
+		}
 		case BKIntrRepeat: {
 			item_list_add (cmds, BKIntrJump);
-			item_list_add (cmds, 0);
+			item_list_add (cmds, -1);
+
 			break;
 		}
 		case BKIntrEnd: {
