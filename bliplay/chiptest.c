@@ -33,15 +33,24 @@ typedef struct {
 	BKInt sampleRate;
 } BKSDLUserData;
 
+typedef struct {
+	BKTrack       track;
+	BKInterpreter interpreter;
+	BKDivider     divider;
+	BKInt         masterVolume;
+	BKInt         stepTickCount;
+	BKInt         waveform;
+} BKTrackState;
+
 BKContext     ctx;
-BKTrack       square, triangle, noise;
-BKInstrument  instrument;
+BKInstrument  instrument, instrument2;
+BKData        pikachu;
 BKSDLUserData userData;
-BKDivider     divider, divider2, divider3;
 
 BKCompiler    compiler;
-BKInterpreter interpreter, interpreter2, interpreter3;
 BKBlipReader  reader;
+
+BKTrackState square, triangle, noise, sample;
 
 static int getchar_nocanon (unsigned tcflags)
 {
@@ -68,47 +77,91 @@ static void fill_audio (BKSDLUserData * info, Uint8 * stream, int len)
 	BKContextGenerate (& ctx, (BKFrame *) stream, numFrames);
 }
 
-static void compileData (BKInterpreter * interpreter, BKTrack * track, char const * data)
+static BKEnum BKTrackStateDividerCallback (BKCallbackInfo * info, void * userData)
+{
+	BKInt divider;
+	BKTrackState * state = userData;
+
+	BKInterpreterTrackAdvance (& state -> interpreter, & state -> track, & divider);
+
+	info -> divider = divider;
+
+	return 0;
+}
+
+static void BKTrackStateCompileData (BKTrackState * state, char const * data, BKInt clearTrack)
 {
 	BKCompilerReset (& compiler);
-	BKInterpreterReset (interpreter);
+	BKInterpreterReset (& state -> interpreter);
 	BKBlipReaderReset (& reader, data, strlen (data));
 
-	BKCompilerCompile (& compiler, interpreter, & reader, 0);
-	BKTrackClear (track);
+	BKCompilerCompile (& compiler, & state -> interpreter, & reader, 0);
+
+	if (clearTrack)
+		BKTrackClear (& state -> track);
+
+	BKDividerReset (& state -> divider);
+
+	state -> interpreter.stepTickCount = state -> stepTickCount;
+	BKTrackSetAttr (& state -> track, BK_WAVEFORM, state -> waveform);
 }
 
-BKEnum dividerCallback (BKCallbackInfo * info, void * userData)
+static void BKTrackStateInit (BKTrackState * state, BKContext * ctx, BKInt waveform)
 {
-	BKInt divider;
+	BKInt masterVolume;
+	BKCallback callback;
 
-	BKInterpreterTrackAdvance (& interpreter, & square, & divider);
+	switch (waveform) {
+		default:
+		case BK_SQUARE: {
+			masterVolume = BK_MAX_VOLUME * 0.15;
+			break;
+		}
+		case BK_TRIANGLE: {
+			masterVolume = BK_MAX_VOLUME * 0.30;
+			break;
+		}
+		case BK_SAWTOOTH: {
+			masterVolume = BK_MAX_VOLUME * 0.15;
+			break;
+		}
+		case BK_NOISE: {
+			masterVolume = BK_MAX_VOLUME * 0.15;
+			break;
+		}
+		case BK_SAMPLE: {
+			masterVolume = BK_MAX_VOLUME * 0.30;
+			break;
+		}
+	}
 
-	info -> divider = divider;
+	memset (state, 0, sizeof (BKTrackState));
 
-	return 0;
+	state -> stepTickCount = 18;
+
+	callback.func     = BKTrackStateDividerCallback;
+	callback.userInfo = state;
+
+	BKTrackInit (& state -> track, waveform);
+
+	state -> masterVolume = masterVolume;
+	state -> waveform     = waveform;
+	BKTrackSetAttr (& state -> track, BK_MASTER_VOLUME, masterVolume);
+
+	BKInterpreterInit (& state -> interpreter);
+	BKDividerInit (& state -> divider, 1, & callback);
+
+	BKTrackAttach (& state -> track, ctx);
+	BKContextAttachDivider (ctx, & state -> divider, BK_CLOCK_TYPE_BEAT);
+
+	BKTrackStateCompileData (state, "", 1);
 }
 
-BKEnum dividerCallback2 (BKCallbackInfo * info, void * userData)
+static void BKTrackStateDispose (BKTrackState * state)
 {
-	BKInt divider;
-
-	BKInterpreterTrackAdvance (& interpreter2, & triangle, & divider);
-
-	info -> divider = divider;
-
-	return 0;
-}
-
-BKEnum dividerCallback3 (BKCallbackInfo * info, void * userData)
-{
-	BKInt divider;
-
-	BKInterpreterTrackAdvance (& interpreter3, & noise, & divider);
-
-	info -> divider = divider;
-
-	return 0;
+	BKTrackDispose (& state -> track);
+	BKInterpreterDispose (& state -> interpreter);
+	BKDividerDispose (& state -> divider);
 }
 
 #ifdef main
@@ -121,32 +174,23 @@ int main (int argc, char * argv [])
 	BKInt const sampleRate  = 44100;
 
 	BKCompilerInit (& compiler);
-	BKInterpreterInit (& interpreter);
-	BKInterpreterInit (& interpreter2);
 	BKBlipReaderInit (& reader, NULL, 0);
 
 	BKContextInit (& ctx, numChannels, sampleRate);
 
-	BKTrackInit (& square, BK_SQUARE);
-	BKTrackInit (& triangle, BK_TRIANGLE);
-	BKTrackInit (& noise, BK_NOISE);
+	BKTrackStateInit (& square, & ctx, BK_SQUARE);
+	BKTrackStateInit (& triangle, & ctx, BK_TRIANGLE);
+	BKTrackStateInit (& noise, & ctx, BK_NOISE);
+	BKTrackStateInit (& sample, & ctx, BK_SAMPLE);
 
-	BKTrackSetAttr (& square, BK_MASTER_VOLUME, 0.15 * BK_MAX_VOLUME);
-	BKTrackSetAttr (& triangle, BK_MASTER_VOLUME, 0.33 * BK_MAX_VOLUME);
-	BKTrackSetAttr (& noise, BK_MASTER_VOLUME, 0.15 * BK_MAX_VOLUME);
+	//BKTrackStateCompileData (& square, "st:18;dc:8;e:vs;v:255;a:c5;s:1;a:c6;e:vs:160;v:0;s:31;e:vs;");
 
-	BKTrackAttach (& square, & ctx);
-	BKTrackAttach (& triangle, & ctx);
-	BKTrackAttach (& noise, & ctx);
-
-	compileData (& interpreter, & square, "");
-	compileData (& interpreter2, & triangle, "");
-	compileData (& interpreter3, & noise, "");
-
-	//// instrument with release sequence
+	// instrument with release sequence
 	BKInstrumentInit (& instrument);
+	BKInstrumentInit (& instrument2);
 
 	#define NUM_VOLUME_PHASES 15
+	#define NUM_VOLUME_PHASES2 13
 
 	BKInt volumeSequence [NUM_VOLUME_PHASES];
 
@@ -157,45 +201,39 @@ int main (int argc, char * argv [])
 	// Set volume sequence of instrument
 	BKInstrumentSetSequence (& instrument, BK_SEQUENCE_VOLUME, volumeSequence, NUM_VOLUME_PHASES, 0, 1);
 
+	// Create descending sequence
+	for (BKInt i = 0; i < NUM_VOLUME_PHASES2; i ++)
+		volumeSequence [i] = ((float) BK_MAX_VOLUME * (NUM_VOLUME_PHASES2 - i) / NUM_VOLUME_PHASES2);
+
+	// Set volume sequence of instrument
+	BKInstrumentSetSequence (& instrument2, BK_SEQUENCE_VOLUME, volumeSequence, NUM_VOLUME_PHASES2, 0, 1);
+
+	BKDataInitAndLoadRawAudio (& pikachu, "../BlipKit/examples/Pika.raw", 16, 1, BK_LITTLE_ENDIAN);
+
+	BKDataNormalize (& pikachu);
+
+	//BKInt const n = 20;
+	//
+	//for (BKInt i = 0; i < n; i ++)
+	//	printf (":%d", (int) (178.0 * (n - i) / n));
+
 	BKInstrument * instruments [] = {
 		& instrument,
+		& instrument2,
 	};
 
-	interpreter.instruments    = instruments;
-	interpreter.stepTickCount  = 18;
-	interpreter2.instruments   = instruments;
-	interpreter2.stepTickCount = 18;
-	interpreter3.instruments   = instruments;
-	interpreter3.stepTickCount = 18;
+	BKData * samples [] = {
+		& pikachu,
+	};
 
-	// // Attach instrument to track
-	// BKTrackSetPtr (& sampleTrack, BK_INSTRUMENT, & instrument);
-
-	// Callback struct used for initializing divider
-	BKCallback callback;
-
-	callback.func     = dividerCallback;
-	callback.userInfo = NULL;
-
-	// Initialize divider with divider value and callback
-	BKDividerInit (& divider, 1, & callback);
-
-	callback.func     = dividerCallback2;
-	callback.userInfo = NULL;
-
-	BKDividerInit (& divider2, 1, & callback);
-
-	callback.func     = dividerCallback3;
-	callback.userInfo = NULL;
-
-	BKDividerInit (& divider3, 1, & callback);
-
-
-	// Attach the divider to the master clock
-	// When samples are generated the callback is called at the defined interval
-	BKContextAttachDivider (& ctx, & divider, BK_CLOCK_TYPE_BEAT);
-	BKContextAttachDivider (& ctx, & divider2, BK_CLOCK_TYPE_BEAT);
-	BKContextAttachDivider (& ctx, & divider3, BK_CLOCK_TYPE_BEAT);
+	square.interpreter.instruments   = instruments;
+	triangle.interpreter.instruments = instruments;
+	noise.interpreter.instruments    = instruments;
+	sample.interpreter.instruments   = instruments;
+	square.interpreter.samples       = samples;
+	triangle.interpreter.samples     = samples;
+	noise.interpreter.samples        = samples;
+	sample.interpreter.samples       = samples;
 
 	SDL_Init (SDL_INIT_AUDIO);
 
@@ -227,22 +265,44 @@ int main (int argc, char * argv [])
 		SDL_LockAudio ();
 
 		if (c == 'e') {
-			compileData (& interpreter2, & triangle, "e:pr:36;a:c3;a:c1;s:3;r;s:1;");
-			BKDividerReset (& divider2);
-			compileData (& interpreter, & square, "i:0;v:192;dc:8;e:vb:4:-300;a:c3:d#3:c4;s:1;e:vb;a:c1;s:1;dc:4;r;e:pr:20;a:c4;a:c1;s:1;r;");
-			BKDividerReset (& divider);
-			compileData (& interpreter3, & noise, "i:0;v:178;a:c6;r;s:2;v:64;pw:64;a:c4;r;");
-			BKDividerReset (& divider3);
+			BKTrackStateCompileData (& triangle, "e:pr:36;a:c3;a:c1;s:3;r;s:1;", 1);
+			BKTrackStateCompileData (& square, "i:0;v:192;dc:8;e:vb:4:-300;a:c3:d#3:c4;s:1;e:vb;a:c1;s:1;dc:4;r;e:pr:20;a:c4;a:c1;s:1;r;", 1);
+			BKTrackStateCompileData (& noise, "i:0;v:178;a:c6;r;s:2;v:64;pw:64;a:c4;r;", 1);
+			BKTrackStateCompileData (& sample, "d:0;e:pr:80;a:c4;a:g#3;s:12;r;", 1);
+		}
+		if (c == 's') {
+			BKTrackStateCompileData (& triangle, "grp:begin; e:pr:36; a:c3;a:c1;s:3;r;s:1; a:f1;s:1;r;s:1;r;a:f1;s:1;r;s:1; a:c3;a:g1;s:3;r;s:1; a:c1;s:3;r;s:1; a:c3;a:c1;s:3;r;s:1;r; a:f1;s:1;r;s:1;r;a:f1;s:1;r;s:1; a:c3;a:a0;s:3;r;s:1; a:c1;s:3;r;s:1; grp:end; s:16; s:32;g:0;g:0; xb; g:0;g:0;g:0;g:0; g:0; g:0;g:0;g:0;g:0; g:0; x;", 1);
+			BKTrackStateCompileData (& square, "grp:begin; i:0;a:f3;s:2;r;s:2;a:g3;s:2;r;s:2;a:a3;s:2;r;s:2;a:c4;s:2;r;s:2;r;a:g#3;s:2;r;s:2;a:g3;s:2;r;s:2;a:f3;s:2;r;s:2;a:c3;s:2;r;s:2; grp:end; grp:begin; i:0;a:f3;s:2;r;s:2;a:g3;s:2;r;s:2;a:a3;s:2;r;s:2;a:c4;s:2;r;s:2;r;a:g#3;s:1;r;s:1;at:9;a:g#3;s:1;r;s:1;at:9;a:g3;s:2;r;s:2;a:f3;s:2;r;e:pr:36;s:2;a:g#3;s:2;r;a:g#3;a:g3;r;s:2; epr; grp:end; grp:begin; e:pr:200;e:vb;e:tr:7:168;dc:4;a:c2;a:c4:d#4:g4;s:8;r;e:pr;e:tr; s:8; grp:end; grp:begin; s:8; e:vb:4:-300;a:c3:d#3:c4;s:1;e:vb;a:f1;s:1;dc:4;r;e:pr:20;a:c4;a:c1;s:1;r; s:9;s:4; e:vb:4:-300;a:c3:d#3:c4;s:1;e:vb;a:c1;s:1;dc:4;r;e:pr:20;a:c4;a:c1;s:1;r; s:5; grp:end; g:2; s:32;s:32;s:32; xb; v:164;pt:-1200;dc:4; g:0;g:1;g:0;g:1; g:3; dc:2;g:0;g:1; pt:0;g:0;g:1;s:32; x;", 1);
+			BKTrackStateCompileData (& noise, "v:96; grp:begin; rt:8;a:c5;s:1;r;s:3 rt:16;a:c6;s:1;r;s:3; a:c5;s:2;r;s:2; rt:16;a:c6;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:8;a:c5;s:1;r;s:3; rt:16;a:c6;s:1;r;s:3; a:e5;s:2;r;s:2; rt:16;a:c6;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; grp:end; grp:begin; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1;  s:2;a:c6;s:2;rt:24;a:c4:c5;s:2;r; grp:end; s:16; g:1;g:0;g:0; xb; g:0;g:0;g:0;g:0; s:32; g:0;g:0; g:0;g:0;g:1; x;", 1);
 		}
 		if (c == 'r') {
-			compileData (& interpreter2, & triangle, "e:pr:36;a:c2;a:c1;s:3;r;s:1;");
-			BKDividerReset (& divider2);
-			compileData (& interpreter, & square, "e:pr:200;e:vb;v:220;e:tr:7:168;dc:4;a:c2;a:c4:d#4:g4;s:5;r;");
-			BKDividerReset (& divider);
+			BKTrackStateCompileData (& triangle, "e:pr:36;a:c2;a:c1;s:3;r;s:1;", 1);
+			BKTrackStateCompileData (& square, "e:pr:200;e:vb;v:220;e:tr:7:168;dc:4;a:c2;a:c4:d#4:g4;s:5;r;e:pr;", 1);
 		}
 		if (c == 'f') {
-			compileData (& interpreter3, & noise, "i:0;v:192;pw:32;a:c2;r;s:2;pw:16;");
-			BKDividerReset (& divider3);
+			BKTrackStateCompileData (& noise, "i:0;v:192;pw:32;a:c2;r;s:2;pw:16;", 1);
+		}
+		if (c == 'i') {
+			BKTrackStateCompileData (& square, "i:0; dc:8;v:96;a:a#3;s:2;r;s:2; v:127;dc:4;a:c4;s:2;r;s:2;a:c4; a:a#3;s:2;r;s:2;a:c4; s:1;r;s:1;a:d4;s:1;r;s:1;e:pr:40; a:g4;s:2;a:g#4;s:2;a:g4;e:vs:80;e:vb:9:20;v:178;s:8;r;s:4;e:vb;e:pr; e:vs;v:192;e:vs:54;dc:4;e:pr:90;a:c2;a:c3;s:3;v:0;s:3;r;", 1);
+			BKTrackStateCompileData (& triangle, "e:pr:30; a:f2; s:4; a:g#2;s:4;a:a#2;s:8;r;a:a#1;s:4;a:c2;s:10;r;s:2;", 1);
+		}
+		if (c == 'u') {
+			BKTrackStateCompileData (& square, "e:vs:36;e:pr:72;v:127;dc:4;a:c3;a:g3;s:3;v:0;s:2;r;", 1);
+		}
+		if (c == 'z') {
+			BKTrackStateCompileData (& square, "e:vs:36;e:pr:90;v:127;dc:4;a:c2;a:c3;s:3;v:0;s:3;r;", 1);
+		}
+		if (c == 'j') {
+			BKTrackStateCompileData (& square, "v:0;s:2;r;", 0);
+		}
+		if (c == 'h') {
+			BKTrackStateCompileData (& square, "v:0;s:3;r;", 0);
+		}
+
+		if (c == 'n') {
+			BKTrackStateCompileData (& square, "grp:begin; e:pr:36; a:f3;a:g3;s:4;r; s:4; a:d#3;s:2;r;a:c3;s:2;r;a:d#3;s:2;r; s:2; a:c3;s:3;a:a#2;s:1;r; s:4; a:g2;s:1;r;s:1;a:g2;s:1;r;s:1; a:g#2;s:2;r;a:a2;s:1;r;s:1; grp:end; grp:begin; rt:9;a:g3;s:1;at:6;rt:20;a:d#3;s:1;at:12;a:c3;s:1;rt:6;s:1; rt:9;a:g3;s:1;at:6;rt:20;a:d#3;s:1;at:12;a:c3;s:1;rt:6;s:1; rt:9;a:g3;s:1;at:6;rt:20;a:a#3;s:1;at:12;a:a#3;s:1;rt:6;s:1; rt:9;a:g3;s:2;at:6;rt:9;a:f3;s:2; grp:end; grp:begin; a:f3;s:2;r;s:2;a:g3;s:2;r;s:2;a:a3;s:2;r;s:2;a:c4;s:2;r;s:2;r;a:g#3;s:2;r;s:2;a:g3;s:2;r;s:2;a:f3;s:2;r;s:2;a:g#3;s:2;r;a:g#3;a:g3;r;s:2; grp:end; s:32;s:32; xb; i:1; dc:4;v:156; g:0;g:0;g:0;g:0; dc:2;g:1;g:1; dc:4;g:2; x;", 1);
+			BKTrackStateCompileData (& triangle, "grp:begin; e:pr:18; a:c3;a:c1;s:2;r;at:12;a:c1;s:1;rt:9;s:1;  rt:12;a:c3;a:c1;s:1;at:6;rt:23;a:d#1;s:1;at:12;a:g1;s:1;rt:9;s:1; a:c3;a:c1;s:1;at:6;rt:15;a:d#1;s:1;at:12;a:g1;s:1;rt:9;s:1; rt:12;a:c3;a:c1;s:1;at:6;rt:23;a:d#1;s:1;at:12;a:g1;s:1;rt:9;s:1; grp:end; grp:begin; e:pr:18; a:c3;a:c1;s:2;r;s:2; a:c3;a:c1;s:2;r;s:2;  a:c3;a:c1;s:2;r;s:2; a:c3;a:c1;s:2;r;s:2; a:c3;a:c1;s:2;r;s:2; a:c3;a:c1;s:2;r;s:2;  a:c3;a:c1;s:2;r; a:c3;a:c1;s:2;r;a:c3;a:c1;s:2;r;s:2; grp:end; s:32; g:1; xb; pt:0;g:0;g:0;g:0;g:0;pt:-400;g:0;g:0;pt:-200;g:0;pt:0;g:0;g:0;g:0;pt:-100;g:0;pt:0;g:0; x;", 1);
+			BKTrackStateCompileData (& noise, "v:96; grp:begin; rt:8;a:c5;s:1;r;s:3 rt:16;a:c6;s:1;r;s:3; a:c5;s:2;r;s:2; rt:16;a:c6;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:8;a:c5;s:1;r;s:3; rt:16;a:c6;s:1;r;s:3; a:c5;s:2;r;s:2; rt:16;a:c6;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; grp:end; grp:begin; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:3; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1; rt:16;at:9;a:c5;s:1;r;s:1;  s:2;a:c6;s:2;rt:24;a:c4:c5;s:2;r; grp:end; g:1;s:32; xb; g:0;g:0;g:0;g:0; x;", 1);
 		}
 
 		SDL_UnlockAudio ();
@@ -256,22 +316,15 @@ int main (int argc, char * argv [])
 	SDL_PauseAudio (1);
 	SDL_CloseAudio ();
 
-	BKDividerDispose (& divider);
-	BKDividerDispose (& divider2);
-	BKDividerDispose (& divider3);
+	BKTrackStateDispose (& square);
+	BKTrackStateDispose (& triangle);
+	BKTrackStateDispose (& noise);
 
 	BKInstrumentDispose (& instrument);
-	BKTrackDispose (& square);
-	BKTrackDispose (& triangle);
-	BKTrackDispose (& noise);
 	BKContextDispose (& ctx);
 
 	BKCompilerDispose (& compiler);
 	BKBlipReaderDispose (& reader);
-
-	BKInterpreterDispose (& interpreter);
-	BKInterpreterDispose (& interpreter2);
-	BKInterpreterDispose (& interpreter3);
 
     return 0;
 }
