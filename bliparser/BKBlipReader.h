@@ -26,25 +26,21 @@
 
 #include "BKBase.h"
 
-typedef struct BKBlipReader    BKBlipReader;
-typedef struct BKBlipArgument  BKBlipArgument;
-typedef struct BKBlipCommand   BKBlipCommand;
-
-typedef long (* BKBlipReadCallback) (void * buffer, size_t size, void * userInfo);
+typedef struct BKBlipReader   BKBlipReader;
+typedef struct BKBlipArgument BKBlipArgument;
+typedef struct BKBlipCommand  BKBlipCommand;
 
 struct BKBlipReader
 {
-	unsigned char    * buffer;
-	unsigned char    * bufferPtr;
-	size_t             bufferCapacity;
-	BKBlipArgument   * argBuffer;
-	BKBlipArgument   * argPtr;
-	size_t             argBufferCapacity;
-	unsigned char    * data;
-	unsigned char    * dataPtr;
-	size_t             dataSize;
-	BKBlipReadCallback read;
-	void             * userInfo;
+	unsigned char  * buffer;
+	unsigned char  * bufferPtr;
+	size_t           bufferCapacity;
+	BKBlipArgument * argBuffer;
+	BKBlipArgument * argPtr;
+	size_t           argBufferCapacity;
+	unsigned char  * data;
+	unsigned char  * dataPtr;
+	size_t           dataSize;
 
 };
 
@@ -65,7 +61,7 @@ struct BKBlipCommand
 /**
  *
  */
-extern BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize, BKBlipReadCallback read, void * userInfo);
+extern BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize);
 
 /**
  *

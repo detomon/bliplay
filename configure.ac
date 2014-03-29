@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([bliplay],[0.1.2],[simon@monoxid.net],[bliplay],[])
+AC_INIT([bliplay],[0.2],[simon@monoxid.net],[bliplay],[])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.

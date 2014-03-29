@@ -242,7 +242,8 @@ static BKEnum beatCallback (BKCallbackInfo * info, BKSDLUserData * userInfo)
 	BKInterpreter * interpreter;
 
 	interpreter = userInfo -> interpreter;
-	numSteps    = BKInterpreterTrackAdvance (interpreter, userInfo -> track);
+
+	BKInterpreterTrackAdvance (interpreter, userInfo -> track, & numSteps);
 
 	info -> divider = numSteps;
 
@@ -335,7 +336,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	BKData       * dataObject;
 	BKInt          index;
 
-	BKBlipReaderInit (& parser, data, size, NULL, NULL);
+	BKBlipReaderInit (& parser, data, size);
 
 	while (BKBlipReaderNextCommand (& parser, & item)) {
 		if (strcmpx (item.name, "track") == 0) {

@@ -29,11 +29,13 @@
 #include "item_list.h"
 
 #define BK_INTR_CUSTOM_WAVEFOMR_FLAG (1 << 24)
-#define BK_INTR_STACK_SIZE 64
-#define BK_INTR_MAX_EVENTS 4
+#define BK_INTR_STACK_SIZE 16
+#define BK_INTR_JUMP_STACK_SIZE 16
+#define BK_INTR_MAX_EVENTS 8
 
 typedef struct BKInterpreter BKInterpreter;
 typedef struct BKTickEvent   BKTickEvent;
+typedef struct BKLongJump    BKLongJump;
 
 enum
 {
@@ -64,6 +66,8 @@ enum
 	BKIntrCall,
 	BKIntrJump,
 	BKIntrEnd,
+	BKIntrRepeat,
+	BKIntrSetRepeatStart,
 	BKIntrStepTicks,
 };
 
@@ -73,14 +77,25 @@ struct BKTickEvent
 	BKInt ticks;
 };
 
+struct BKLongJump
+{
+	BKInt   ticks;
+	BKInt   opcodeAddr;
+	BKInt * stackPtr;
+};
+
 struct BKInterpreter
 {
 	BKUInt          flags;
 	BKInt         * opcode;
 	BKInt         * opcodePtr;
+	BKInt           repeatStartAddr;
 	BKInt           stack [BK_INTR_STACK_SIZE];
 	BKInt         * stackPtr;
 	BKInt         * stackEnd;
+	BKLongJump      jumpStack [BK_INTR_JUMP_STACK_SIZE];
+	BKLongJump    * jumpStackPtr;
+	BKLongJump    * jumpStackEnd;
 	BKInstrument ** instruments;
 	BKData       ** waveforms;
 	BKData       ** samples;
@@ -99,9 +114,12 @@ struct BKInterpreter
 extern BKInt BKInterpreterInit (BKInterpreter * interpreter);
 
 /**
- * Apply commands to track and return steps to next event
+ * Apply commands to track
+ *
+ * Return 1 if more events are available otherwise 0
+ * `outTicks` is set to number of ticks to next event
  */
-extern BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track);
+extern BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, BKInt * outTicks);
 
 /**
  * Dispose interpreter
@@ -109,7 +127,7 @@ extern BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * t
 extern void BKInterpreterDispose (BKInterpreter * interpreter);
 
 /**
- * reset interpreter
+ * Reset interpreter
  */
 extern void BKInterpreterReset (BKInterpreter * interpreter);
 

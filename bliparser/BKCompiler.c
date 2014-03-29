@@ -90,7 +90,9 @@ static strval commands [] =
 	{"v",   BKIntrVolume},
 	{"vm",  BKIntrMasterVolume},
 	{"w",   BKIntrWaveform},
-	{"x",   BKIntrEnd},
+	{"x",   BKIntrRepeat},
+	{"xb",  BKIntrSetRepeatStart},
+	{"z",   BKIntrEnd},
 };
 
 #define NUM_COMMANDS (sizeof (commands) / sizeof (strval))
@@ -250,7 +252,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 			case BKIntrSample:        argCount = 1; break;
 			case BKIntrSampleRepeat:  argCount = 1; break;
 			case BKIntrReturn:        argCount = 0; break;
-			case BKIntrGroupJump:     argCount = 1; break;
+			case BKIntrGroupJump:     argCount = 2; break;
 			case BKIntrJump:          argCount = 1; break;
 			case BKIntrEnd:           argCount = 0; break;
 		}
@@ -273,6 +275,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 
 				* allCmds ++ = BKIntrCall;
 				* allCmds ++ = value;
+				* allCmds ++ = * cmdPtr ++; // return after ticks
 			}
 		}
 		// other command
@@ -322,10 +325,6 @@ static BKInt BKCompilerCombine (BKCompiler * compiler, BKInterpreter * interpret
 	cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> cmds);
 	cmds = BKCompilerCombineCmds (compiler, cmds, compiler -> groupCmds);
 
-	interpreter -> opcodePtr = interpreter -> opcode;
-	interpreter -> stackPtr  = interpreter -> stack;
-	interpreter -> stackEnd  = (void *) interpreter -> stack + sizeof (interpreter -> stack);
-
 	return 0;
 }
 
@@ -372,9 +371,12 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 			break;
 		}
 		case BKIntrGroupJump: {
+			arg1 = atoix (instr -> args [1].arg, 0);
+
 			// jump to group
 			item_list_add (cmds, item -> value);
 			item_list_add (cmds, atoix (arg0, 0));
+			item_list_add (cmds, arg1);
 
 			break;
 		}
@@ -552,13 +554,25 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 			item_list_add (cmds, BKMax (atoix (arg0, 0), 1));
 			break;
 		}
+		case BKIntrSetRepeatStart: {
+			item_list_add (cmds, item -> value);
+			break;
+		}
+		case BKIntrRepeat: {
+			item_list_add (cmds, BKIntrJump);
+			item_list_add (cmds, -1);
+
+			break;
+		}
 		case BKIntrEnd: {
 			item_list_add (cmds, item -> value);
 			break;
 		}
-		default:
-			return -1;
+		// ignore invalid commands
+		default: {
+			printf ("\n");
 			break;
+		}
 	}
 
 	return 0;
@@ -584,11 +598,11 @@ BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter, B
 		item_list_add (& compiler -> cmds, BKIntrEnd);
 	}
 
-	BKInterpreterReset (& interpreter);
-
 	// combine commands and group commands into one array
 	if (BKCompilerCombine (compiler, interpreter) < 0)
 		return -1;
+
+	BKInterpreterReset (interpreter);
 
 	return 0;
 }
