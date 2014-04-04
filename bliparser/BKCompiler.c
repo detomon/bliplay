@@ -203,10 +203,9 @@ static BKInt BKCompilerLookupNote (char const * name)
 	item = bsearch (tone, notes, NUM_NOTES, sizeof (strval), (void *) cmdcmp);
 
 	if (item) {
-		octave = BKClamp (octave, 0, 7);
-
 		value = item -> value;
 		value += octave * 12;
+		value = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
 		value <<= BK_FINT20_SHIFT;
 	}
 
