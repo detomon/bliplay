@@ -270,7 +270,12 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 			value = * cmdPtr ++;
 
 			if (value < item_list_length (compiler -> groupOffsets)) {
-				value = compiler -> groupOffsets [value] + item_list_length (compiler -> cmds);
+				value = compiler -> groupOffsets [value];
+
+				if (value == -1)
+					value = 0;
+
+				value += item_list_length (compiler -> cmds);
 
 				* allCmds ++ = BKIntrCall;
 				* allCmds ++ = value;
@@ -345,7 +350,30 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 			// begin group
 			if (strcmpx (arg0, "begin") == 0) {
 				if (compiler -> groupLevel == 0) {
-					item_list_add (& compiler -> groupOffsets, item_list_length (compiler -> groupCmds));
+					BKInt groupOffset, length;
+
+					groupOffset = atoix (instr -> args [1].arg, -1);
+					length      = item_list_length (compiler -> groupOffsets);
+
+					if (groupOffset == -1) {
+						for (BKInt i = 0; i < length; i ++) {
+							if (compiler -> groupOffsets [i] == -1) {
+								groupOffset = i;
+								break;
+							}
+						}
+					}
+
+					if (groupOffset != -1) {
+						for (; length <= groupOffset; length ++)
+							item_list_add (& compiler -> groupOffsets, -1);
+
+						compiler -> groupOffsets [groupOffset] = item_list_length (compiler -> groupCmds);
+					}
+					else {
+						item_list_add (& compiler -> groupOffsets, item_list_length (compiler -> groupCmds));
+					}
+
 					compiler -> activeCmdList = & compiler -> groupCmds;
 					compiler -> groupLevel ++;
 				}
