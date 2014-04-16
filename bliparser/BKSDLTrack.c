@@ -48,6 +48,7 @@ static BKInt parseSequence (BKSDLContext * ctx, BKBlipCommand * item, BKInt * se
 	BKInt length = (BKInt) item -> argCount - 2;
 	BKInt repeatBegin = 0, repeatLength = 0;
 
+	length       = BKMin (length, BK_MAX_SEQ_LENGTH);
 	repeatBegin  = atoix (item -> args [0].arg, 0);
 	repeatLength = atoix (item -> args [1].arg, 1);
 
@@ -70,8 +71,9 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 {
 	BKInstrument * instrument;
 	BKBlipCommand  item;
-	BKInt sequence [BK_MAX_WAVE_LENGTH];
+	BKInt sequence [BK_MAX_SEQ_LENGTH];
 	BKInt sequenceLength, repeatBegin, repeatLength;
+
 
 	instrument = malloc (sizeof (BKInstrument));
 
@@ -86,22 +88,18 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 		}
 		else if (strcmpx (item.name, "v") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_VOLUME, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "a") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
-			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_ARPEGGIO, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "p") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_PANNING, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "dc") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, 1);
-			sequenceLength = BKMin (sequenceLength, BK_MAX_WAVE_LENGTH);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 	}

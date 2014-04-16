@@ -33,6 +33,7 @@
 #define BK_NUM_SAMP_SLOTS  256
 #define BK_NUM_TRACK_SLOTS 256
 #define BK_MAX_WAVE_LENGTH 256
+#define BK_MAX_SEQ_LENGTH  256
 
 typedef struct {
 	BKTrack       * track;
