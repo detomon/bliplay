@@ -67,12 +67,40 @@ static BKInt parseSequence (BKSDLContext * ctx, BKBlipCommand * item, BKInt * se
 	return length;
 }
 
+static BKInt parseEnvelopeSequence (BKSDLContext * ctx, BKBlipCommand * item, BKSequencePhase * phases, BKInt * outRepeatBegin, BKInt * outRepeatLength, BKInt multiplier)
+{
+	BKInt length = (BKInt) item -> argCount - 2;
+	BKInt repeatBegin = 0, repeatLength = 0;
+
+	length       = BKMin (length, BK_MAX_SEQ_LENGTH);
+	repeatBegin  = atoix (item -> args [0].arg, 0);
+	repeatLength = atoix (item -> args [1].arg, 1);
+
+	if (repeatBegin > length)
+		repeatBegin = length;
+
+	if (repeatBegin + repeatLength > length)
+		repeatLength = length - repeatBegin;
+
+	* outRepeatBegin  = repeatBegin;
+	* outRepeatLength = repeatLength;
+
+	for (BKInt i = 0, j = 0; i < length; i += 2, j ++) {
+		phases [j].steps = atoix (item -> args [i + 2].arg, 0);
+		phases [j].value = atoix (item -> args [i + 3].arg, 0) * multiplier;
+	}
+
+	return length / 2;
+}
+
 static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser)
 {
 	BKInstrument * instrument;
 	BKBlipCommand  item;
 	BKInt sequence [BK_MAX_SEQ_LENGTH];
+	BKSequencePhase phases [BK_MAX_SEQ_LENGTH];
 	BKInt sequenceLength, repeatBegin, repeatLength;
+	BKInt asdr [4];
 
 
 	instrument = malloc (sizeof (BKInstrument));
@@ -101,6 +129,29 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 		else if (strcmpx (item.name, "dc") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, 1);
 			BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
+		}
+		else if (strcmpx (item.name, "adsr") == 0) {
+			asdr [0] = atoix (item.args [0].arg, 0);
+			asdr [1] = atoix (item.args [1].arg, 0);
+			asdr [2] = atoix (item.args [2].arg, 0) * (BK_MAX_VOLUME / 255);
+			asdr [3] = atoix (item.args [3].arg, 0);
+			BKInstrumentSetEnvelopeADSR (instrument, asdr [0], asdr [1], asdr [2], asdr [3]);
+		}
+		else if (strcmpx (item.name, "vnv") == 0) {
+			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_VOLUME, phases, sequenceLength, repeatBegin, repeatLength);
+		}
+		else if (strcmpx (item.name, "anv") == 0) {
+			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
+			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_ARPEGGIO, phases, sequenceLength, repeatBegin, repeatLength);
+		}
+		else if (strcmpx (item.name, "pnv") == 0) {
+			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PANNING, phases, sequenceLength, repeatBegin, repeatLength);
+		}
+		else if (strcmpx (item.name, "dcnv") == 0) {
+			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, 1);
+			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_DUTY_CYCLE, phases, sequenceLength, repeatBegin, repeatLength);
 		}
 	}
 
