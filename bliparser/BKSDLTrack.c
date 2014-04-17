@@ -325,6 +325,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 		}
 	}
 
+	BKDataSetAttr (sample, BK_SAMPLE_PITCH, pitch);
 	BKDataGetAttr (sample, BK_NUM_FRAMES, & length);
 
 	if (length < 2) {
