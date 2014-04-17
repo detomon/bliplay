@@ -23,6 +23,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 #include "BKSDLTrack.h"
 
 /**
@@ -236,14 +237,41 @@ static BKEnum numBitsParamFromNumBitsName (char const * numBitsString)
 	return param;
 }
 
+static char * dataFromFile (char const * filename, size_t * outSize)
+{
+	int f = open (filename, O_RDONLY);
+	char * data;
+	off_t size;
+
+	if (f > -1) {
+		size = lseek (f, 0, SEEK_END);
+		lseek (f, 0, SEEK_SET);
+
+		data = malloc (size);
+
+		if (data) {
+			read (f, data, size);
+			* outSize = size;
+
+			return data;
+		}
+	}
+
+	return NULL;
+}
+
 static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 {
 	BKData      * sample;
 	BKBlipCommand item;
-	BKInt         length = 0;
-	BKInt         pitch  = 0;
+	BKInt         length  = 0;
+	BKInt         pitch   = 0;
+	BKInt         numBits = 0;
 	BKInt         numChannels;
 	BKEnum        format;
+	char const  * filename;
+	void        * data = NULL;
+	size_t        dataSize;
 
 	sample = malloc (sizeof (BKData));
 
@@ -269,6 +297,30 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 		else if (strcmpx (item.name, "p") == 0) {
 			pitch = atoix (item.args [0].arg, 0) * (BK_FINT20_UNIT / 100);
 		}
+		else if (strcmpx (item.name, "load") == 0) {
+			if (strcmpx (item.args [0].arg, "raw") == 0) {
+				length = (BKInt) item.argCount;
+
+				if (length >= 3) {
+					numChannels = atoix (item.args [1].arg, 1);
+					format      = numBitsParamFromNumBitsName (item.args [2].arg);
+					filename    = item.args [3].arg;
+
+					data = dataFromFile (filename, & dataSize);
+
+					if (data) {
+						BKDataSetData (sample, data, dataSize, numChannels, format);
+						free (data);
+					}
+				}
+			}
+		}
+		else if (strcmpx (item.name, "nbits") == 0) {
+			length = (BKInt) item.argCount;
+
+			if (length >= 1)
+				numBits = atoix (item.args [0].arg, 16);
+		}
 	}
 
 	BKDataGetAttr (sample, BK_NUM_FRAMES, & length);
@@ -279,8 +331,14 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 		return NULL;
 	}
 
-	BKDataSetAttr (sample, BK_SAMPLE_PITCH, pitch);
-	BKDataNormalize (sample);
+	if (numBits) {
+		BKDataConvertInfo info;
+
+		memset (& info, 0, sizeof (info));
+		info.targetNumBits = numBits;
+
+		BKDataConvert (sample, & info);
+	}
 
 	return sample;
 }
@@ -372,6 +430,36 @@ static BKInt BKSDLContextFindEmptySlot (void ** slots, BKInt numSlots)
 	}
 
 	return -1;
+}
+
+static char * bk_dirname (char * path)
+{
+	BKInt i;
+
+	if (path == NULL || path [0] == 0)
+		return ".";
+
+	for (i = strlen (path) - 1; i >= 0; i --) {
+		if (path [i] != '/')
+			break;
+	}
+
+	for (; i >= 0; i --) {
+		if (path [i] == '/')
+			break;
+	}
+
+	for (; i >= 0; i --) {
+		if (path [i] != '/')
+			break;
+	}
+
+	if (i == 0)
+		return ".";
+
+	path [i + 1] = 0;
+
+	return path;
 }
 
 BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
@@ -573,39 +661,23 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 	return 0;
 }
 
-static char * dataFromFile (char const * filename, size_t * outSize)
-{
-	int f = open (filename, O_RDONLY);
-	char * data;
-	off_t size;
-
-	if (f > -1) {
-		size = lseek (f, 0, SEEK_END);
-		lseek (f, 0, SEEK_SET);
-
-		data = malloc (size);
-
-		if (data) {
-			read (f, data, size);
-			* outSize = size;
-
-			return data;
-		}
-	}
-
-	return NULL;
-}
-
 BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 {
 	size_t size;
 	char * data;
+	char   dirbuf [PATH_MAX], * dir;
+	char   cwd [PATH_MAX];
 	BKInt  ret = 0;
 
 	data = dataFromFile (filename, & size);
 
 	if (data) {
+		strcpy (dirbuf, filename);
+		dir = bk_dirname (dirbuf);
+		getcwd (cwd, sizeof (cwd));
+		chdir (dir);
 		ret = BKSDLContextLoadData (ctx, data, size);
+		chdir (cwd);
 		free (data);
 	}
 	else {
