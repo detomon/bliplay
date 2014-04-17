@@ -292,6 +292,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 				format      = numBitsParamFromNumBitsName (item.args [1].arg);
 
 				BKDataSetData (sample, item.args [2].arg, item.args [2].size, numChannels, format);
+				BKDataNormalize (sample);
 			}
 		}
 		else if (strcmpx (item.name, "p") == 0) {
@@ -310,6 +311,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 
 					if (data) {
 						BKDataSetData (sample, data, dataSize, numChannels, format);
+						BKDataNormalize (sample);
 						free (data);
 					}
 				}
