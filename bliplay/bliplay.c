@@ -27,6 +27,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "BKSDLTrack.h"
+#include "BKWaveFileWriter.h"
 
 #ifndef PROGRAM_NAME
 #define PROGRAM_NAME "bliplay"
@@ -49,6 +50,13 @@ enum
 	QUIT_COMMAND,
 	PAUSE_COMMAND,
 	PLAY_COMMAND,
+};
+
+enum
+{
+	OUTPUT_TYPE_NONE,
+	OUTPUT_TYPE_RAW,
+	OUTPUT_TYPE_WAVE,
 };
 
 struct commandDef
@@ -77,6 +85,9 @@ static FILE         * outputFile;
 static BKSDLContext   ctx, pauseCtx;
 static BKSDLContext * runCtx;
 static BKTime         seekTime;
+static BKEnum         outputType = OUTPUT_TYPE_NONE;
+
+static BKWaveFileWriter waveWriter;
 
 static int set_nocanon (int nocanon)
 {
@@ -235,8 +246,16 @@ static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 
 	BKContextGenerate (& runCtx -> ctx, (BKFrame *) stream, numFrames);
 
-	if (outputFile)
-		fwrite (stream, len / sizeof (BKFrame), sizeof (BKFrame), outputFile);
+	switch (outputType) {
+		case OUTPUT_TYPE_RAW: {
+			fwrite (stream, len / sizeof (BKFrame), sizeof (BKFrame), outputFile);
+			break;
+		}
+		case OUTPUT_TYPE_WAVE: {
+			BKWaveFileWriterAppendFrames (& waveWriter, stream, numFrames * numChannels);
+			break;
+		}
+	}
 }
 
 static BKInt initSDL (BKSDLContext * ctx, char const ** error)
@@ -322,6 +341,31 @@ static BKInt parseSeekTime (char const * string, BKTime * outTime, BKInt speed)
 	return 0;
 }
 
+static int stringEndsWith (char const * str, char const * tail)
+{
+	char const * sc, * tc;
+	size_t sl, tl;
+
+	if (str == NULL || tail == NULL)
+		return 0;
+
+	sl = strlen (str);
+	tl = strlen (tail);
+
+	if (sl == 0 || tl == 0 || tl > sl)
+		return 0;
+
+	sc = & str [sl - 1];
+	tc = & tail [tl - 1];
+
+	for (; tc > tail; tc --, sc --) {
+		if (* tc != * sc)
+			return 0;
+	}
+
+	return 1;
+}
+
 static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 {
 	int    opt;
@@ -399,7 +443,19 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 		outputFile = fopen (outputFilename, mode);
 
 		if (outputFile == NULL) {
-			fprintf (stderr, "Couldn't open file for raw output: %s\n", outputFilename);
+			fprintf (stderr, "Couldn't open file for output: %s\n", outputFilename);
+			return -1;
+		}
+
+		if (stringEndsWith (outputFilename, ".wav")) {
+			outputType = OUTPUT_TYPE_WAVE;
+			BKWaveFileWriterInit (& waveWriter, 2, sampleRate, outputFile);
+		}
+		else if (stringEndsWith (outputFilename, ".raw")) {
+			outputType = OUTPUT_TYPE_RAW;
+		}
+		else {
+			fprintf (stderr, "Only .raw and .wav is supported for output\n");
 			return -1;
 		}
 	}
@@ -606,8 +662,14 @@ static void play (void)
 
 static void cleanup ()
 {
-	if (outputFile)
+	if (outputFile) {
+		if (outputType == OUTPUT_TYPE_WAVE) {
+			BKWaveFileWriterTerminate (& waveWriter);
+			BKWaveFileWriterDispose (& waveWriter);
+		}
+
 		fclose (outputFile);
+	}
 }
 
 #ifdef main
