@@ -38,9 +38,8 @@ enum
 	DISPLAY_FLAG      = 1 << 1, // only in terminal
 	PLAY_FLAG         = 1 << 2,
 	CHECK_FLAG        = 1 << 3,
-	TRUNC_OUTPUT_FLAG = 1 << 5,
-	NO_PAUSE_SND_FLAG = 1 << 6,
-	HAS_SEEK_TIME     = 1 << 7,
+	NO_PAUSE_SND_FLAG = 1 << 4,
+	HAS_SEEK_TIME     = 1 << 5,
 };
 
 enum
@@ -224,7 +223,6 @@ struct option const options [] = {
 	{"play",         optional_argument, NULL, 'p'},
 	{"check",        no_argument,       NULL, 'c'},
 	{"output",       required_argument, NULL, 'o'},
-	{"trunc-output", no_argument,       NULL, 'q'},
 	{"no-pause-snd", no_argument,       NULL, 'u'},
 	{"fast-forward", required_argument, NULL, 'f'},
 	{NULL,           0,                 NULL, 0},
@@ -363,10 +361,6 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 				outputFilename = optarg;
 				break;
 			}
-			case 'q': {
-				flags |= TRUNC_OUTPUT_FLAG;
-				break;
-			}
 			case 'r': {
 				sampleRate = atoi (optarg);
 				break;
@@ -400,11 +394,7 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 	if (outputFilename) {
 		char const * mode;
 
-		if (flags & TRUNC_OUTPUT_FLAG) {
-			mode = "wb+";
-		} else {
-			mode = "ab+";
-		}
+		mode = "wb+";
 
 		outputFile = fopen (outputFilename, mode);
 
