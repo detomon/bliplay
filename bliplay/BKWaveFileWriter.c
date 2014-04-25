@@ -190,7 +190,7 @@ BKInt BKWaveFileWriterAppendFrames (BKWaveFileWriter * writer, BKFrame const * f
 		while (numFrames) {
 			writeSize = BKMin (bufferSize, numFrames);
 
-			for (BKInt i = 0; i < writer; i ++)
+			for (BKInt i = 0; i < writeSize; i ++)
 				buffer [i] = BKInt16Reverse (frames [i]);
 
 			frames += writeSize;
