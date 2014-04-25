@@ -60,6 +60,8 @@ enum
 	BKIntrWaveform,
 	BKIntrSample,
 	BKIntrSampleRepeat,
+	BKIntrSampleOffset,
+	BKIntrSampleEnd,
 	BKIntrReturn,
 	BKIntrGroup,
 	BKIntrGroupJump,
