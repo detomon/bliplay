@@ -449,7 +449,7 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 
 		if (stringEndsWith (outputFilename, ".wav")) {
 			outputType = OUTPUT_TYPE_WAVE;
-			BKWaveFileWriterInit (& waveWriter, 2, sampleRate, outputFile);
+			BKWaveFileWriterInit (& waveWriter, outputFile, 2, sampleRate);
 		}
 		else if (stringEndsWith (outputFilename, ".raw")) {
 			outputType = OUTPUT_TYPE_RAW;

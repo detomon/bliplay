@@ -249,7 +249,7 @@ BKInt BKWaveFileWriteData (FILE * file, BKData const * data, BKInt sampleRate)
 {
 	BKWaveFileWriter writer;
 
-	if (BKWaveFileWriterInit (& writer, sampleRate, data -> numChannels, file) < 0)
+	if (BKWaveFileWriterInit (& writer, file, sampleRate, data -> numChannels) < 0)
 		return -1;
 
 	BKWaveFileWriterAppendFrames (& writer, data -> frames, data -> numFrames * data -> numChannels);
