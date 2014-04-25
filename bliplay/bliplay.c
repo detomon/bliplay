@@ -252,7 +252,7 @@ static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 			break;
 		}
 		case OUTPUT_TYPE_WAVE: {
-			BKWaveFileWriterAppendFrames (& waveWriter, stream, numFrames * numChannels);
+			BKWaveFileWriterAppendFrames (& waveWriter, (BKFrame *) stream, numFrames * numChannels);
 			break;
 		}
 	}
