@@ -104,6 +104,8 @@ static int set_nocanon (int nocanon)
 	}
 
 	tcsetattr (STDIN_FILENO, TCSANOW, & newtc);
+
+	return 0;
 }
 
 static int getchar_nocanon (unsigned tcflags)
