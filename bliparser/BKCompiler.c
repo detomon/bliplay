@@ -340,12 +340,14 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 	BKInt ** cmds = compiler -> activeCmdList;
 	strval * item;
 
+	char const * arg0 = instr -> args [0].arg;
+
 	item = bsearch (instr -> name, commands, NUM_COMMANDS, sizeof (strval), (void *) cmdcmp);
 
-	if (item == NULL)
+	if (item == NULL) {
+		printf ("*** Unknown command '%s'\n", instr -> name);
 		return 0;
-
-	char const * arg0 = instr -> args [0].arg;
+	}
 
 	switch (item -> value) {
 		case BKIntrGroup: {
@@ -608,7 +610,6 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 		}
 		// ignore invalid commands
 		default: {
-			printf ("\n");
 			break;
 		}
 	}
