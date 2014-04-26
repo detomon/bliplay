@@ -72,8 +72,7 @@ static strval commands [] =
 	{"at",  BKIntrAttackTicks},
 	{"d",   BKIntrSample},
 	{"dc",  BKIntrDutyCycle},
-	{"de",  BKIntrSampleEnd},
-	{"do",  BKIntrSampleOffset},
+	{"dn",  BKIntrSampleRange},
 	{"dr",  BKIntrSampleRepeat},
 	{"e",   BKIntrEffect},
 	{"g",   BKIntrGroupJump},
@@ -252,8 +251,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 			case BKIntrWaveform:      argCount = 1; break;
 			case BKIntrSample:        argCount = 1; break;
 			case BKIntrSampleRepeat:  argCount = 1; break;
-			case BKIntrSampleOffset:  argCount = 1; break;
-			case BKIntrSampleEnd:     argCount = 1; break;
+			case BKIntrSampleRange:   argCount = 2; break;
 			case BKIntrReturn:        argCount = 0; break;
 			case BKIntrGroupJump:     argCount = 2; break;
 			case BKIntrJump:          argCount = 1; break;
@@ -580,14 +578,13 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 			item_list_add (cmds, atoix (arg0, 0));
 			break;
 		}
-		case BKIntrSampleOffset: {
+		case BKIntrSampleRange: {
+			value0 = atoix (instr -> args [0].arg, 0);
+			arg1   = atoix (instr -> args [1].arg, 0);
+
 			item_list_add (cmds, item -> value);
-			item_list_add (cmds, atoix (arg0, 0));
-			break;
-		}
-		case BKIntrSampleEnd: {
-			item_list_add (cmds, item -> value);
-			item_list_add (cmds, atoix (arg0, 0));
+			item_list_add (cmds, value0);
+			item_list_add (cmds, arg1);
 			break;
 		}
 		case BKIntrArpeggioSpeed: {

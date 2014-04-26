@@ -430,14 +430,9 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				BKTrackSetAttr (track, BK_SAMPLE_REPEAT, value0);
 				break;
 			}
-			case BKIntrSampleOffset: {
-				value0 = * (opcode ++);
-				BKTrackSetAttr (track, BK_SAMPLE_OFFSET, value0);
-				break;
-			}
-			case BKIntrSampleEnd: {
-				value0 = * (opcode ++);
-				BKTrackSetAttr (track, BK_SAMPLE_END, value0);
+			case BKIntrSampleRange: {
+				BKTrackSetPtr (track, BK_SAMPLE_RANGE, opcode);
+				opcode += 2;
 				break;
 			}
 			case BKIntrReturn: {
