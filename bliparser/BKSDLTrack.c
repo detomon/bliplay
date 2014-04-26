@@ -295,7 +295,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 				BKDataNormalize (sample);
 			}
 		}
-		else if (strcmpx (item.name, "p") == 0) {
+		else if (strcmpx (item.name, "pt") == 0) {
 			pitch = atoix (item.args [0].arg, 0) * (BK_FINT20_UNIT / 100);
 		}
 		else if (strcmpx (item.name, "load") == 0) {
