@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/stat.h>
 #include "BKSDLTrack.h"
 
 /**
@@ -670,7 +671,16 @@ BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 	char * data;
 	char   dirbuf [PATH_MAX], * dir;
 	char   cwd [PATH_MAX];
+	struct stat filestat;
 	BKInt  ret = 0;
+
+	stat (filename, & filestat);
+
+	if (filestat.st_mode & S_IFDIR) {
+		strcpy (dirbuf, filename);
+		strcat (dirbuf, "/DATA.blip");
+		filename = dirbuf;
+	}
 
 	data = dataFromFile (filename, & size);
 
