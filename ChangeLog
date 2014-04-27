@@ -1,3 +1,11 @@
+Changes in bliplay 0.3:
+
+* Added sample repeat command "dn"
+* Added envelope sequence commands
+* Added command to load samples from external audio files
+* Added WAVE output format
+* Renamed sample picth command to "pt" to match notation command name
+
 Changes in bliplay 0.2:
 
 * Implemented repeat mark command
