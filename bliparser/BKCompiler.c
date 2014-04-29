@@ -196,10 +196,11 @@ static BKInt BKCompilerLookupNote (char const * name)
 	char     tone [3];
 	BKUInt   octave = 0;
 	BKUInt   value  = 0;
+	BKInt    pitch  = 0;
 	strval * item;
 
 	strcpy (tone, "");  // empty name
-	sscanf (name, "%2[a-z#]%u", tone, & octave);  // scan string; d#3 => "d#", 3
+	sscanf (name, "%2[a-z#]%u%d", tone, & octave, & pitch);  // scan string; d#3[+-p] => "d#", 3, p
 
 	item = bsearch (tone, notes, NUM_NOTES, sizeof (strval), (void *) cmdcmp);
 
@@ -208,6 +209,7 @@ static BKInt BKCompilerLookupNote (char const * name)
 		value += octave * 12;
 		value = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
 		value <<= BK_FINT20_SHIFT;
+		value += pitch * BK_FINT20_UNIT / 100;
 	}
 
 	return value;
