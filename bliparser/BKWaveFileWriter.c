@@ -22,40 +22,11 @@
  */
 
 #include "BKWaveFileWriter.h"
+#include "BKWaveFile_internal.h"
 
 /**
  * https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
  */
-
-typedef struct BKWaveFileHeader     BKWaveFileHeader;
-typedef struct BKWaveFileHeaderFmt  BKWaveFileHeaderFmt;
-typedef struct BKWaveFileHeaderData BKWaveFileHeaderData;
-
-struct BKWaveFileHeader
-{
-	char     chunkID [4];
-	uint32_t chunkSize;
-	char     format [4];
-};
-
-struct BKWaveFileHeaderFmt
-{
-	char     subchunkID [4];
-	uint32_t subchunkSize;
-	uint16_t audioFormat;
-	uint16_t numChannels;
-	uint32_t sampleRate;
-	uint32_t byteRate;
-	uint16_t blockAlign;
-	uint16_t bitsPerSample;
-};
-
-struct BKWaveFileHeaderData
-{
-	char     subchunkID [4];
-	uint32_t subchunkSize;
-	char     data [];
-};
 
 static BKWaveFileHeader const waveFileHeader =
 {
@@ -81,40 +52,6 @@ static BKWaveFileHeaderData const waveFileHeaderData =
 	.subchunkID   = "data",
 	.subchunkSize = 0,
 };
-
-static BKInt BKSystemIsBigEndian (void)
-{
-	union { BKUInt i; char c [4]; } sentinel;
-
-	sentinel.i = 0x01020304;
-
-	return sentinel.c[0] == 0x01;
-}
-
-static uint32_t BKInt32Reverse (uint32_t i)
-{
-	char c;
-	union { uint32_t i; char c [4]; } sentinel;
-
-	sentinel.i = i;
-	c = sentinel.c [0]; sentinel.c [0] = sentinel.c [3]; sentinel.c [3] = c;
-	c = sentinel.c [1]; sentinel.c [1] = sentinel.c [2]; sentinel.c [2] = c;
-	i = sentinel.i;
-
-	return i;
-}
-
-static uint16_t BKInt16Reverse (uint16_t i)
-{
-	char c;
-	union { uint16_t i; char c [2]; } sentinel;
-
-	sentinel.i = i;
-	c = sentinel.c [0]; sentinel.c [0] = sentinel.c [1]; sentinel.c [1] = c;
-	i = sentinel.i;
-
-	return i;
-}
 
 BKInt BKWaveFileWriterInit (BKWaveFileWriter * writer, FILE * file, BKInt numChannels, BKInt sampleRate)
 {

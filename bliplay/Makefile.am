@@ -3,7 +3,7 @@ AM_CFLAGS = @BK_STD_CFLAGS@ -I$(srcdir)/../BlipKit/src -I$(srcdir)/../bliparser 
 bin_PROGRAMS = bliplay chiptest
 
 bliplay_SOURCES = \
-	bliplay.c BKWaveFileWriter.c
+	bliplay.c
 
 chiptest_SOURCES = \
 	chiptest.c

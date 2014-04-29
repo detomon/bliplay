@@ -27,6 +27,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "BKSDLTrack.h"
+#include "BKWaveFileReader.h"
 #include "BKWaveFileWriter.h"
 
 #ifndef PROGRAM_NAME
