@@ -209,7 +209,7 @@ static BKInt BKCompilerLookupNote (char const * name)
 		value += octave * 12;
 		value = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
 		value <<= BK_FINT20_SHIFT;
-		value += pitch * BK_FINT20_UNIT / 100;
+		value += BK_FINT20_UNIT / 100 * pitch;
 	}
 
 	return value;
