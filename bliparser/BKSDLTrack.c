@@ -103,6 +103,7 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 	BKSequencePhase phases [BK_MAX_SEQ_LENGTH];
 	BKInt sequenceLength, repeatBegin, repeatLength;
 	BKInt asdr [4];
+	BKInt res = 0;
 
 
 	instrument = malloc (sizeof (BKInstrument));
@@ -118,43 +119,46 @@ static BKInstrument * parseInstrument (BKSDLContext * ctx, BKBlipReader * parser
 		}
 		else if (strcmpx (item.name, "v") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			BKInstrumentSetSequence (instrument, BK_SEQUENCE_VOLUME, sequence, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_VOLUME, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "a") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
-			BKInstrumentSetSequence (instrument, BK_SEQUENCE_ARPEGGIO, sequence, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_ARPEGGIO, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "p") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			BKInstrumentSetSequence (instrument, BK_SEQUENCE_PANNING, sequence, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_PANNING, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "dc") == 0) {
 			sequenceLength = parseSequence (ctx, & item, sequence, & repeatBegin, & repeatLength, 1);
-			BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "adsr") == 0) {
 			asdr [0] = atoix (item.args [0].arg, 0);
 			asdr [1] = atoix (item.args [1].arg, 0);
 			asdr [2] = atoix (item.args [2].arg, 0) * (BK_MAX_VOLUME / 255);
 			asdr [3] = atoix (item.args [3].arg, 0);
-			BKInstrumentSetEnvelopeADSR (instrument, asdr [0], asdr [1], asdr [2], asdr [3]);
+			res = BKInstrumentSetEnvelopeADSR (instrument, asdr [0], asdr [1], asdr [2], asdr [3]);
 		}
 		else if (strcmpx (item.name, "vnv") == 0) {
 			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_VOLUME, phases, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_VOLUME, phases, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "anv") == 0) {
 			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
-			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_ARPEGGIO, phases, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_ARPEGGIO, phases, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "pnv") == 0) {
 			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
-			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PANNING, phases, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PANNING, phases, sequenceLength, repeatBegin, repeatLength);
 		}
 		else if (strcmpx (item.name, "dcnv") == 0) {
 			sequenceLength = parseEnvelopeSequence (ctx, & item, phases, & repeatBegin, & repeatLength, 1);
-			BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_DUTY_CYCLE, phases, sequenceLength, repeatBegin, repeatLength);
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_DUTY_CYCLE, phases, sequenceLength, repeatBegin, repeatLength);
 		}
+
+		if (res != 0)
+			fprintf (stderr, "*** Invalid sequence '%s' (%d)\n", item.name, res);
 	}
 
 	return instrument;
