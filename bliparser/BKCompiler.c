@@ -439,7 +439,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 					compiler -> flags |= BKCompilerArpeggioFlag;
 				}
 				// disable arpeggio
-				else if (compiler -> flags & BKCompilerArpeggioFlag) {
+				else {
 					item_list_add (cmds, BKIntrArpeggio);
 					item_list_add (cmds, 0);
 					compiler -> flags &= ~BKCompilerArpeggioFlag;
@@ -450,14 +450,16 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 		}
 		case BKIntrRelease:
 		case BKIntrMute: {
-			item_list_add (cmds, item -> value);
-
 			// deactivate arpeggio
 			if (compiler -> flags & BKCompilerArpeggioFlag) {
-				item_list_add (cmds, BKIntrArpeggio);
-				item_list_add (cmds, 0);
-				compiler -> flags &= ~BKCompilerArpeggioFlag;
+				if (item -> value == BKIntrMute) {
+					item_list_add (cmds, BKIntrArpeggio);
+					item_list_add (cmds, 0);
+					compiler -> flags &= ~BKCompilerArpeggioFlag;
+				}
 			}
+
+			item_list_add (cmds, item -> value);
 
 			break;
 		}
