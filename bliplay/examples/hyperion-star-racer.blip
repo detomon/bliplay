@@ -1071,7 +1071,7 @@ track:begin:noise;
 		i:5;
 		p:0;v:192;a:c5;s:2;r;
 		i:4;
-		p0;v:96;rt:12;a:c6;s:1;r;
+		p:0;v:96;rt:12;a:c6;s:1;r;
 		p:0;v:64;a:c5;s:1;r;
 		p:0;pw:16;rt:20;v:230;a:c1;a:c0;s:2;r;pw:0;
 		p:0;v:96;rt:12;a:c6;s:1;r;
