@@ -169,7 +169,7 @@ BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [
 		while (readSize) {
 			switch (frameSize) {
 				case 1: {
-					frame = (* (char *) bufferPtr);
+					frame = ((BKFrame) (* (char *) bufferPtr)) << 8;
 					break;
 				}
 				case 2: {
