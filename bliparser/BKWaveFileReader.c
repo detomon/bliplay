@@ -113,6 +113,7 @@ BKInt BKWaveFileReaderReadHeader (BKWaveFileReader * reader, BKInt * outNumChann
 				frameSize = 1;
 				break;
 			}
+			default:
 			case 16: {
 				frameSize = 2;
 				break;
@@ -120,14 +121,14 @@ BKInt BKWaveFileReaderReadHeader (BKWaveFileReader * reader, BKInt * outNumChann
 		}
 
 		reader -> dataSize  = headerData.subchunkSize;
-		reader -> numFrames = reader -> dataSize / reader -> numChannels / frameSize;
+		reader -> numFrames = (BKInt)reader -> dataSize / reader -> numChannels / frameSize;
 	}
 
 	* outNumChannels = reader -> numChannels;
 	* outSampleRate  = reader -> sampleRate;
 	* outNumFrames   = reader -> numFrames;
 
-	return -1;
+	return 0;
 }
 
 BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [])
@@ -145,6 +146,7 @@ BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [
 			frameSize = 1;
 			break;
 		}
+		default:
 		case 16: {
 			frameSize = 2;
 			break;
@@ -172,6 +174,7 @@ BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [
 					frame = ((BKFrame) (* (char *) bufferPtr)) << 8;
 					break;
 				}
+				default:
 				case 2: {
 					frame = (* (BKFrame *) bufferPtr);
 					if (reverseEndian)
@@ -190,5 +193,5 @@ BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [
 
 	memset (outFrames, 0, reader -> dataSize - writeSize);
 
-	return -1;
+	return 0;
 }
