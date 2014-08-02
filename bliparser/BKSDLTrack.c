@@ -695,7 +695,10 @@ BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 	data = dataFromFile (filename, & size);
 
 	if (data) {
-		strcpy (dirbuf, filename);
+		if (dirbuf != filename) {
+			strcpy (dirbuf, filename);
+		}
+
 		dir = bk_dirname (dirbuf);
 		getcwd (cwd, sizeof (cwd));
 		chdir (dir);
