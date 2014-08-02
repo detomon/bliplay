@@ -678,7 +678,9 @@ BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 	struct stat filestat;
 	BKInt  ret = 0;
 
-	stat (filename, & filestat);
+	if (stat (filename, & filestat) < 0) {
+		return -1;
+	}
 
 	if (filestat.st_mode & S_IFDIR) {
 		strcpy (dirbuf, filename);
