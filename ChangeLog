@@ -1,3 +1,9 @@
+Changes in bliplay 0.4:
+
+* Added bundled file format
+* Added pitch option to attack command
+* Fixed stuff
+
 Changes in bliplay 0.3:
 
 * Added sample repeat command "dn"
