@@ -410,7 +410,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 						masterVolume = BK_MAX_VOLUME * 0.15;
 						break;
 					}
-					case BK_TRIANGLE: {
+					case BK_TRIANGLE:
+					case BK_SINE: {
 						masterVolume = BK_MAX_VOLUME * 0.30;
 						break;
 					}

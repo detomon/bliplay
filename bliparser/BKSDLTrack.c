@@ -533,6 +533,10 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					waveform     = BK_SAWTOOTH;
 					masterVolume = BK_MAX_VOLUME * 0.15;
 				}
+				else if (strcmpx (type, "sine") == 0) {
+					waveform     = BK_SINE;
+					masterVolume = BK_MAX_VOLUME * 0.30;
+				}
 
 				masterVolume = (masterVolume * globalVolume) >> BK_VOLUME_SHIFT;
 
