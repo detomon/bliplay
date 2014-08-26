@@ -43,6 +43,7 @@ enum
 	NO_PAUSE_SND_FLAG = 1 << 4,
 	HAS_SEEK_TIME     = 1 << 5,
 	PRINT_NO_TIME     = 1 << 6,
+	NO_SOUND          = 1 << 7,
 };
 
 enum
@@ -130,9 +131,11 @@ static int getchar_nocanon (unsigned tcflags)
 static void printOptionHelp (void)
 {
 	printf (
-		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-n | --no-time] file\n"
+		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-n | --no-time] [-m | --no-sound] file\n"
 		"       %1$s [-c | --check] file\n"
-		"       %1$s [-h | --help]\n",
+		"       %1$s [-h | --help]\n"
+		"\n"
+		"       --no-sound implicitly sets --play\n",
 		PROGRAM_NAME
 	);
 }
@@ -241,8 +244,23 @@ struct option const options [] = {
 	{"no-pause-snd", no_argument,       NULL, 'u'},
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"no-time",      no_argument,       NULL, 'n'},
+	{"no-sound",     no_argument,       NULL, 'm'},
 	{NULL,           0,                 NULL, 0},
 };
+
+static void outputChunk (BKFrame const * frames, BKInt numFrames)
+{
+	switch (outputType) {
+		case OUTPUT_TYPE_RAW: {
+			fwrite (frames, numFrames, sizeof (BKFrame), outputFile);
+			break;
+		}
+		case OUTPUT_TYPE_WAVE: {
+			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames);
+			break;
+		}
+	}
+}
 
 static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 {
@@ -250,17 +268,7 @@ static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 	BKUInt numFrames   = len / sizeof (BKFrame) / numChannels;
 
 	BKContextGenerate (& runCtx -> ctx, (BKFrame *) stream, numFrames);
-
-	switch (outputType) {
-		case OUTPUT_TYPE_RAW: {
-			fwrite (stream, len / sizeof (BKFrame), sizeof (BKFrame), outputFile);
-			break;
-		}
-		case OUTPUT_TYPE_WAVE: {
-			BKWaveFileWriterAppendFrames (& waveWriter, (BKFrame *) stream, numFrames * numChannels);
-			break;
-		}
-	}
+	outputChunk ((BKFrame *) stream, numFrames * numChannels);
 }
 
 static BKInt initSDL (BKSDLContext * ctx, char const ** error)
@@ -425,6 +433,10 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 			}
 			case 'n': {
 				flags |= PRINT_NO_TIME;
+				break;
+			}
+			case 'm': {
+				flags |= NO_SOUND | PLAY_FLAG;
 				break;
 			}
 			default: {
@@ -690,10 +702,24 @@ static BKInt handleKeys ()
 
 static void play (void)
 {
-	handleKeys ();
+	if (flags & NO_SOUND) {
+		BKInt numFrames = 512;
+		BKInt numChannels = ctx.ctx.numChannels;
+		BKFrame * frames = malloc (numFrames * numChannels * sizeof (BKFrame));
 
-	SDL_PauseAudio (1);
-	SDL_CloseAudio ();
+		while (checkTrackStatus ()) {
+			BKContextGenerate (& ctx.ctx, frames, numFrames);
+			outputChunk (frames, numFrames * numChannels);
+		}
+
+		free (frames);
+	}
+	else {
+		handleKeys ();
+
+		SDL_PauseAudio (1);
+		SDL_CloseAudio ();
+	}
 }
 
 static void cleanup ()
