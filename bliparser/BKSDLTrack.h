@@ -35,20 +35,28 @@
 #define BK_MAX_WAVE_LENGTH 256
 #define BK_MAX_SEQ_LENGTH  256
 
-typedef struct {
+typedef struct BKSDLUserData BKSDLUserData;
+typedef struct BKSDLTrack    BKSDLTrack;
+typedef struct BKSDLContext  BKSDLContext;
+
+struct BKSDLUserData
+{
 	BKTrack       * track;
 	BKInterpreter * interpreter;
-} BKSDLUserData;
+};
 
-typedef struct {
-	BKTrack       track;
-	BKDivider     divider;
-	BKInterpreter interpreter;
-	BKSDLUserData userData;
-	BKInt         initWaveform;
-} BKSDLTrack;
+struct BKSDLTrack
+{
+	BKSDLContext * ctx;
+	BKTrack        track;
+	BKDivider      divider;
+	BKInterpreter  interpreter;
+	BKSDLUserData  userData;
+	BKInt          initWaveform;
+};
 
-typedef struct {
+struct BKSDLContext
+{
 	BKContext      ctx;
 	BKUInt         speed;
 	BKInstrument * instruments [BK_NUM_INSTR_SLOTS];
@@ -59,7 +67,7 @@ typedef struct {
 	BKUInt         numSamples;
 	BKSDLTrack   * tracks [BK_NUM_TRACK_SLOTS];
 	BKUInt         numTracks;
-} BKSDLContext;
+};
 
 /**
  *

@@ -497,6 +497,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					memset (track, 0, sizeof (BKSDLTrack));
 					BKTrackInit (& track -> track, 0);
 					BKInterpreterInit (& track -> interpreter);
+					track -> ctx = ctx;
 
 					BKSDLUserData * userData = & track -> userData;
 					userData -> track        = & track -> track;
@@ -532,6 +533,10 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 				else if (strcmpx (type, "sawtooth") == 0) {
 					waveform     = BK_SAWTOOTH;
 					masterVolume = BK_MAX_VOLUME * 0.15;
+				}
+				else if (strcmpx (type, "sine") == 0) {
+					waveform     = BK_SINE;
+					masterVolume = BK_MAX_VOLUME * 0.30;
 				}
 
 				masterVolume = (masterVolume * globalVolume) >> BK_VOLUME_SHIFT;

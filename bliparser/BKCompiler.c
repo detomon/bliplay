@@ -119,6 +119,7 @@ static strval waveforms [] =
 {
 	{"noise",    BK_NOISE},
 	{"sawtooth", BK_SAWTOOTH},
+	{"sine",     BK_SINE},
 	{"square",   BK_SQUARE},
 	{"triangle", BK_TRIANGLE},
 };

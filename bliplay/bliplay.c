@@ -42,6 +42,8 @@ enum
 	CHECK_FLAG        = 1 << 3,
 	NO_PAUSE_SND_FLAG = 1 << 4,
 	HAS_SEEK_TIME     = 1 << 5,
+	PRINT_NO_TIME     = 1 << 6,
+	NO_SOUND          = 1 << 7,
 };
 
 enum
@@ -129,9 +131,11 @@ static int getchar_nocanon (unsigned tcflags)
 static void printOptionHelp (void)
 {
 	printf (
-		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-r | --samplerate] file\n"
+		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-n | --no-time] [-m | --no-sound] file\n"
 		"       %1$s [-c | --check] file\n"
-		"       %1$s [-h | --help]\n",
+		"       %1$s [-h | --help]\n"
+		"\n"
+		"       --no-sound implicitly sets --play\n",
 		PROGRAM_NAME
 	);
 }
@@ -239,8 +243,24 @@ struct option const options [] = {
 	{"output",       required_argument, NULL, 'o'},
 	{"no-pause-snd", no_argument,       NULL, 'u'},
 	{"fast-forward", required_argument, NULL, 'f'},
+	{"no-time",      no_argument,       NULL, 'n'},
+	{"no-sound",     no_argument,       NULL, 'm'},
 	{NULL,           0,                 NULL, 0},
 };
+
+static void outputChunk (BKFrame const * frames, BKInt numFrames)
+{
+	switch (outputType) {
+		case OUTPUT_TYPE_RAW: {
+			fwrite (frames, numFrames, sizeof (BKFrame), outputFile);
+			break;
+		}
+		case OUTPUT_TYPE_WAVE: {
+			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames);
+			break;
+		}
+	}
+}
 
 static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 {
@@ -248,17 +268,7 @@ static void fillAudio (BKSDLContext * ctx, Uint8 * stream, int len)
 	BKUInt numFrames   = len / sizeof (BKFrame) / numChannels;
 
 	BKContextGenerate (& runCtx -> ctx, (BKFrame *) stream, numFrames);
-
-	switch (outputType) {
-		case OUTPUT_TYPE_RAW: {
-			fwrite (stream, len / sizeof (BKFrame), sizeof (BKFrame), outputFile);
-			break;
-		}
-		case OUTPUT_TYPE_WAVE: {
-			BKWaveFileWriterAppendFrames (& waveWriter, (BKFrame *) stream, numFrames * numChannels);
-			break;
-		}
-	}
+	outputChunk ((BKFrame *) stream, numFrames * numChannels);
 }
 
 static BKInt initSDL (BKSDLContext * ctx, char const ** error)
@@ -421,6 +431,14 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 				strncpy (seekTimeString, optarg, 64);
 				break;
 			}
+			case 'n': {
+				flags |= PRINT_NO_TIME;
+				break;
+			}
+			case 'm': {
+				flags |= NO_SOUND | PLAY_FLAG;
+				break;
+			}
 			default: {
 				fprintf (stderr, "Unknown option %c near %s\n", opt, argv [longoptind]);
 				printOptionHelp ();
@@ -549,6 +567,33 @@ static void seekContext (BKSDLContext * ctx, BKTime time)
 	BKContextGenerateToTime (& ctx -> ctx, time, pushFrames, NULL);
 }
 
+static BKInt checkTrackStatus (void)
+{
+	BKSDLTrack * track;
+	BKInt numActive = ctx.numTracks;
+
+	for (BKInt i = 0; i < ctx.numTracks; i ++) {
+		track = ctx.tracks [i];
+
+		// exit if tracks have repeated
+		if (flags & NO_SOUND) {
+			if (track -> interpreter.flags & (BKInterpreterFlagHasStopped | BKInterpreterFlagHasRepeated)) {
+				numActive --;
+			}
+		}
+		// exit if tracks have stopped
+		else if (track -> interpreter.flags & BKInterpreterFlagHasStopped) {
+			numActive --;
+		}
+	}
+
+	if (numActive == 0) {
+		return 0;
+	}
+
+	return 1;
+}
+
 static BKInt handleKeys ()
 {
 	BKInt paused = 0;
@@ -620,26 +665,33 @@ static BKInt handleKeys ()
 			int secs = frames % 60;
 			int mins = frames / 60;
 
-			int groups [64];
+			if (!(flags & PRINT_NO_TIME)) {
+				int groups [64];
 
-			for (int i = 0; i < ctx.numTracks; i ++) {
-				if (ctx.tracks[i] -> interpreter.stackPtr > ctx.tracks[i] -> interpreter.stack) {
-					groups [i] = ctx.tracks[i] -> interpreter.stackPtr [-1];
-				} else {
-					groups [i] = -1;
+				for (int i = 0; i < ctx.numTracks; i ++) {
+					if (ctx.tracks[i] -> interpreter.stackPtr > ctx.tracks[i] -> interpreter.stack) {
+						groups [i] = ctx.tracks[i] -> interpreter.stackPtr [-1];
+					} else {
+						groups [i] = -1;
+					}
 				}
+
+				printf ("\rPlaying %3d:%02d.%02d", mins, secs, frac);
+
+				for (int i = 0; i < ctx.numTracks; i ++)
+					printf ("  % 6d", groups [i]);
+
+				fflush (stdout);
 			}
-
-			printf ("\rPlaying %3d:%02d.%02d", mins, secs, frac);
-
-			for (int i = 0; i < ctx.numTracks; i ++)
-				printf ("  % 6d", groups [i]);
-
-			fflush (stdout);
 		}
 		else {
 			fprintf (stderr, "select failed\n");
 			exit (1);
+		}
+
+		// exit if all tracks have stopped
+		if (!checkTrackStatus ()) {
+			break;
 		}
 
 		//SDL_Delay(100);
@@ -657,10 +709,24 @@ static BKInt handleKeys ()
 
 static void play (void)
 {
-	handleKeys ();
+	if (flags & NO_SOUND) {
+		BKInt numFrames = 512;
+		BKInt numChannels = ctx.ctx.numChannels;
+		BKFrame * frames = malloc (numFrames * numChannels * sizeof (BKFrame));
 
-	SDL_PauseAudio (1);
-	SDL_CloseAudio ();
+		while (checkTrackStatus ()) {
+			BKContextGenerate (& ctx.ctx, frames, numFrames);
+			outputChunk (frames, numFrames * numChannels);
+		}
+
+		free (frames);
+	}
+	else {
+		handleKeys ();
+
+		SDL_PauseAudio (1);
+		SDL_CloseAudio ();
+	}
 }
 
 static void cleanup ()
