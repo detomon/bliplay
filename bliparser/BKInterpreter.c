@@ -467,8 +467,10 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				value0 = * (opcode ++);
 
 				// jump to repeat mark
-				if (value0 == -1)
+				if (value0 == -1) {
 					value0 = interpreter -> repeatStartAddr;
+					interpreter -> flags |= BKInterpreterFlagHasRepeated;
+				}
 
 				opcode = & interpreter -> opcode [value0];
 				break;

@@ -575,7 +575,14 @@ static BKInt checkTrackStatus (void)
 	for (BKInt i = 0; i < ctx.numTracks; i ++) {
 		track = ctx.tracks [i];
 
-		if (track -> interpreter.flags & BKInterpreterFlagHasStopped) {
+		// exit if tracks have repeated
+		if (flags & NO_SOUND) {
+			if (track -> interpreter.flags & (BKInterpreterFlagHasStopped | BKInterpreterFlagHasRepeated)) {
+				numActive --;
+			}
+		}
+		// exit if tracks have stopped
+		else if (track -> interpreter.flags & BKInterpreterFlagHasStopped) {
 			numActive --;
 		}
 	}

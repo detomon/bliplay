@@ -77,6 +77,7 @@ enum
 	BKInterpreterFlagHasAttackEvent = 1 << 0,
 	BKInterpreterFlagHasArpeggio    = 1 << 1,
 	BKInterpreterFlagHasStopped     = 1 << 2,
+	BKInterpreterFlagHasRepeated    = 1 << 3,
 };
 
 struct BKTickEvent
