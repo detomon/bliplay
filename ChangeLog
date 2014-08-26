@@ -1,3 +1,9 @@
+Changes in bliplay 0.5:
+
+* Added --no-sound flag
+* Added --no-time flag
+* Exit prgram if tracks have stoppen
+
 Changes in bliplay 0.4:
 
 * Added bundled file format
