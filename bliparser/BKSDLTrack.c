@@ -497,6 +497,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 					memset (track, 0, sizeof (BKSDLTrack));
 					BKTrackInit (& track -> track, 0);
 					BKInterpreterInit (& track -> interpreter);
+					track -> ctx = ctx;
 
 					BKSDLUserData * userData = & track -> userData;
 					userData -> track        = & track -> track;

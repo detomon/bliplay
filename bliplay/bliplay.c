@@ -549,6 +549,26 @@ static void seekContext (BKSDLContext * ctx, BKTime time)
 	BKContextGenerateToTime (& ctx -> ctx, time, pushFrames, NULL);
 }
 
+static BKInt checkTrackStatus (void)
+{
+	BKSDLTrack * track;
+	BKInt numActive = ctx.numTracks;
+
+	for (BKInt i = 0; i < ctx.numTracks; i ++) {
+		track = ctx.tracks [i];
+
+		if (track -> interpreter.flags & BKInterpreterFlagHasStopped) {
+			numActive --;
+		}
+	}
+
+	if (numActive == 0) {
+		return 0;
+	}
+
+	return 1;
+}
+
 static BKInt handleKeys ()
 {
 	BKInt paused = 0;
@@ -640,6 +660,11 @@ static BKInt handleKeys ()
 		else {
 			fprintf (stderr, "select failed\n");
 			exit (1);
+		}
+
+		// exit if all tracks have stopped
+		if (!checkTrackStatus ()) {
+			break;
 		}
 
 		//SDL_Delay(100);

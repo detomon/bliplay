@@ -24,12 +24,6 @@
 #include "BKInterpreter.h"
 #include "BKTone.h"
 
-enum
-{
-	BKInterpreterFlagHasAttackEvent = 1 << 0,
-	BKInterpreterFlagHasArpeggio    = 1 << 1,
-};
-
 enum {
 	BKIntrEventStep    = 1 << 0,
 	BKIntrEventAttack  = 1 << 1,
@@ -482,6 +476,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			case BKIntrEnd: {
 				//BKTrackSetAttr (track, BK_MUTE, 1);
 				BKInterpreterEventSet (interpreter, BKIntrEventStep, BK_INT_MAX);
+				interpreter -> flags |= BKInterpreterFlagHasStopped;
 				opcode --; // Repeat command forever
 				run = 0;
 				result = 0;
