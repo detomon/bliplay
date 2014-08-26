@@ -42,6 +42,7 @@ enum
 	CHECK_FLAG        = 1 << 3,
 	NO_PAUSE_SND_FLAG = 1 << 4,
 	HAS_SEEK_TIME     = 1 << 5,
+	PRINT_NO_TIME     = 1 << 6,
 };
 
 enum
@@ -129,7 +130,7 @@ static int getchar_nocanon (unsigned tcflags)
 static void printOptionHelp (void)
 {
 	printf (
-		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-r | --samplerate] file\n"
+		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-n | --no-time] file\n"
 		"       %1$s [-c | --check] file\n"
 		"       %1$s [-h | --help]\n",
 		PROGRAM_NAME
@@ -239,6 +240,7 @@ struct option const options [] = {
 	{"output",       required_argument, NULL, 'o'},
 	{"no-pause-snd", no_argument,       NULL, 'u'},
 	{"fast-forward", required_argument, NULL, 'f'},
+	{"no-time",      no_argument,       NULL, 'n'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -419,6 +421,10 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 			case 'f': {
 				flags |= HAS_SEEK_TIME;
 				strncpy (seekTimeString, optarg, 64);
+				break;
+			}
+			case 'n': {
+				flags |= PRINT_NO_TIME;
 				break;
 			}
 			default: {
@@ -640,22 +646,24 @@ static BKInt handleKeys ()
 			int secs = frames % 60;
 			int mins = frames / 60;
 
-			int groups [64];
+			if (!(flags & PRINT_NO_TIME)) {
+				int groups [64];
 
-			for (int i = 0; i < ctx.numTracks; i ++) {
-				if (ctx.tracks[i] -> interpreter.stackPtr > ctx.tracks[i] -> interpreter.stack) {
-					groups [i] = ctx.tracks[i] -> interpreter.stackPtr [-1];
-				} else {
-					groups [i] = -1;
+				for (int i = 0; i < ctx.numTracks; i ++) {
+					if (ctx.tracks[i] -> interpreter.stackPtr > ctx.tracks[i] -> interpreter.stack) {
+						groups [i] = ctx.tracks[i] -> interpreter.stackPtr [-1];
+					} else {
+						groups [i] = -1;
+					}
 				}
+
+				printf ("\rPlaying %3d:%02d.%02d", mins, secs, frac);
+
+				for (int i = 0; i < ctx.numTracks; i ++)
+					printf ("  % 6d", groups [i]);
+
+				fflush (stdout);
 			}
-
-			printf ("\rPlaying %3d:%02d.%02d", mins, secs, frac);
-
-			for (int i = 0; i < ctx.numTracks; i ++)
-				printf ("  % 6d", groups [i]);
-
-			fflush (stdout);
 		}
 		else {
 			fprintf (stderr, "select failed\n");
