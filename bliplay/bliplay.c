@@ -38,13 +38,11 @@
 enum
 {
 	INTERACTIVE_FLAG  = 1 << 0,
-	DISPLAY_FLAG      = 1 << 1, // only in terminal
-	PLAY_FLAG         = 1 << 2,
-	CHECK_FLAG        = 1 << 3,
-	NO_PAUSE_SND_FLAG = 1 << 4,
-	HAS_SEEK_TIME     = 1 << 5,
-	PRINT_NO_TIME     = 1 << 6,
-	NO_SOUND          = 1 << 7,
+	PLAY_FLAG         = 1 << 1,
+	NO_PAUSE_SND_FLAG = 1 << 2,
+	HAS_SEEK_TIME     = 1 << 3,
+	PRINT_NO_TIME     = 1 << 4,
+	NO_SOUND          = 1 << 5,
 };
 
 enum
@@ -132,8 +130,11 @@ static int getchar_nocanon (unsigned tcflags)
 static void printOptionHelp (void)
 {
 	printf (
-		"usage: %1$s [-d | --display] [-s speed | --speed speed] [-p | --play] [-n | --no-time] [-m | --no-sound] file\n"
-		"       %1$s [-c | --check] file\n"
+		"usage: %1$s [-s speed | --speed speed] [-p | --play] [-n | --no-time] [-m | --no-sound] file\n"
+		"       %1$s [-o | --output file[.raw|.wav]]\n"
+		"       %1$s [-f | --fast-forward value[f (frames) | b (beats) | t (ticks) | s (seconds)]]\n"
+		"       %1$s [-r | --samplerate value]\n"
+		"       %1$s [-u | --no-pause-snd]\n"
 		"       %1$s [-h | --help]\n"
 		"\n"
 		"       --no-sound implicitly sets --play\n",
@@ -291,10 +292,8 @@ static int interactiveMode (BKSDLContext * ctx)
 struct option const options [] = {
 	{"speed",        required_argument, NULL, 's'},
 	{"samplerate",   required_argument, NULL, 'r'},
-	{"display",      no_argument,       NULL, 'd'},
 	{"help",         no_argument,       NULL, 'h'},
 	{"play",         optional_argument, NULL, 'p'},
-	{"check",        no_argument,       NULL, 'c'},
 	{"output",       required_argument, NULL, 'o'},
 	{"no-pause-snd", no_argument,       NULL, 'u'},
 	{"fast-forward", required_argument, NULL, 'f'},
@@ -446,14 +445,10 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "cdhpo:qs:r:uf:", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "hpo:s:r:uf:nm", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 's': {
 				speed = atoi (optarg);
-				break;
-			}
-			case 'd': {
-				flags |= DISPLAY_FLAG;
 				break;
 			}
 			case 'h': {
@@ -463,10 +458,6 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 			}
 			case 'p': {
 				flags |= PLAY_FLAG;
-				break;
-			}
-			case 'c': {
-				flags |= CHECK_FLAG;
 				break;
 			}
 			case 'o': {
