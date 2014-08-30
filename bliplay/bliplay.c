@@ -22,6 +22,7 @@
  */
 
 #include <getopt.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -146,6 +147,60 @@ static void printInteractiveHelp (void)
 		printf ("%-8s %s\n", commands [i].name, commands [i].description);
 }
 
+static void printString (char const * format, va_list args, int level)
+{
+	FILE * stream = stdout;
+	char const * color = "0";
+
+	switch (level) {
+		case 0: {
+			break;
+		}
+		case 1: {
+			color = "33";
+			break;
+		}
+		case 2: {
+			stream = stderr;
+			color = "31";
+			break;
+		}
+	}
+
+	fprintf (stream, "\033[%sm", color);
+	vfprintf (stream, format, args);
+	fprintf (stream, "\033[%sm", "0");
+	fflush (stream);
+}
+
+static void printMessage (char const * format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	printString (format, args, 0);
+	va_end (args);
+}
+
+static void printNotice (char const * format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	printString (format, args, 1);
+	va_end (args);
+
+}
+
+static void printError (char const * format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	printString (format, args, 2);
+	va_end (args);
+}
+
 static int lookupCommand (char const * key, struct commandDef const * cmd)
 {
 	return strcmp (key, cmd -> name);
@@ -171,7 +226,7 @@ static int loadFile (BKSDLContext * ctx, char * const args)
 		printf ("File '%s' loaded\n", args);
 	}
 	else {
-		fprintf (stderr, "No such file: %s\n", filename);
+		printError ("No such file: %s", filename);
 		return -1;
 	}
 
@@ -185,7 +240,7 @@ static int interactiveMode (BKSDLContext * ctx)
 	char args [256];
 	int command = -1;
 
-	printf ("Entering interactive mode... (\"help\" for help, \"quit\" to quit)\n");
+	printNotice ("Entering interactive mode... (\"help\" for help, \"quit\" to quit)\n");
 
 	do {
 		printf ("%s> ", PROGRAM_NAME);
@@ -223,7 +278,7 @@ static int interactiveMode (BKSDLContext * ctx)
 					break;
 				}
 				default:
-					printf ("Unknown command %s\n", name);
+					printError ("Unknown command %s\n", name);
 					break;
 			}
 		}
@@ -314,12 +369,12 @@ static BKInt parseSeekTime (char const * string, BKTime * outTime, BKInt speed)
 	argc = sscanf (string, "%lf%c", & value, & type);
 
 	if (argc < 1) {
-		fprintf (stderr, "Fast forward option must define a numeric value (e.g. 12.4s, 760t, 45600f)\n");
+		printError ("Fast forward option must define a numeric value (e.g. 12.4s, 760t, 45600f)\n");
 		return -1;
 	}
 
 	if (value < 0) {
-		fprintf (stderr, "Fast forward option must be a positive value\n");
+		printError ("Fast forward option must be a positive value\n");
 		return -1;
 	}
 
@@ -344,7 +399,7 @@ static BKInt parseSeekTime (char const * string, BKTime * outTime, BKInt speed)
 			break;
 		}
 		default: {
-			fprintf (stderr, "Unknown fast forward unit '%c'\n", type);
+			printError ("Unknown fast forward unit '%c'\n", type);
 			return -1;
 		}
 	}
@@ -440,7 +495,7 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 				break;
 			}
 			default: {
-				fprintf (stderr, "Unknown option %c near %s\n", opt, argv [longoptind]);
+				printError ("Unknown option %c near %s\n", opt, argv [longoptind]);
 				printOptionHelp ();
 				exit (1);
 				break;
@@ -464,7 +519,7 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 		outputFile = fopen (outputFilename, mode);
 
 		if (outputFile == NULL) {
-			fprintf (stderr, "Couldn't open file for output: %s\n", outputFilename);
+			printError ("Couldn't open file for output: %s\n", outputFilename);
 			return -1;
 		}
 
@@ -476,18 +531,18 @@ static int handleOptions (BKSDLContext * ctx, int argc, const char * argv [])
 			outputType = OUTPUT_TYPE_RAW;
 		}
 		else {
-			fprintf (stderr, "Only .raw and .wav is supported for output\n");
+			printError ("Only .raw and .wav is supported for output\n");
 			return -1;
 		}
 	}
 
 	if (BKSDLContextInit (ctx, 2, sampleRate) < 0) {
-		fprintf (stderr, "Couldn't initialize context\n");
+		printError ("Couldn't initialize context\n");
 		return -1;
 	}
 
 	if (BKSDLContextInit (& pauseCtx, 2, sampleRate) < 0) {
-		fprintf (stderr, "Couldn't initialize pause context\n");
+		printError ("Couldn't initialize pause context\n");
 		return -1;
 	}
 
@@ -509,14 +564,14 @@ track:end;";
 	BKInt dataSize = strlen (data);
 
 	if (BKSDLContextLoadData (& pauseCtx, data, dataSize) < 0) {
-		fprintf (stderr, "Couldn't load pause sound\n");
+		printError ("Couldn't load pause sound\n");
 		return -1;
 	}
 
 	setRunContext (ctx, 0);
 
 	if (initSDL (ctx, & error) < 0) {
-		fprintf (stderr, "Couldn't initialize SDL: %s\n", error);
+		printError ("Couldn't initialize SDL: %s\n", error);
 		return -1;
 	}
 
@@ -530,7 +585,7 @@ track:end;";
 		SDL_LockAudio ();
 
 		if (BKSDLContextLoadFile (ctx, filename) < 0) {
-			fprintf (stderr, "No such file: %s\n", filename);
+			printError ("No such file: %s\n", filename);
 			exit (1);
 		}
 
@@ -598,7 +653,7 @@ static BKInt handleKeys ()
 {
 	BKInt paused = 0;
 
-	printf ("[space] = play/pause, [q] = stop\n");
+	printNotice ("[space] = play/pause, [q] = stop\n");
 
 	if (flags & PLAY_FLAG) {
 		seekContext (& ctx, seekTime);
@@ -685,7 +740,7 @@ static BKInt handleKeys ()
 			}
 		}
 		else {
-			fprintf (stderr, "select failed\n");
+			printError ("select failed\n");
 			exit (1);
 		}
 
