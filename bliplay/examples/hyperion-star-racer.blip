@@ -463,7 +463,7 @@ track:begin:square;
 	g:8;
 	g:9;
 
-	s:64;
+	z;
 
 track:end;
 
@@ -649,7 +649,7 @@ track:begin:square;
 	pt:7;g:2;pt:0;
 	pt:1193;g:7;pt:0;
 
-	s:64;
+	z;
 
 track:end;
 
@@ -731,7 +731,7 @@ track:begin:square;
 	pt:2400;g:0;pt:0;
 	pt:1200;g:1;pt:0;
 
-	s:64;
+	z;
 
 track:end;
 
@@ -886,7 +886,7 @@ track:begin:triangle;
 		pt:300;g:1;pt:0;
 		s:16;
 
-	s:64;
+	z;
 
 track:end;
 
@@ -1018,7 +1018,7 @@ track:begin:sawtooth;
 		pt:300;g:0;pt:0;
 		s:16;
 
-	s:64;
+	z;
 
 track:end;
 
@@ -1179,6 +1179,6 @@ track:begin:noise;
 	g:5;
 	s:16;
 
-	s:64;
+	z;
 
 track:end;
