@@ -9,7 +9,9 @@ libbliparser_a_SOURCES = \
 	BKCompiler.c \
 	BKInterpreter.c \
 	BKWaveFileReader.c \
-	BKWaveFileWriter.c
+	BKWaveFileWriter.c \
+	BKSTTokenizer.c \
+	BKSTParser.c
 
 dist_noinst_HEADERS = \
 	BKSDLTrack.h \
@@ -19,6 +21,8 @@ dist_noinst_HEADERS = \
 	BKInterpreter.h \
 	BKWaveFileReader.h \
 	BKWaveFileWriter.h \
+	BKSTTokenizer.h \
+	BKSTParser.h \
 	item_list.h
 
 pkginclude_HEADERS = $(HEADER_LIST)
