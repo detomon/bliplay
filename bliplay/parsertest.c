@@ -67,7 +67,7 @@ int main (int argc, char * argv [])
 	BKSTParserInit (& parser, data, dataSize);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
-		printf ("%d %s %d\n", token, cmd.name, cmd.numArgs);
+		printf ("%d %s %ld\n", token, cmd.name, cmd.numArgs);
 
 		if (cmd.numArgs > 0) {
 			for (BKInt i = 0; i < cmd.numArgs; i ++) {
