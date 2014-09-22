@@ -63,9 +63,16 @@ extern BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, si
 extern void BKSTTokenizerDispose (BKSTTokenizer * tokenizer);
 
 /**
- * Read next command and arguments
+ * Read next token
+ *
+ * Previous tokens are kept until `BKSTTokenizerClearTokens` is called
  */
 extern BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** outPtr, size_t * outSize);
+
+/**
+ * Clear tokens buffer
+ */
+extern void BKSTTokenizerClearTokens (BKSTTokenizer * tokenizer);
 
 /**
  * Reset tokenizer with new data
