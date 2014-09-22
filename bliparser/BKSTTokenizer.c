@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdint.h>
-#include <stdio.h>
+#include <sys/types.h>
 #include "BKSTTokenizer.h"
 
 #define INIT_BUFFER_SIZE 0x4000
@@ -85,17 +84,17 @@ void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 
 static BKInt BKSTTokenizerReadBufferGrow (BKSTTokenizer * tokenizer)
 {
-	off_t readBufOff;
+	off_t bufOff;
 	size_t newCapacity = tokenizer -> readBufCapacity * 2;
-	uint8_t * newReadBuf = realloc (tokenizer -> readBuf, newCapacity);
+	uint8_t * newBuf = realloc (tokenizer -> readBuf, newCapacity);
 
-	if (newReadBuf == NULL) {
+	if (newBuf == NULL) {
 		return -1;
 	}
 
-	readBufOff = tokenizer -> readBufPtr - tokenizer -> readBuf;
-	tokenizer -> readBufPtr = newReadBuf + readBufOff;
-	tokenizer -> readBuf = newReadBuf;
+	bufOff = tokenizer -> readBufPtr - tokenizer -> readBuf;
+	tokenizer -> readBufPtr = newBuf + bufOff;
+	tokenizer -> readBuf = newBuf;
 	tokenizer -> readBufCapacity = newCapacity;
 
 	return 0;
@@ -232,12 +231,10 @@ static int BKSTTokenizerReadBase64 (BKSTTokenizer * tokenizer)
 BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** outPtr, size_t * outSize)
 {
 	int c;
+	uint8_t const * readPtr = tokenizer -> readBufPtr;
 	BKSTToken token = BKSTTokenNone;
 
-	// reset buffer
-	tokenizer -> readBufPtr = tokenizer -> readBuf;
-
-	*outPtr = tokenizer -> readBufPtr;
+	*outPtr = readPtr;
 
 	do {
 		c = BKSTTokenizerNextChar (tokenizer);
@@ -336,9 +333,15 @@ BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** ou
 	}
 	while (token == BKSTTokenNone);
 
-	*outSize = tokenizer -> readBufPtr - tokenizer -> readBuf;
+	*outSize = tokenizer -> readBufPtr - readPtr;
+	BKSTTokenizerReadBufferPutChar (tokenizer, '\0');
 
 	return token;
+}
+
+void BKSTTokenizerClearTokens (BKSTTokenizer * tokenizer)
+{
+	tokenizer -> readBufPtr = tokenizer -> readBuf;
 }
 
 void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t dataSize)

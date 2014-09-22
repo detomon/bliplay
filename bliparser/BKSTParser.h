@@ -27,16 +27,16 @@
 #include "BKBase.h"
 #include "BKSTTokenizer.h"
 
-typedef struct BKSTArg BKSTArg;
-typedef struct BKSTCmd BKSTCmd;
+typedef struct BKSTParser BKSTParser;
+typedef struct BKSTArg    BKSTArg;
+typedef struct BKSTCmd    BKSTCmd;
 
 struct BKSTParser
 {
-	// ...
-	BKSTArg * argBuf;
-	BKSTArg * argPtr;
-	size_t    argBufCapacity;
-
+	BKSTTokenizer tokenizer;
+	BKSTArg     * argBuf;
+	BKSTArg     * argBufPtr;
+	size_t        argBufCapacity;
 };
 
 struct BKSTArg
@@ -47,10 +47,32 @@ struct BKSTArg
 
 struct BKSTCmd
 {
-	char    const * name;
+	char const    * name;
 	size_t          nameSize;
 	BKSTArg const * args;
 	size_t          numArgs;
 };
+
+/**
+ * Initialize parser object
+ */
+extern BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize);
+
+/**
+ * Dispose parser object
+ */
+extern void BKSTParserDispose (BKSTParser * parser);
+
+/**
+ * Read next command and arguments
+ */
+extern BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd);
+
+/**
+ * Reset parser with new data
+ *
+ * Allocated memory is reused
+ */
+extern void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize);
 
 #endif /* ! _BKST_PARSER_H_ */

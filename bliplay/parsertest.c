@@ -33,7 +33,7 @@ int main (int argc, char * argv [])
 {
 	void * data = NULL;
 	size_t dataSize = 0;
-	FILE * file = fopen ("/Users/simon/Desktop/test-new-format.blip", "r");
+	FILE * file = fopen ("/Users/simon/Downloads/test-new-format.blip", "r");
 
 	fseek (file, 0, SEEK_END);
 	dataSize = ftell (file);
@@ -46,7 +46,7 @@ int main (int argc, char * argv [])
 
 	fclose (file);
 
-	BKSTToken token;
+	/*BKSTToken token;
 	uint8_t const * ptr;
 	size_t size;
 
@@ -58,7 +58,26 @@ int main (int argc, char * argv [])
 		printf ("\n");
 	}
 
-	BKSTTokenizerDispose (& tokenizer);
+	BKSTTokenizerDispose (& tokenizer);*/
+
+	BKSTToken token;
+	BKSTParser parser;
+	BKSTCmd cmd;
+
+	BKSTParserInit (& parser, data, dataSize);
+
+	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
+		printf ("%d %s %d\n", token, cmd.name, cmd.numArgs);
+
+		if (cmd.numArgs > 0) {
+			for (BKInt i = 0; i < cmd.numArgs; i ++) {
+				printf ("  '%s' (%ld)\n", cmd.args[i].arg, cmd.args[i].size);
+			}
+		}
+	}
+
+	BKSTParserDispose (& parser);
+
 	free (data);
 
     return 0;
