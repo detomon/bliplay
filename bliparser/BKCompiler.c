@@ -221,7 +221,7 @@ static BKInt BKCompilerLookupNote (char const * name)
  */
 static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BKInt * cmds)
 {
-	BKInt  cmd;
+	BKInstruction cmd;
 	BKUInt argCount, variable, value;
 	BKUInt numCmd = item_list_length (cmds);
 
@@ -232,33 +232,37 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 		cmd = * cmdPtr ++;
 
 		switch (cmd) {
-			case BKIntrAttack:        argCount = 1; break;
-			case BKIntrAttackTicks:   argCount = 1; break;
-			case BKIntrArpeggio:      variable = 1; break;
-			case BKIntrArpeggioSpeed: argCount = 1; break;
-			case BKIntrRelease:       argCount = 0; break;
-			case BKIntrReleaseTicks:  argCount = 1; break;
-			case BKIntrMute:          argCount = 0; break;
-			case BKIntrMuteTicks:     argCount = 1; break;
-			case BKIntrVolume:        argCount = 1; break;
-			case BKIntrPanning:       argCount = 1; break;
-			case BKIntrPitch:         argCount = 1; break;
-			case BKIntrMasterVolume:  argCount = 1; break;
-			case BKIntrStep:          argCount = 1; break;
-			case BKIntrStepTicks:     argCount = 1; break;
-			case BKIntrTicks:         argCount = 1; break;
-			case BKIntrEffect:        argCount = 4; break;
-			case BKIntrDutyCycle:     argCount = 1; break;
-			case BKIntrPhaseWrap:     argCount = 1; break;
-			case BKIntrInstrument:    argCount = 1; break;
-			case BKIntrWaveform:      argCount = 1; break;
-			case BKIntrSample:        argCount = 1; break;
-			case BKIntrSampleRepeat:  argCount = 1; break;
-			case BKIntrSampleRange:   argCount = 2; break;
-			case BKIntrReturn:        argCount = 0; break;
-			case BKIntrGroupJump:     argCount = 2; break;
-			case BKIntrJump:          argCount = 1; break;
-			case BKIntrEnd:           argCount = 0; break;
+			case BKIntrAttack:         argCount = 1; break;
+			case BKIntrAttackTicks:    argCount = 1; break;
+			case BKIntrArpeggio:       variable = 1; break;
+			case BKIntrArpeggioSpeed:  argCount = 1; break;
+			case BKIntrRelease:        argCount = 0; break;
+			case BKIntrReleaseTicks:   argCount = 1; break;
+			case BKIntrMute:           argCount = 0; break;
+			case BKIntrMuteTicks:      argCount = 1; break;
+			case BKIntrVolume:         argCount = 1; break;
+			case BKIntrPanning:        argCount = 1; break;
+			case BKIntrPitch:          argCount = 1; break;
+			case BKIntrMasterVolume:   argCount = 1; break;
+			case BKIntrStep:           argCount = 1; break;
+			case BKIntrStepTicks:      argCount = 1; break;
+			case BKIntrTicks:          argCount = 1; break;
+			case BKIntrEffect:         argCount = 4; break;
+			case BKIntrDutyCycle:      argCount = 1; break;
+			case BKIntrPhaseWrap:      argCount = 1; break;
+			case BKIntrInstrument:     argCount = 1; break;
+			case BKIntrWaveform:       argCount = 1; break;
+			case BKIntrSample:         argCount = 1; break;
+			case BKIntrSampleRepeat:   argCount = 1; break;
+			case BKIntrSampleRange:    argCount = 2; break;
+			case BKIntrReturn:         argCount = 0; break;
+			case BKIntrGroupJump:      argCount = 2; break;
+			case BKIntrJump:           argCount = 1; break;
+			case BKIntrEnd:            argCount = 0; break;
+			case BKIntrSetRepeatStart: argCount = 0; break;
+			case BKIntrGroup:          argCount = 0; break;
+			case BKIntrCall:           argCount = 0; break;
+			case BKIntrRepeat:         argCount = 0; break;
 		}
 
 		// command has variable number of arguments

@@ -36,8 +36,9 @@
 typedef struct BKInterpreter BKInterpreter;
 typedef struct BKTickEvent   BKTickEvent;
 typedef struct BKLongJump    BKLongJump;
+typedef enum BKInstruction   BKInstruction;
 
-enum
+enum BKInstruction
 {
 	BKIntrAttack,
 	BKIntrArpeggio,
