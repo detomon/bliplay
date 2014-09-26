@@ -43,7 +43,7 @@ AC_CONFIG_FILES([
 AC_CONFIG_SUBDIRS([BlipKit])
 
 # Define flags.
-BK_STD_CFLAGS="-std=c99 -Wall"
+BK_STD_CFLAGS="-std=c99 -Wall -Wno-unused-function"
 
 AC_SUBST(BK_STD_CFLAGS)
 
