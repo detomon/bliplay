@@ -24,6 +24,7 @@
 #ifndef _BKST_TOKENIZER_H_
 #define _BKST_TOKENIZER_H_
 
+#include <stdio.h>
 #include "BKBase.h"
 
 typedef struct BKSTTokenizer BKSTTokenizer;
@@ -34,6 +35,8 @@ struct BKSTTokenizer
 	uint8_t * data;
 	uint8_t * dataPtr;
 	size_t    dataSize;
+	FILE    * file;
+	int       prevChars [2];
 	uint8_t * readBuf;
 	uint8_t * readBufPtr;
 	size_t    readBufCapacity;
@@ -53,9 +56,14 @@ enum BKSTToken
 };
 
 /**
- * Initialize tokenizer object
+ * Initialize tokenizer object with data
  */
 extern BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, size_t dataSize);
+
+/**
+ * Initialize tokenizer object with file
+ */
+extern BKInt BKSTTokenizerInitWithFile (BKSTTokenizer * tokenizer, FILE * file);
 
 /**
  * Dispose tokenizer object
@@ -80,5 +88,13 @@ extern void BKSTTokenizerClearTokens (BKSTTokenizer * tokenizer);
  * Allocated memory is reused
  */
 extern void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t dataSize);
+
+/**
+ * Reset tokenizer with new file
+ *
+ * The file cursor is not reset
+ * Allocated memory is reused
+ */
+extern void BKSTTokenizerSetFile (BKSTTokenizer * tokenizer, FILE * file);
 
 #endif /* ! _BKST_TOKENIZER_H_ */

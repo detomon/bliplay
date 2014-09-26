@@ -26,15 +26,26 @@
 
 #define INIT_BUFFER_SIZE 0x4000
 
-BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize)
+static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 {
 	memset (parser, 0, sizeof (*parser));
 
 	parser -> argBufCapacity = INIT_BUFFER_SIZE;
-
 	parser -> argBuf = malloc (parser -> argBufCapacity);
 
 	if (parser -> argBuf == NULL) {
+		BKSTParserDispose (parser);
+		return -1;
+	}
+
+	parser -> argBufPtr = parser -> argBuf;
+
+	return 0;
+}
+
+BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize)
+{
+	if (BKSTParserInitGeneric (parser) < 0) {
 		BKSTParserDispose (parser);
 		return -1;
 	}
@@ -45,6 +56,23 @@ BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize)
 	}
 
 	BKSTParserSetData (parser, data, dataSize);
+
+	return 0;
+}
+
+BKInt BKSTParserInitWithFile (BKSTParser * parser, FILE * file)
+{
+	if (BKSTParserInitGeneric (parser) < 0) {
+		BKSTParserDispose (parser);
+		return -1;
+	}
+
+	if (BKSTTokenizerInitWithFile (& parser -> tokenizer, file)) {
+		BKSTParserDispose (parser);
+		return -1;
+	}
+
+	BKSTParserSetData (parser, NULL, 0);
 
 	return 0;
 }
@@ -107,7 +135,6 @@ BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	size_t size;
 
 	memset (outCmd, 0, sizeof (*outCmd));
-
 	BKSTParserArgsClear (parser);
 
 	outCmd -> args = parser -> argBuf;
@@ -120,28 +147,22 @@ BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 		}
 
 		switch (token) {
+			case BKSTTokenEnd:
+			case BKSTTokenGrpBegin:
+			case BKSTTokenGrpEnd: {
+				flag = 0;
+				break;
+			}
 			case BKSTTokenCmdSep: {
 				if (parser -> argBufPtr > parser -> argBuf) {
 					flag = 0;
 				}
 				break;
 			}
-			case BKSTTokenEnd: {
-				flag = 0;
-				break;
-			}
 			case BKSTTokenValue: {
 				if (BKSTParserArgPush (parser, (void *) arg, size) < 0) {
 					return -1;
 				}
-				break;
-			}
-			case BKSTTokenGrpBegin: {
-				flag = 0;
-				break;
-			}
-			case BKSTTokenGrpEnd: {
-				flag = 0;
 				break;
 			}
 			case BKSTTokenArgSep:
@@ -173,6 +194,11 @@ void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize)
 	}
 
 	BKSTTokenizerSetData (& parser -> tokenizer, data, dataSize);
+	BKSTParserArgsClear (parser);
+}
 
-	parser -> argBufPtr = parser -> argBuf;
+void BKSTParserSetFile (BKSTParser * parser, FILE * file)
+{
+	BKSTParserSetData (parser, NULL, 0);
+	BKSTTokenizerSetFile (& parser -> tokenizer, file);
 }

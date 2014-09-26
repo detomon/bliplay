@@ -57,10 +57,9 @@ static char const BKBase64Table [256] =
 
 BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, size_t dataSize)
 {
-	memset (tokenizer, 0, sizeof (BKSTTokenizer));
+	memset (tokenizer, 0, sizeof (*tokenizer));
 
 	tokenizer -> readBufCapacity = INIT_BUFFER_SIZE;
-
 	tokenizer -> readBuf = malloc (tokenizer -> readBufCapacity);
 
 	if (tokenizer -> readBuf == NULL) {
@@ -73,13 +72,30 @@ BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, size_t da
 	return 0;
 }
 
+BKInt BKSTTokenizerInitWithFile (BKSTTokenizer * tokenizer, FILE * file)
+{
+	if (BKSTTokenizerInit (tokenizer, NULL, 0) < 0) {
+		return -1;
+	}
+
+	if (file == NULL) {
+		return -1;
+	}
+
+	tokenizer -> file = file;
+
+	return 0;
+}
+
 void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 {
 	if (tokenizer -> readBuf) {
 		free (tokenizer -> readBuf);
 	}
 
-	memset (tokenizer, 0, sizeof (BKSTTokenizer));
+	tokenizer -> prevChars [0] = -1;
+	tokenizer -> prevChars [1] = -1;
+	memset (tokenizer, 0, sizeof (*tokenizer));
 }
 
 static BKInt BKSTTokenizerReadBufferGrow (BKSTTokenizer * tokenizer)
@@ -115,20 +131,36 @@ static BKInt BKSTTokenizerReadBufferPutChar (BKSTTokenizer * tokenizer, int c)
 
 static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 {
-	if (tokenizer -> dataPtr >= tokenizer -> data + tokenizer -> dataSize) {
-		return -1;
+	int nextChar = -1;
+
+	if (tokenizer -> prevChars [0] >= 0 && tokenizer -> prevChars [1] == -1) {
+		nextChar = tokenizer -> prevChars [0];
+		tokenizer -> prevChars [0] = -1;
+	}
+	else if (tokenizer -> file) {
+		nextChar = fgetc (tokenizer -> file);
+	}
+	else if (tokenizer -> dataPtr < tokenizer -> data + tokenizer -> dataSize) {
+		nextChar = *tokenizer -> dataPtr ++;
 	}
 
-	return *tokenizer -> dataPtr ++;
+	tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
+	tokenizer -> prevChars [1] = nextChar;
+
+	return nextChar;
 }
 
 static int BKSTTokenizerPrevChar (BKSTTokenizer * tokenizer)
 {
-	if (tokenizer -> dataPtr > tokenizer -> data && tokenizer -> dataPtr < tokenizer -> data + tokenizer -> dataSize) {
-		tokenizer -> dataPtr --;
+	int prevChars = -1;
+
+	if (tokenizer -> prevChars [0] >= 0) {
+		prevChars = tokenizer -> prevChars [0];
+		tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
+		tokenizer -> prevChars [1] = -1;
 	}
 
-	return *tokenizer -> dataPtr;
+	return prevChars;
 }
 
 static int BKSTTokenizerReadComment (BKSTTokenizer * tokenizer)
@@ -350,8 +382,16 @@ void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t 
 		dataSize = 0;
 	}
 
-	tokenizer -> data       = (uint8_t *) data;
-	tokenizer -> dataPtr    = (uint8_t *) data;
-	tokenizer -> dataSize   = dataSize;
-	tokenizer -> readBufPtr = tokenizer -> readBuf;
+	tokenizer -> prevChars [0] = -1;
+	tokenizer -> prevChars [1] = -1;
+	tokenizer -> data          = (uint8_t *) data;
+	tokenizer -> dataPtr       = (uint8_t *) data;
+	tokenizer -> dataSize      = dataSize;
+	tokenizer -> readBufPtr    = tokenizer -> readBuf;
+}
+
+void BKSTTokenizerSetFile (BKSTTokenizer * tokenizer, FILE * file)
+{
+	BKSTTokenizerSetData (tokenizer, NULL, 0);
+	tokenizer -> file = file;
 }

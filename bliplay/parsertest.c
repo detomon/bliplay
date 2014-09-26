@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012-2014 Simon Schoenenberger
+ * Copyright (c) 2014 Simon Schoenenberger
  * http://blipkit.monoxid.net/
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -24,47 +24,19 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
-#include "BlipKit.h"
 #include "BKSTParser.h"
 
  BKSTTokenizer tokenizer;
 
 int main (int argc, char * argv [])
 {
-	void * data = NULL;
-	size_t dataSize = 0;
-	FILE * file = fopen ("/Users/simon/Downloads/test-new-format.blip", "r");
-
-	fseek (file, 0, SEEK_END);
-	dataSize = ftell (file);
-
-	if (dataSize) {
-		data = malloc (dataSize);
-		fseek (file, 0, SEEK_SET);
-		fread (data, sizeof (char), dataSize, file);
-	}
-
-	fclose (file);
-
-	/*BKSTToken token;
-	uint8_t const * ptr;
-	size_t size;
-
-	BKSTTokenizerInit (& tokenizer, data, dataSize);
-
-	while ((token = BKSTTokenizerNextToken (& tokenizer, & ptr, & size))) {
-		printf ("%d (%ld) ", token, size);
-		fwrite (ptr, sizeof (char), size, stdout);
-		printf ("\n");
-	}
-
-	BKSTTokenizerDispose (& tokenizer);*/
-
 	BKSTToken token;
 	BKSTParser parser;
 	BKSTCmd cmd;
 
-	BKSTParserInit (& parser, data, dataSize);
+	FILE * file = fopen ("/Users/simon/Downloads/test-new-format.blip", "r");
+
+	BKSTParserInitWithFile (& parser, file);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
 		printf ("%d %s %ld\n", token, cmd.name, cmd.numArgs);
@@ -78,7 +50,7 @@ int main (int argc, char * argv [])
 
 	BKSTParserDispose (& parser);
 
-	free (data);
+	fclose (file);
 
     return 0;
 }

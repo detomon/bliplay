@@ -54,9 +54,14 @@ struct BKSTCmd
 };
 
 /**
- * Initialize parser object
+ * Initialize parser object with data
  */
 extern BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize);
+
+/**
+ * Initialize parser object with file
+ */
+extern BKInt BKSTParserInitWithFile (BKSTParser * parser, FILE * file);
 
 /**
  * Dispose parser object
@@ -74,5 +79,13 @@ extern BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd);
  * Allocated memory is reused
  */
 extern void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize);
+
+/**
+ * Reset parser with new file
+ *
+ * The file cursor is not reset
+ * Allocated memory is reused
+ */
+extern void BKSTParserSetFile (BKSTParser * parser, FILE * file);
 
 #endif /* ! _BKST_PARSER_H_ */
