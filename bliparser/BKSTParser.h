@@ -47,10 +47,13 @@ struct BKSTArg
 
 struct BKSTCmd
 {
+	BKSTTokenType   token;
 	char const    * name;
 	size_t          nameSize;
 	BKSTArg const * args;
 	size_t          numArgs;
+	int             lineno;
+	int             colno;
 };
 
 /**
@@ -71,7 +74,7 @@ extern void BKSTParserDispose (BKSTParser * parser);
 /**
  * Read next command and arguments
  */
-extern BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd);
+extern BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd);
 
 /**
  * Reset parser with new data

@@ -131,11 +131,13 @@ static BKInt BKSTTokenizerReadBufferPutChar (BKSTTokenizer * tokenizer, int c)
 
 static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 {
+	int hasPrevChar = 0;
 	int nextChar = -1;
 
 	if (tokenizer -> prevChars [0] >= 0 && tokenizer -> prevChars [1] == -1) {
 		nextChar = tokenizer -> prevChars [0];
 		tokenizer -> prevChars [0] = -1;
+		hasPrevChar = 1;
 	}
 	else if (tokenizer -> file) {
 		nextChar = fgetc (tokenizer -> file);
@@ -146,6 +148,16 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 
 	tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
 	tokenizer -> prevChars [1] = nextChar;
+
+	if (hasPrevChar == 0) {
+		if (nextChar == '\n') {
+			tokenizer -> lineno ++;
+			tokenizer -> colno = 0;
+		}
+		else {
+			tokenizer -> colno ++;
+		}
+	}
 
 	return nextChar;
 }
@@ -260,15 +272,19 @@ static int BKSTTokenizerReadBase64 (BKSTTokenizer * tokenizer)
 	return 0;
 }
 
-BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** outPtr, size_t * outSize)
+BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * outToken)
 {
 	int c;
+	int lineno, colno;
 	uint8_t const * readPtr = tokenizer -> readBufPtr;
-	BKSTToken token = BKSTTokenNone;
+	BKSTTokenType token = BKSTTokenNone;
 
-	*outPtr = readPtr;
+	outToken -> value = (void *) readPtr;
 
 	do {
+		lineno = tokenizer -> lineno;
+		colno  = tokenizer -> colno;
+
 		c = BKSTTokenizerNextChar (tokenizer);
 
 		if (c == -1) {
@@ -365,7 +381,9 @@ BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** ou
 	}
 	while (token == BKSTTokenNone);
 
-	*outSize = tokenizer -> readBufPtr - readPtr;
+	outToken -> size = tokenizer -> readBufPtr - readPtr;
+	outToken -> lineno = lineno + 1;
+	outToken -> colno = colno + 1;
 	BKSTTokenizerReadBufferPutChar (tokenizer, '\0');
 
 	return token;
@@ -388,6 +406,8 @@ void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t 
 	tokenizer -> dataPtr       = (uint8_t *) data;
 	tokenizer -> dataSize      = dataSize;
 	tokenizer -> readBufPtr    = tokenizer -> readBuf;
+	tokenizer -> lineno        = 0;
+	tokenizer -> colno         = 0;
 }
 
 void BKSTTokenizerSetFile (BKSTTokenizer * tokenizer, FILE * file)

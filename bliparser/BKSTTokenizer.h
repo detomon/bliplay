@@ -27,8 +27,21 @@
 #include <stdio.h>
 #include "BKBase.h"
 
+typedef enum   BKSTTokenType BKSTTokenType;
 typedef struct BKSTTokenizer BKSTTokenizer;
-typedef enum   BKSTToken     BKSTToken;
+typedef struct BKSTToken     BKSTToken;
+
+enum BKSTTokenType
+{
+	BKSTTokenEnd,
+	BKSTTokenNone,
+	BKSTTokenValue,
+	BKSTTokenGrpBegin,
+	BKSTTokenGrpEnd,
+	BKSTTokenComment,
+	BKSTTokenArgSep,
+	BKSTTokenCmdSep,
+};
 
 struct BKSTTokenizer
 {
@@ -40,19 +53,17 @@ struct BKSTTokenizer
 	uint8_t * readBuf;
 	uint8_t * readBufPtr;
 	size_t    readBufCapacity;
+	int       lineno;
+	int       colno;
 };
 
-enum BKSTToken
+struct BKSTToken
 {
-	BKSTTokenEnd,
-	BKSTTokenNone,
-	BKSTTokenUnknown,
-	BKSTTokenValue,
-	BKSTTokenGrpBegin,
-	BKSTTokenGrpEnd,
-	BKSTTokenComment,
-	BKSTTokenArgSep,
-	BKSTTokenCmdSep,
+	BKSTTokenType type;
+	char const  * value;
+	size_t        size;
+	int           lineno;
+	int           colno;
 };
 
 /**
@@ -75,7 +86,7 @@ extern void BKSTTokenizerDispose (BKSTTokenizer * tokenizer);
  *
  * Previous tokens are kept until `BKSTTokenizerClearTokens` is called
  */
-extern BKSTToken BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, uint8_t const ** outPtr, size_t * outSize);
+extern BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * outToken);
 
 /**
  * Clear tokens buffer

@@ -30,7 +30,7 @@
 
 int main (int argc, char * argv [])
 {
-	BKSTToken token;
+	BKSTTokenType token;
 	BKSTParser parser;
 	BKSTCmd cmd;
 
@@ -39,7 +39,7 @@ int main (int argc, char * argv [])
 	BKSTParserInitWithFile (& parser, file);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
-		printf ("%d %s %ld\n", token, cmd.name, cmd.numArgs);
+		printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
 
 		if (cmd.numArgs > 0) {
 			for (BKInt i = 0; i < cmd.numArgs; i ++) {

@@ -127,10 +127,12 @@ static void BKSTParserArgsClear (BKSTParser * parser)
 	parser -> argBufPtr = parser -> argBuf;
 }
 
-BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
+BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 {
 	int flag = 1;
-	BKSTToken token = BKSTTokenEnd;
+	int lineno = 0, colno = 0;
+	BKSTToken token;
+	BKSTTokenType type = BKSTTokenEnd;
 	uint8_t const * arg;
 	size_t size;
 
@@ -140,34 +142,44 @@ BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	outCmd -> args = parser -> argBuf;
 
 	do  {
-		token = BKSTTokenizerNextToken (& parser -> tokenizer, & arg, & size);
+		type = BKSTTokenizerNextToken (& parser -> tokenizer, & token);
 
-		if ((int) token == -1) {
+		if ((int) type == -1) {
 			return -1;
 		}
 
-		switch (token) {
-			case BKSTTokenEnd:
+		switch (type) {
+			case BKSTTokenEnd: {
+				flag = 0;
+				break;
+			}
 			case BKSTTokenGrpBegin:
 			case BKSTTokenGrpEnd: {
+				lineno = token.lineno;
+				colno = token.colno;
 				flag = 0;
 				break;
 			}
 			case BKSTTokenCmdSep: {
 				if (parser -> argBufPtr > parser -> argBuf) {
+					type = BKSTTokenValue;
 					flag = 0;
 				}
 				break;
 			}
 			case BKSTTokenValue: {
-				if (BKSTParserArgPush (parser, (void *) arg, size) < 0) {
+				if (parser -> argBufPtr == parser -> argBuf) {
+					lineno = token.lineno;
+					colno = token.colno;
+				}
+
+				if (BKSTParserArgPush (parser, (void *) token.value, token.size) < 0) {
 					return -1;
 				}
 				break;
 			}
 			case BKSTTokenArgSep:
 			case BKSTTokenNone:
-			case BKSTTokenUnknown:
 			case BKSTTokenComment: {
 				break;
 			}
@@ -175,7 +187,10 @@ BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	}
 	while (flag);
 
+	outCmd -> token   = type;
 	outCmd -> numArgs = parser -> argBufPtr - parser -> argBuf;
+	outCmd -> lineno  = lineno;
+	outCmd -> colno   = colno;
 
 	if (outCmd -> numArgs) {
 		outCmd -> name     = outCmd -> args [0].arg;
@@ -184,7 +199,7 @@ BKSTToken BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 		outCmd -> numArgs --;
 	}
 
-	return token;
+	return type;
 }
 
 void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize)
