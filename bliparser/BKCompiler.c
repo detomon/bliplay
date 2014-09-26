@@ -76,7 +76,7 @@ static strval commands [] =
 	{"dr",  BKIntrSampleRepeat},
 	{"e",   BKIntrEffect},
 	{"g",   BKIntrGroupJump},
-	{"grp", BKIntrGroup},
+	{"grp", BKIntrGroupDef},
 	{"i",   BKIntrInstrument},
 	{"m",   BKIntrMute},
 	{"mt",  BKIntrMuteTicks},
@@ -260,7 +260,7 @@ static BKInt * BKCompilerCombineCmds (BKCompiler * compiler, BKInt * allCmds, BK
 			case BKIntrJump:           argCount = 1; break;
 			case BKIntrEnd:            argCount = 0; break;
 			case BKIntrSetRepeatStart: argCount = 0; break;
-			case BKIntrGroup:          argCount = 0; break;
+			case BKIntrGroupDef:       argCount = 0; break;
 			case BKIntrCall:           argCount = 0; break;
 			case BKIntrRepeat:         argCount = 0; break;
 		}
@@ -357,7 +357,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * instr)
 	}
 
 	switch (item -> value) {
-		case BKIntrGroup: {
+		case BKIntrGroupDef: {
 			// begin group
 			if (strcmpx (arg0, "begin") == 0) {
 				if (compiler -> groupLevel == 0) {

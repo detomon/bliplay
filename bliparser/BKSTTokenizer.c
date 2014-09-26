@@ -35,7 +35,7 @@
  * Terminal characters (':', ';') which are used in the syntax have the value -2.
  * '=' also counts as terminal character to stop parsing.
  */
-static char const BKBase64Table [256] =
+static char const base64Chars [256] =
 {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -212,11 +212,12 @@ static int BKSTTokenizerReadBase64 (BKSTTokenizer * tokenizer)
 	do {
 		c = BKSTTokenizerNextChar (tokenizer);
 
+		// no more characters
 		if (c == -1) {
 			return -1;
 		}
 
-		bc = BKBase64Table [c];
+		bc = base64Chars [c];
 
 		// ignore invalid char
 		if (bc == -1) {
@@ -244,7 +245,7 @@ static int BKSTTokenizerReadBase64 (BKSTTokenizer * tokenizer)
 		c = BKSTTokenizerNextChar (tokenizer);
 
 		if (c == -1) {
-			return -1;
+			break;
 		}
 	}
 

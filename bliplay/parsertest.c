@@ -25,18 +25,27 @@
 #include <termios.h>
 #include <unistd.h>
 #include "BKSTParser.h"
+#include "BKCompiler2.h"
 
- BKSTTokenizer tokenizer;
+static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
+//static char const * filename = "/Users/simon/Downloads/base64.blip";
 
 int main (int argc, char * argv [])
 {
 	BKSTTokenType token;
 	BKSTParser parser;
 	BKSTCmd cmd;
+	BKCompiler2 compiler;
 
-	FILE * file = fopen ("/Users/simon/Downloads/test-new-format.blip", "r");
+	FILE * file = fopen (filename, "r");
+
+	if (file == NULL) {
+		fprintf (stderr, "No such file: %s\n", filename);
+		return 1;
+	}
 
 	BKSTParserInitWithFile (& parser, file);
+	BKCompiler2Init (& compiler);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
 		printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
@@ -46,9 +55,25 @@ int main (int argc, char * argv [])
 				printf ("  '%s' (%ld)\n", cmd.args[i].arg, cmd.args[i].size);
 			}
 		}
+
+		BKCompiler2PushCommand (& compiler, & cmd);
+	}
+
+	if (BKCompiler2Terminate (& compiler, 0) < 0) {
+		return 1;
+	}
+
+	printf("\n\n");
+
+	BKByteBuffer * buffer;
+
+	for (BKInt i = 0; i < compiler.cmdGroups.length; i ++) {
+		buffer = BKArrayGetItemAtIndex (& compiler.cmdGroups, i);
+		printf("%u %lu\n", i, buffer -> size);
 	}
 
 	BKSTParserDispose (& parser);
+	BKCompiler2Dispose (& compiler);
 
 	fclose (file);
 

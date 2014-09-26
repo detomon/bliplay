@@ -14,6 +14,7 @@ AC_PROG_MAKE_SET
 AC_PROG_CPP
 AC_PROG_MKDIR_P
 AC_PROG_RANLIB
+AC_PROG_LN_S
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 # Checks for libraries.
@@ -26,6 +27,7 @@ AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h termios.h
 AC_C_INLINE
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
+AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 

@@ -1,0 +1,727 @@
+/**
+ * Copyright (c) 2014 Simon Schoenenberger
+ * http://blipkit.monoxid.net/
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#include <stdio.h>
+#include "BKTone.h"
+#include "BKCompiler2.h"
+
+#define VOLUME_UNIT (BK_MAX_VOLUME / 255)
+#define PITCH_UNIT (BK_FINT20_UNIT / 100)
+
+enum
+{
+	BKCompiler2FlagOpenGroup   = 1 << 0,
+	BKCompiler2FlagArpeggio    = 1 << 1,
+};
+
+/**
+ * Used for lookup tables to assign a string to a value
+ */
+typedef struct
+{
+	char * name;
+	BKInt  value;
+	BKUInt flags;
+} const strval;
+
+/**
+ * Group stack item
+ */
+typedef struct {
+	BKUInt         level;
+	BKInstruction  groupType;
+	BKByteBuffer * cmdBuffer;
+} BKCompiler2Group;
+
+/**
+ * Note lookup table
+ */
+static strval noteNames [] =
+{
+	{"a",  9},
+	{"a#", 10},
+	{"b",  11},
+	{"c",  0},
+	{"c#", 1},
+	{"d",  2},
+	{"d#", 3},
+	{"e",  4},
+	{"f",  5},
+	{"f#", 6},
+	{"g",  7},
+	{"g#", 8},
+	{"h",  11},
+};
+
+/**
+ * Command lookup table
+ */
+static strval cmdNames [] =
+{
+	{"a",     BKIntrAttack},
+	{"as",    BKIntrArpeggioSpeed},
+	{"at",    BKIntrAttackTicks},
+	{"d",     BKIntrSample},
+	{"dc",    BKIntrDutyCycle},
+	{"dn",    BKIntrSampleRange},
+	{"dr",    BKIntrSampleRepeat},
+	{"e",     BKIntrEffect},
+	{"g",     BKIntrGroupJump},
+	{"grp",   BKIntrGroupDef, BKCompiler2FlagOpenGroup},
+	{"i",     BKIntrInstrument},
+	{"instr", BKIntrInstrumentDef, BKCompiler2FlagOpenGroup},
+	{"m",     BKIntrMute},
+	{"mt",    BKIntrMuteTicks},
+	{"p",     BKIntrPanning},
+	{"pt",    BKIntrPitch},
+	{"pw",    BKIntrPhaseWrap},
+	{"r",     BKIntrRelease},
+	{"rt",    BKIntrReleaseTicks},
+	{"s",     BKIntrStep},
+	{"samp",  BKIntrSampleDef},
+	{"st",    BKIntrStepTicks},
+	{"t",     BKIntrTicks},
+	{"track", BKIntrTrackDef, BKCompiler2FlagOpenGroup},
+	{"vm",    BKIntrMasterVolume},
+	{"w",     BKIntrWaveform},
+	{"wave",  BKIntrWaveformDef, BKCompiler2FlagOpenGroup},
+	{"x",     BKIntrRepeat},
+	{"xb",    BKIntrSetRepeatStart},
+	{"z",     BKIntrEnd},
+};
+
+/**
+ * Effect lookup table
+ */
+static strval effectNames [] =
+{
+	{"pr", BK_EFFECT_PORTAMENTO},
+	{"ps", BK_EFFECT_PANNING_SLIDE},
+	{"tr", BK_EFFECT_TREMOLO},
+	{"vb", BK_EFFECT_VIBRATO},
+	{"vs", BK_EFFECT_VOLUME_SLIDE},
+};
+
+/**
+ * Waveform lookup table
+ */
+static strval waveformNames [] =
+{
+	{"noise",    BK_NOISE},
+	{"sawtooth", BK_SAWTOOTH},
+	{"sine",     BK_SINE},
+	{"square",   BK_SQUARE},
+	{"triangle", BK_TRIANGLE},
+};
+
+#define NUM_WAVEFORM_NAMES (sizeof (waveformNames) / sizeof (strval))
+#define NUM_CMD_NAMES (sizeof (cmdNames) / sizeof (strval))
+#define NUM_EFFECT_NAMES (sizeof (effectNames) / sizeof (strval))
+#define NUM_NOTE_NAMES (sizeof (noteNames) / sizeof (strval))
+
+/**
+ * Convert string to signed integer like `atoi`
+ * Returns alternative value if string is NULL
+ */
+static int atoix (char const * str, int alt)
+{
+	return str ? atoi (str) : alt;
+}
+
+/**
+ * Compare two strings like `strcmp`
+ * Returns -1 is if one of the strings is NULL
+ */
+static int strcmpx (char const * a, char const * b)
+{
+	return (a && b) ? strcmp (a, b) : -1;
+}
+
+/**
+ * Compare name of command with string
+ * Used as callback for `bsearch`
+ */
+static int strvalcmp (char const * name, strval const * item)
+{
+	return strcmp (name, item -> name);
+}
+
+BKInt BKCompiler2Init (BKCompiler2 * compiler)
+{
+	memset (compiler, 0, sizeof (*compiler));
+
+	if (BKArrayInit (& compiler -> cmdGroups, sizeof (BKByteBuffer), 0) < 0) {
+		return -1;
+	}
+
+	if (BKByteBufferInit (& compiler -> globalCmds, 0) < 0) {
+		return -1;
+	}
+
+	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompiler2Group), 0) < 0) {
+		return -1;
+	}
+
+	BKCompiler2Reset (compiler);
+
+	return 0;
+}
+
+void BKCompiler2Dispose (BKCompiler2 * compiler)
+{
+	BKArrayDispose (& compiler -> cmdGroups);
+	BKByteBufferDispose (& compiler -> globalCmds);
+	BKArrayDispose (& compiler -> groupStack);
+
+	memset (compiler, 0, sizeof (*compiler));
+}
+
+static BKInt BKCompilerStrvalTableLookup (strval table [], size_t size, char const * name, BKInt * outValue, BKUInt * outFlags)
+{
+	strval * item = bsearch (name, table, size, sizeof (strval), (void *) strvalcmp);
+
+	if (item == NULL) {
+		return 0;
+	}
+
+	* outValue = item -> value;
+
+	if (outFlags) {
+		* outFlags = item -> flags;
+	}
+
+	return 1;
+}
+
+/**
+ * Get note value for note string
+ *
+ * note octave [+-pitch]
+ * Examples: c#3, e2+56, a#2-26
+ */
+static BKInt BKCompiler2ParseNote (char const * name)
+{
+	char  note [3];
+	BKInt value  = 0;
+	BKInt octave = 0;
+	BKInt pitch  = 0;
+
+	strcpy (note, "");  // empty name
+	sscanf (name, "%2[a-z#]%u%d", note, & octave, & pitch);  // scan string; d#3[+-p] => "d#", 3, p
+
+	if (BKCompilerStrvalTableLookup (noteNames, NUM_NOTE_NAMES, note, & value, NULL)) {
+		value += octave * 12;
+		value = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
+		value = (value << BK_FINT20_SHIFT) + pitch * PITCH_UNIT;
+	}
+
+	return value;
+}
+
+static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BKInt index)
+{
+	BKByteBuffer * buffer = NULL;
+
+	// search for free slot
+	if (index == -1) {
+		for (BKInt i = 0; i < compiler -> cmdGroups.length; i ++) {
+			buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, i);
+
+			if (buffer -> size == 0) {
+				index = i;
+				break;
+			}
+		}
+
+		if (index == -1) {
+			index = compiler -> cmdGroups.length;
+		}
+	}
+	else {
+		buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, index);
+	}
+
+	if (buffer == NULL) {
+		while (compiler -> cmdGroups.length <= index) {
+			buffer = BKArrayPushPtr (& compiler -> cmdGroups);
+
+			if (buffer == NULL) {
+				return NULL;
+			}
+		}
+	}
+
+	return buffer;
+}
+
+static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
+{
+	char const       * arg0str;
+	BKInt              values [2];
+	BKInt              args [3];
+	BKInt              numArgs;
+	BKInt              value;
+	BKInstruction      instr;
+	BKCompiler2Group * group = BKArrayGetLastItem (& compiler -> groupStack);
+	BKByteBuffer     * cmds  = group -> cmdBuffer;
+
+	arg0str = cmd -> args [0].arg;
+	numArgs = cmd -> numArgs;
+
+	if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, NULL) == 0) {
+		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+		return 0;
+	}
+
+	instr = value;
+
+	switch (instr) {
+		// command:8
+		// group number:8
+		case BKIntrGroupJump: {
+			args [0] = atoix (cmd -> args [1].arg, 0);
+
+			// jump to group
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt8 (cmds, atoix (arg0str, 0));
+
+			break;
+		}
+		// command:8
+		// note:32
+		// --- arpeggio
+		// command:8
+		// num values:8
+		// values:32*
+		case BKIntrAttack: {
+			values [0] = BKCompiler2ParseNote (arg0str);
+
+			if (values [0] > -1) {
+				BKByteBufferAppendInt8 (cmds, instr);
+				BKByteBufferAppendInt32 (cmds, values [0]);
+
+				// set arpeggio
+				if (numArgs > 1) {
+					numArgs = BKMin (numArgs, BK_MAX_ARPEGGIO);
+
+					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
+					BKByteBufferAppendInt8 (cmds, (BKInt) numArgs);
+
+					for (BKInt j = 0; j < numArgs; j ++) {
+						values [1] = BKCompiler2ParseNote (cmd -> args [j].arg);
+
+						if (values [1] < 0) {
+							values [1] = 0;
+						}
+
+						BKByteBufferAppendInt32 (cmds, values [1] - values [0]);
+					}
+
+					compiler -> flags |= BKCompiler2FlagArpeggio;
+				}
+				// disable arpeggio
+				else {
+					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
+					BKByteBufferAppendInt8 (cmds, 0);
+					compiler -> flags &= ~BKCompiler2FlagArpeggio;
+				}
+			}
+
+			break;
+		}
+		// command:8
+		// --- arpeggio
+		// command:8
+		// 0:8
+		case BKIntrRelease:
+		case BKIntrMute: {
+			// disable arpeggio
+			if (compiler -> flags & BKCompiler2FlagArpeggio) {
+				if (instr == BKIntrMute) {
+					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
+					BKByteBufferAppendInt8 (cmds, 0);
+					compiler -> flags &= ~BKCompiler2FlagArpeggio;
+				}
+			}
+
+			BKByteBufferAppendInt8 (cmds, instr);
+
+			break;
+		}
+		// command:8
+		// ticks:16
+		case BKIntrAttackTicks:
+		case BKIntrReleaseTicks:
+		case BKIntrMuteTicks: {
+			values [0] = atoix (arg0str, 0);
+
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, values [0]);
+			break;
+		}
+		// command:8
+		// volume:16
+		case BKIntrVolume: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT);
+			break;
+		}
+		// command:8
+		// volume:16
+		case BKIntrMasterVolume: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT);
+			break;
+		}
+		// command:8
+		// value:16
+		case BKIntrStep:
+		case BKIntrTicks:
+		case BKIntrStepTicks: {
+			values [0] = atoix (arg0str, 0);
+
+			if (values [0] == 0) {
+				return 0;
+			}
+
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, values [0]);
+			break;
+		}
+		// command:8
+		// value[4]:32
+		case BKIntrEffect: {
+			if (BKCompilerStrvalTableLookup (effectNames, NUM_EFFECT_NAMES, arg0str, & values [0], NULL)) {
+				args [0] = atoix (cmd -> args [1].arg, 0);
+				args [1] = atoix (cmd -> args [2].arg, 0);
+				args [2] = atoix (cmd -> args [3].arg, 0);
+
+				switch (values [0]) {
+					case BK_EFFECT_TREMOLO: {
+						args [1] *= VOLUME_UNIT;
+						break;
+					}
+					case BK_EFFECT_VIBRATO: {
+						args [1] *= PITCH_UNIT;
+						break;
+					}
+				}
+
+				BKByteBufferAppendInt8 (cmds, instr);
+				BKByteBufferAppendInt32 (cmds, values [0]);
+				BKByteBufferAppendInt32 (cmds, args [0]);
+				BKByteBufferAppendInt32 (cmds, args [1]);
+				BKByteBufferAppendInt32 (cmds, args [2]);
+			}
+
+			break;
+		}
+		// command:8
+		// duty cycle:8
+		case BKIntrDutyCycle: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt8 (cmds, atoix (arg0str, 0));
+			break;
+		}
+		// command:8
+		// phase wrap:16
+		case BKIntrPhaseWrap: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt32 (cmds, atoix (arg0str, 0));
+			break;
+		}
+		// command:8
+		// panning:16
+		case BKIntrPanning: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT / 2);
+			break;
+		}
+		// command:8
+		// pitch:32
+		case BKIntrPitch: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt32 (cmds, atoix (arg0str, 0) * PITCH_UNIT);
+			break;
+		}
+		// command:8
+		// instrument:16
+		case BKIntrInstrument: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, -1));
+			break;
+		}
+		// command:8
+		// waveform:16
+		case BKIntrWaveform: {
+			if (arg0str) {
+				BKByteBufferAppendInt8 (cmds, instr);
+
+				if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, arg0str, & values [0], NULL) == 0) {
+					values [0]  = atoix (arg0str, 0);
+					values [0] |= BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+				}
+
+				BKByteBufferAppendInt16 (cmds, values [0]);
+			}
+			break;
+		}
+		// command:8
+		// sample:16
+		case BKIntrSample: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, -1));
+			break;
+		}
+		// command:8
+		// repeat:8
+		case BKIntrSampleRepeat: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt8 (cmds, atoix (arg0str, 0));
+			break;
+		}
+		// command:8
+		// from:32
+		// to:32
+		case BKIntrSampleRange: {
+			values [0] = atoix (cmd -> args [0].arg, 0);
+			args   [0] = atoix (cmd -> args [1].arg, 0);
+
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt32 (cmds, values [0]);
+			BKByteBufferAppendInt32 (cmds, args [0]);
+			break;
+		}
+		// command:8
+		// speed:8
+		case BKIntrArpeggioSpeed: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt8 (cmds, BKMax (atoix (arg0str, 0), 1));
+			break;
+		}
+		// command:8
+		case BKIntrSetRepeatStart: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			break;
+		}
+		// command:8
+		// jump:8
+		case BKIntrRepeat: {
+			BKByteBufferAppendInt8 (cmds, BKIntrJump);
+			BKByteBufferAppendInt32 (cmds, -1);
+
+			break;
+		}
+		// command:8
+		case BKIntrEnd: {
+			BKByteBufferAppendInt8 (cmds, instr);
+			break;
+		}
+		// ignore invalid command
+		default: {
+			break;
+		}
+	}
+
+	return 0;
+}
+
+BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
+{
+	BKInt              index;
+	BKInt              value;
+	BKByteBuffer     * buffer;
+	BKInstruction      instr;
+	BKUInt             flags;
+	BKCompiler2Group * group, * newGroup;
+
+	switch (cmd -> token) {
+		case BKSTTokenValue: {
+			// previous token was group begin
+			if (compiler -> flags & BKCompiler2FlagOpenGroup) {
+				compiler -> flags &= ~BKCompiler2FlagOpenGroup;
+				group = BKArrayGetLastItem (& compiler -> groupStack);
+				flags = 0;
+				value = 0;
+
+				if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, & flags) == 0) {
+					fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+					return 0;
+				}
+
+				instr = value;
+
+				if ((flags & BKCompiler2FlagOpenGroup) == 0) {
+					fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+					return 0;
+				}
+
+				switch (instr) {
+					case BKIntrGroupDef: {
+						index  = atoix (cmd -> args [0].arg, -1);
+						buffer = BKCompiler2GetCmdGroupForIndex (compiler, index);
+
+						if (buffer == NULL) {
+							return -1;
+						}
+
+						group -> cmdBuffer = buffer;
+						break;
+					}
+					case BKIntrInstrumentDef: {
+
+						break;
+					}
+					case BKIntrSampleDef: {
+
+						break;
+					}
+					case BKIntrTrackDef: {
+
+						break;
+					}
+					case BKIntrWaveformDef: {
+
+						break;
+					}
+					default: {
+						fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+						break;
+					}
+				}
+
+				group -> groupType = instr;
+			}
+			else {
+				if (BKCompiler2PushTrackCommand (compiler, cmd) < 0) {
+					return -1;
+				}
+			}
+
+			break;
+		}
+		case BKSTTokenGrpBegin: {
+			compiler -> flags |= BKCompiler2FlagOpenGroup;
+
+			group    = BKArrayGetLastItem (& compiler -> groupStack);
+			newGroup = BKArrayPushPtr (& compiler -> groupStack);
+
+			if (newGroup == NULL) {
+				fprintf (stderr, "Allocation error\n");
+				return -1;
+			}
+
+			memcpy (newGroup, group, sizeof (* group));
+			newGroup -> level ++;
+
+			break;
+		}
+		case BKSTTokenGrpEnd: {
+			if (compiler -> groupStack.length <= 0) {
+				fprintf (stderr, "Unbalanced group on line %d:%d\n", cmd -> lineno, cmd -> colno);
+				return -1;
+			}
+
+			BKArrayPop (& compiler -> groupStack, NULL);
+
+			break;
+		}
+		case BKSTTokenEnd:
+		case BKSTTokenNone:
+		case BKSTTokenComment:
+		case BKSTTokenArgSep:
+		case BKSTTokenCmdSep: {
+			// ignore
+			break;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * Append commands from array
+ */
+static BKInt * BKCompiler2Combine (BKCompiler2 * compiler)
+{
+	return NULL;
+}
+
+BKInt BKCompiler2Terminate (BKCompiler2 * compiler, BKEnum options)
+{
+	if (compiler -> groupStack.length > 1) {
+		fprintf (stderr, "Unterminated groups (%lu)\n", compiler -> groupStack.length);
+		return -1;
+	}
+
+	// combine commands and group commands into one array
+	if (BKCompiler2Combine (compiler) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static BKInt BKCompiler2Parse (BKCompiler2 * compiler, BKSTParser * parser)
+{
+	BKSTCmd cmd;
+
+	while (BKSTParserNextCommand (parser, & cmd)) {
+		if (BKCompiler2PushCommand (compiler, & cmd) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+BKInt BKCompiler2Compile (BKCompiler2 * compiler, BKSTParser * parser, BKEnum options)
+{
+	if (BKCompiler2Parse (compiler, parser) < 0) {
+		return -1;
+	}
+
+	if (BKCompiler2Terminate (compiler, options) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+void BKCompiler2Reset (BKCompiler2 * compiler)
+{
+	BKByteBuffer     * buffer;
+	BKCompiler2Group * group;
+
+	for (BKInt i = 0; i < compiler -> cmdGroups.length; i ++) {
+		buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, i);
+		BKByteBufferEmpty (buffer, 0);
+	}
+
+	BKArrayEmpty (& compiler -> cmdGroups, 1);
+	BKArrayEmpty (& compiler -> groupStack, 1);
+	BKByteBufferEmpty (& compiler -> globalCmds, 1);
+
+	group = BKArrayPushPtr (& compiler -> groupStack);
+	group -> cmdBuffer = & compiler -> globalCmds;
+}
