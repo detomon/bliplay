@@ -133,8 +133,6 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	int lineno = 0, colno = 0;
 	BKSTToken token;
 	BKSTTokenType type = BKSTTokenEnd;
-	uint8_t const * arg;
-	size_t size;
 
 	memset (outCmd, 0, sizeof (*outCmd));
 	BKSTParserArgsClear (parser);
