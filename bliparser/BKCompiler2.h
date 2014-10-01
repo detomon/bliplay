@@ -38,6 +38,7 @@ struct BKCompiler2
 	BKArray         cmdGroups;
 	BKArray         tracks;
 	BKByteBuffer    globalCmds;
+	BKUInt          ignoreGroupLevel;
 	BKInterpreter * interpreter;
 };
 

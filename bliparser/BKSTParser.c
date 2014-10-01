@@ -43,7 +43,7 @@ static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 	return 0;
 }
 
-BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize)
+BKInt BKSTParserInit (BKSTParser * parser, char const * data, BKSize dataSize)
 {
 	if (BKSTParserInitGeneric (parser) < 0) {
 		BKSTParserDispose (parser);
@@ -89,7 +89,7 @@ void BKSTParserDispose (BKSTParser * parser)
 static BKInt BKSTParserArgBufferGrow (BKSTParser * parser)
 {
 	off_t bufOff;
-	size_t newCapacity = parser -> argBufCapacity * 2;
+	BKSize newCapacity = parser -> argBufCapacity * 2;
 	BKSTArg * newBuf = realloc (parser -> argBuf, newCapacity);
 
 	if (newBuf == NULL) {
@@ -104,7 +104,7 @@ static BKInt BKSTParserArgBufferGrow (BKSTParser * parser)
 	return 0;
 }
 
-static BKInt BKSTParserArgPush (BKSTParser * parser, char const * arg, size_t size)
+static BKInt BKSTParserArgPush (BKSTParser * parser, char const * arg, BKSize size)
 {
 	if ((void *) parser -> argBufPtr >= (void *) parser -> argBuf + parser -> argBufCapacity) {
 		if (BKSTParserArgBufferGrow (parser) < 0) {
@@ -129,8 +129,8 @@ static void BKSTParserArgsClear (BKSTParser * parser)
 
 BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 {
-	int flag = 1;
-	int lineno = 0, colno = 0;
+	BKInt flag = 1, flags = 0;
+	BKInt lineno = 0, colno = 0;
 	BKSTToken token;
 	BKSTTokenType type = BKSTTokenEnd;
 
@@ -151,11 +151,14 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 				flag = 0;
 				break;
 			}
-			case BKSTTokenGrpBegin:
+			case BKSTTokenGrpBegin: {
+				flags |= BKSTParserFlagGroup;
+				break;
+			}
 			case BKSTTokenGrpEnd: {
 				lineno = token.lineno;
-				colno = token.colno;
-				flag = 0;
+				colno  = token.colno;
+				flag   = 0;
 				break;
 			}
 			case BKSTTokenCmdSep: {
@@ -168,7 +171,7 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 			case BKSTTokenValue: {
 				if (parser -> argBufPtr == parser -> argBuf) {
 					lineno = token.lineno;
-					colno = token.colno;
+					colno  = token.colno;
 				}
 
 				if (BKSTParserArgPush (parser, (void *) token.value, token.size) < 0) {
@@ -185,6 +188,11 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	}
 	while (flag);
 
+	if (flags & BKSTParserFlagGroup) {
+		type = BKSTTokenGrpBegin;
+	}
+
+	outCmd -> flags   = flags;
 	outCmd -> token   = type;
 	outCmd -> numArgs = parser -> argBufPtr - parser -> argBuf;
 	outCmd -> lineno  = lineno;
@@ -200,7 +208,7 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	return type;
 }
 
-void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize)
+void BKSTParserSetData (BKSTParser * parser, char const * data, BKSize dataSize)
 {
 	if (data == NULL) {
 		dataSize = 0;

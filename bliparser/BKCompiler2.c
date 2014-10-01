@@ -30,8 +30,8 @@
 
 enum
 {
-	BKCompiler2FlagOpenGroup   = 1 << 0,
-	BKCompiler2FlagArpeggio    = 1 << 1,
+	BKCompiler2FlagOpenGroup = 1 << 0,
+	BKCompiler2FlagArpeggio  = 1 << 1,
 };
 
 /**
@@ -196,7 +196,7 @@ void BKCompiler2Dispose (BKCompiler2 * compiler)
 	memset (compiler, 0, sizeof (*compiler));
 }
 
-static BKInt BKCompilerStrvalTableLookup (strval table [], size_t size, char const * name, BKInt * outValue, BKUInt * outFlags)
+static BKInt BKCompilerStrvalTableLookup (strval table [], BKSize size, char const * name, BKInt * outValue, BKUInt * outFlags)
 {
 	strval * item = bsearch (name, table, size, sizeof (strval), (void *) strvalcmp);
 
@@ -247,6 +247,7 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 		for (BKInt i = 0; i < compiler -> cmdGroups.length; i ++) {
 			buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, i);
 
+			// is empty slot
 			if (buffer -> size == 0) {
 				index = i;
 				break;
@@ -279,8 +280,7 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 	char const       * arg0str;
 	BKInt              values [2];
 	BKInt              args [3];
-	BKInt              numArgs;
-	BKInt              value;
+	BKInt              numArgs, value;
 	BKInstruction      instr;
 	BKCompiler2Group * group = BKArrayGetLastItem (& compiler -> groupStack);
 	BKByteBuffer     * cmds  = group -> cmdBuffer;
@@ -304,7 +304,6 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 			// jump to group
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt8 (cmds, atoix (arg0str, 0));
-
 			break;
 		}
 		// command:8
@@ -365,7 +364,6 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 			}
 
 			BKByteBufferAppendInt8 (cmds, instr);
-
 			break;
 		}
 		// command:8
@@ -433,7 +431,6 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 				BKByteBufferAppendInt32 (cmds, args [1]);
 				BKByteBufferAppendInt32 (cmds, args [2]);
 			}
-
 			break;
 		}
 		// command:8
@@ -478,8 +475,7 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 				BKByteBufferAppendInt8 (cmds, instr);
 
 				if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, arg0str, & values [0], NULL) == 0) {
-					values [0]  = atoix (arg0str, 0);
-					values [0] |= BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+					values [0] = atoix (arg0str, 0) | BK_INTR_CUSTOM_WAVEFOMR_FLAG;
 				}
 
 				BKByteBufferAppendInt16 (cmds, values [0]);
@@ -529,7 +525,6 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 		case BKIntrRepeat: {
 			BKByteBufferAppendInt8 (cmds, BKIntrJump);
 			BKByteBufferAppendInt32 (cmds, -1);
-
 			break;
 		}
 		// command:8
@@ -548,81 +543,26 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 
 BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 {
-	BKInt              index;
-	BKInt              value;
+	BKInt              index, value;
+	BKUInt             flags;
 	BKByteBuffer     * buffer;
 	BKInstruction      instr;
-	BKUInt             flags;
 	BKCompiler2Group * group, * newGroup;
 
 	switch (cmd -> token) {
 		case BKSTTokenValue: {
-			// previous token was group begin
-			if (compiler -> flags & BKCompiler2FlagOpenGroup) {
-				compiler -> flags &= ~BKCompiler2FlagOpenGroup;
-				group = BKArrayGetLastItem (& compiler -> groupStack);
-				flags = 0;
-				value = 0;
-
-				if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, & flags) == 0) {
-					fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
-					return 0;
-				}
-
-				instr = value;
-
-				if ((flags & BKCompiler2FlagOpenGroup) == 0) {
-					fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
-					return 0;
-				}
-
-				switch (instr) {
-					case BKIntrGroupDef: {
-						index  = atoix (cmd -> args [0].arg, -1);
-						buffer = BKCompiler2GetCmdGroupForIndex (compiler, index);
-
-						if (buffer == NULL) {
-							return -1;
-						}
-
-						group -> cmdBuffer = buffer;
-						break;
-					}
-					case BKIntrInstrumentDef: {
-
-						break;
-					}
-					case BKIntrSampleDef: {
-
-						break;
-					}
-					case BKIntrTrackDef: {
-
-						break;
-					}
-					case BKIntrWaveformDef: {
-
-						break;
-					}
-					default: {
-						fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
-						break;
-					}
-				}
-
-				group -> groupType = instr;
+			// ignore current group
+			if (compiler -> ignoreGroupLevel) {
+				return 0;
 			}
-			else {
-				if (BKCompiler2PushTrackCommand (compiler, cmd) < 0) {
-					return -1;
-				}
+
+			if (BKCompiler2PushTrackCommand (compiler, cmd) < 0) {
+				return -1;
 			}
 
 			break;
 		}
 		case BKSTTokenGrpBegin: {
-			compiler -> flags |= BKCompiler2FlagOpenGroup;
-
 			group    = BKArrayGetLastItem (& compiler -> groupStack);
 			newGroup = BKArrayPushPtr (& compiler -> groupStack);
 
@@ -634,6 +574,53 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 			memcpy (newGroup, group, sizeof (* group));
 			newGroup -> level ++;
 
+			flags = 0;
+			value = 0;
+
+			if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, & flags) == 0) {
+				fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+				return 0;
+			}
+
+			instr = value;
+
+			switch (instr) {
+				case BKIntrGroupDef: {
+					index  = atoix (cmd -> args [0].arg, -1);
+					buffer = BKCompiler2GetCmdGroupForIndex (compiler, index);
+
+					if (buffer == NULL) {
+						return -1;
+					}
+
+					group -> cmdBuffer = buffer;
+					break;
+				}
+				case BKIntrInstrumentDef: {
+
+					break;
+				}
+				case BKIntrSampleDef: {
+
+					break;
+				}
+				case BKIntrTrackDef: {
+
+					break;
+				}
+				case BKIntrWaveformDef: {
+
+					break;
+				}
+				default: {
+					fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+					break;
+				}
+			}
+
+			group -> groupType = instr;
+
 			break;
 		}
 		case BKSTTokenGrpEnd: {
@@ -643,6 +630,10 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 			}
 
 			BKArrayPop (& compiler -> groupStack, NULL);
+
+			if (compiler -> groupStack.length <= compiler -> ignoreGroupLevel) {
+				compiler -> ignoreGroupLevel = 0;
+			}
 
 			break;
 		}

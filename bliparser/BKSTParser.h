@@ -31,27 +31,33 @@ typedef struct BKSTParser BKSTParser;
 typedef struct BKSTArg    BKSTArg;
 typedef struct BKSTCmd    BKSTCmd;
 
+enum
+{
+	BKSTParserFlagGroup = 1 << 0,
+};
+
 struct BKSTParser
 {
 	BKSTTokenizer tokenizer;
 	BKSTArg     * argBuf;
 	BKSTArg     * argBufPtr;
-	size_t        argBufCapacity;
+	BKSize        argBufCapacity;
 };
 
 struct BKSTArg
 {
 	char const * arg;
-	size_t       size;
+	BKSize       size;
 };
 
 struct BKSTCmd
 {
+	BKUInt          flags;
 	BKSTTokenType   token;
 	char const    * name;
-	size_t          nameSize;
+	BKSize          nameSize;
 	BKSTArg const * args;
-	size_t          numArgs;
+	BKSize          numArgs;
 	int             lineno;
 	int             colno;
 };
@@ -59,7 +65,7 @@ struct BKSTCmd
 /**
  * Initialize parser object with data
  */
-extern BKInt BKSTParserInit (BKSTParser * parser, char const * data, size_t dataSize);
+extern BKInt BKSTParserInit (BKSTParser * parser, char const * data, BKSize dataSize);
 
 /**
  * Initialize parser object with file
@@ -81,7 +87,7 @@ extern BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCm
  *
  * Allocated memory is reused
  */
-extern void BKSTParserSetData (BKSTParser * parser, char const * data, size_t dataSize);
+extern void BKSTParserSetData (BKSTParser * parser, char const * data, BKSize dataSize);
 
 /**
  * Reset parser with new file
