@@ -23,12 +23,14 @@
 
 #include "BKByteBuffer.h"
 
-#define MIN_CAPACITY 64
+#define MIN_CAPACITY 256
 
-static BKInt BKByteBufferGrow (BKByteBuffer * buffer, size_t minCapacity)
+static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 {
 	void * newData;
-	size_t newCapacity;
+	BKSize newCapacity;
+
+	printf("***Grow %lu\n", buffer);
 
 	newCapacity = BKMax (buffer -> capacity + minCapacity, buffer -> capacity * 1.5);
 	newCapacity = BKMax (MIN_CAPACITY, newCapacity);
@@ -45,11 +47,11 @@ static BKInt BKByteBufferGrow (BKByteBuffer * buffer, size_t minCapacity)
 	return 0;
 }
 
-BKInt BKByteBufferInit (BKByteBuffer * buffer, size_t initCapacity)
+BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 {
 	memset (buffer, 0, sizeof (*buffer));
 
-	buffer -> capacity = initCapacity;
+	buffer -> capacity = BKMax (MIN_CAPACITY, initCapacity);
 	buffer -> data     = malloc (buffer -> capacity);
 
 	if (buffer -> data == NULL) {
@@ -68,14 +70,14 @@ void BKByteBufferDispose (BKByteBuffer * buffer)
 	memset (buffer, 0, sizeof (*buffer));
 }
 
-size_t BKByteBufferGetSize (BKByteBuffer const * buffer)
+BKSize BKByteBufferGetSize (BKByteBuffer const * buffer)
 {
 	return buffer -> size;
 }
 
 BKInt BKByteBufferAppendInt8 (BKByteBuffer * buffer, uint8_t c)
 {
-	size_t size = sizeof (c);
+	BKSize size = sizeof (c);
 
 	if (buffer -> size + size > buffer -> capacity) {
 		if (BKByteBufferGrow (buffer, size) < 0) {
@@ -91,7 +93,7 @@ BKInt BKByteBufferAppendInt8 (BKByteBuffer * buffer, uint8_t c)
 
 BKInt BKByteBufferAppendInt16 (BKByteBuffer * buffer, uint16_t c)
 {
-	size_t size = sizeof (c);
+	BKSize size = sizeof (c);
 
 	if (buffer -> size + size > buffer -> capacity) {
 		if (BKByteBufferGrow (buffer, size) < 0) {
@@ -107,7 +109,7 @@ BKInt BKByteBufferAppendInt16 (BKByteBuffer * buffer, uint16_t c)
 
 BKInt BKByteBufferAppendInt32 (BKByteBuffer * buffer, uint32_t c)
 {
-	size_t size = sizeof (c);
+	BKSize size = sizeof (c);
 
 	if (buffer -> size + size > buffer -> capacity) {
 		if (BKByteBufferGrow (buffer, size) < 0) {
@@ -121,7 +123,7 @@ BKInt BKByteBufferAppendInt32 (BKByteBuffer * buffer, uint32_t c)
 	return 0;
 }
 
-BKInt BKByteBufferAppendPtr (BKByteBuffer * buffer, void const * ptr, size_t size)
+BKInt BKByteBufferAppendPtr (BKByteBuffer * buffer, void const * ptr, BKSize size)
 {
 	if (buffer -> size + size > buffer -> capacity) {
 		if (BKByteBufferGrow (buffer, size) < 0) {

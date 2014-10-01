@@ -60,8 +60,8 @@ static void BKWaveFileHeaderDataRead (BKWaveFileHeaderData * headerData)
 
 BKInt BKWaveFileReaderReadHeader (BKWaveFileReader * reader, BKInt * outNumChannels, BKInt * outSampleRate, BKInt * outNumFrames)
 {
-	size_t size;
-	size_t frameSize;
+	BKSize size;
+	BKSize frameSize;
 	BKWaveFileHeader header;
 	BKWaveFileHeaderFmt headerFmt;
 	BKWaveFileHeaderData headerData;
@@ -135,9 +135,9 @@ BKInt BKWaveFileReaderReadFrames (BKWaveFileReader * reader, BKFrame outFrames [
 {
 	char    buffer [1024];
 	char  * bufferPtr;
-	size_t  readSize, writeSize;
-	size_t  remainingSize;
-	size_t  frameSize;
+	BKSize  readSize, writeSize;
+	BKSize  remainingSize;
+	BKSize  frameSize;
 	BKInt   reverseEndian;
 	BKFrame frame;
 

@@ -25,10 +25,10 @@
 
 #define MIN_CAPACITY 8
 
-static BKInt BKArrayGrow (BKArray * array, size_t minCapacity)
+static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 {
 	void * newItems;
-	size_t newCapacity;
+	BKSize newCapacity;
 
 	newCapacity = BKMax (array -> capacity + minCapacity * array -> itemSize, array -> capacity * 1.5);
 	newCapacity = BKMax (MIN_CAPACITY, newCapacity);
@@ -45,7 +45,7 @@ static BKInt BKArrayGrow (BKArray * array, size_t minCapacity)
 	return 0;
 }
 
-BKInt BKArrayInit (BKArray * array, size_t itemSize, size_t initCapacity)
+BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 {
 	memset (array, 0, sizeof (*array));
 
@@ -69,12 +69,12 @@ void BKArrayDispose (BKArray * array)
 	memset (array, 0, sizeof (*array));
 }
 
-size_t BKArrayGetLength (BKArray const * array)
+BKSize BKArrayGetLength (BKArray const * array)
 {
 	return array -> length;
 }
 
-void * BKArrayGetItemAtIndex (BKArray const * array, size_t index)
+void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index)
 {
 	if (index >= array -> length) {
 		return NULL;
@@ -83,7 +83,7 @@ void * BKArrayGetItemAtIndex (BKArray const * array, size_t index)
 	return array -> items + index * array -> itemSize;
 }
 
-BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, size_t index, void * outItem)
+BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, void * outItem)
 {
 	void const * item = BKArrayGetItemAtIndex (array, index);
 

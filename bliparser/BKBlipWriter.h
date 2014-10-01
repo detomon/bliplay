@@ -28,14 +28,14 @@
 
 typedef struct BKBlipWriter BKBlipWriter;
 
-typedef long (* BKBlipWriterCallback) (char * data, size_t size, void * userInfo);
+typedef long (* BKBlipWriterCallback) (char * data, BKSize size, void * userInfo);
 
 struct BKBlipWriter
 {
-	size_t               argCount;
+	BKSize               argCount;
 	unsigned char      * buffer;
 	unsigned char      * bufferPtr;
-	size_t               bufferCapacity;
+	BKSize               bufferCapacity;
 	BKBlipWriterCallback write;
 	void               * userInfo;
 };
@@ -68,12 +68,12 @@ extern BKInt BKBlipWriterAddFloatArg (BKBlipWriter * writer, double value);
 /**
  * If `size` is 0 length of string is determined by `strlen`
  */
-extern BKInt BKBlipWriterAddStringArg (BKBlipWriter * writer, char const * string, size_t size);
+extern BKInt BKBlipWriterAddStringArg (BKBlipWriter * writer, char const * string, BKSize size);
 
 /**
  * Add base64 encoded argument
  */
-extern BKInt BKBlipWriterAddDataArg (BKBlipWriter * writer, void const * data, size_t size);
+extern BKInt BKBlipWriterAddDataArg (BKBlipWriter * writer, void const * data, BKSize size);
 
 /**
  *

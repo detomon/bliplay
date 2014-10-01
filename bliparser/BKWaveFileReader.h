@@ -37,7 +37,7 @@ struct BKWaveFileReader
 	BKInt  numChannels;
 	BKInt  numBits;
 	BKInt  numFrames;
-	size_t dataSize;
+	BKSize dataSize;
 };
 
 /**

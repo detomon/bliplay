@@ -34,34 +34,34 @@ struct BKBlipReader
 {
 	unsigned char  * buffer;
 	unsigned char  * bufferPtr;
-	size_t           bufferCapacity;
+	BKSize           bufferCapacity;
 	BKBlipArgument * argBuffer;
 	BKBlipArgument * argPtr;
-	size_t           argBufferCapacity;
+	BKSize           argBufferCapacity;
 	unsigned char  * data;
 	unsigned char  * dataPtr;
-	size_t           dataSize;
+	BKSize           dataSize;
 
 };
 
 struct BKBlipArgument
 {
 	char const * arg;
-	size_t       size;
+	BKSize       size;
 };
 
 struct BKBlipCommand
 {
 	char const           * name;
-	size_t                 nameSize;
+	BKSize                 nameSize;
 	BKBlipArgument const * args;
-	size_t                 argCount;
+	BKSize                 argCount;
 };
 
 /**
  *
  */
-extern BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize);
+extern BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, BKSize dataSize);
 
 /**
  *
@@ -76,6 +76,6 @@ extern BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * com
 /**
  *
  */
-extern void BKBlipReaderReset (BKBlipReader * reader, char const * data, size_t dataSize);
+extern void BKBlipReaderReset (BKBlipReader * reader, char const * data, BKSize dataSize);
 
 #endif /* ! _BK_BLIP_READER_H_ */

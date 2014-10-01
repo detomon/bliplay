@@ -82,7 +82,7 @@ extern void BKSDLContextDispose (BKSDLContext * ctx);
 /**
  *
  */
-extern BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size);
+extern BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, BKSize size);
 
 /**
  *

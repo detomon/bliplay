@@ -411,7 +411,7 @@ static BKInt parseSeekTime (char const * string, BKTime * outTime, BKInt speed)
 static int stringEndsWith (char const * str, char const * tail)
 {
 	char const * sc, * tc;
-	size_t sl, tl;
+	BKSize sl, tl;
 
 	if (str == NULL || tail == NULL)
 		return 0;

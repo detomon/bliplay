@@ -119,7 +119,7 @@ static BKInt BKBlipWriterWriteCharEscape (BKBlipWriter * writer, char c)
 	return BKBlipWriterWriteChar (writer, c);
 }
 
-static BKInt BKBlipWriterWriteDataCharsBase64 (BKBlipWriter * writer, unsigned char const * chars, size_t size)
+static BKInt BKBlipWriterWriteDataCharsBase64 (BKBlipWriter * writer, unsigned char const * chars, BKSize size)
 {
 	unsigned c;
 
@@ -169,7 +169,7 @@ static BKInt BKBlipWriterWriteDataCharsBase64 (BKBlipWriter * writer, unsigned c
 	return 0;
 }
 
-static BKInt BKBlipWriterWriteCharsEscape (BKBlipWriter * writer, char const * chars, size_t size)
+static BKInt BKBlipWriterWriteCharsEscape (BKBlipWriter * writer, char const * chars, BKSize size)
 {
 	char const * charsEnd;
 
@@ -184,7 +184,7 @@ static BKInt BKBlipWriterWriteCharsEscape (BKBlipWriter * writer, char const * c
 	return 0;
 }
 
-static BKInt BKBlipWriterWriteChars (BKBlipWriter * writer, char const * chars, size_t size)
+static BKInt BKBlipWriterWriteChars (BKBlipWriter * writer, char const * chars, BKSize size)
 {
 	char const * charsEnd;
 
@@ -199,7 +199,7 @@ static BKInt BKBlipWriterWriteChars (BKBlipWriter * writer, char const * chars, 
 	return 0;
 }
 
-static BKInt BKBlipWriterAddArg (BKBlipWriter * writer, char const * arg, size_t size)
+static BKInt BKBlipWriterAddArg (BKBlipWriter * writer, char const * arg, BKSize size)
 {
 	if (writer -> argCount > 0) {
 		if (BKBlipWriterWriteChar (writer, ':') < 0)
@@ -243,7 +243,7 @@ BKInt BKBlipWriterAddFloatArg (BKBlipWriter * writer, double value)
 	return BKBlipWriterAddArg (writer, buffer, 0);
 }
 
-BKInt BKBlipWriterAddStringArg (BKBlipWriter * writer, char const * string, size_t size)
+BKInt BKBlipWriterAddStringArg (BKBlipWriter * writer, char const * string, BKSize size)
 {
 	if (size == 0 && string)
 		size = strlen (string);
@@ -251,7 +251,7 @@ BKInt BKBlipWriterAddStringArg (BKBlipWriter * writer, char const * string, size
 	return BKBlipWriterAddArg (writer, string, size);
 }
 
-BKInt BKBlipWriterAddDataArg (BKBlipWriter * writer, void const * data, size_t size)
+BKInt BKBlipWriterAddDataArg (BKBlipWriter * writer, void const * data, BKSize size)
 {
 	// add separator
 	if (BKBlipWriterAddArg (writer, "", 0) < 0)

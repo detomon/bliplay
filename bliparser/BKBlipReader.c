@@ -57,7 +57,7 @@ static char const BKReaderBase64Table [256] =
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, size_t dataSize)
+BKInt BKBlipReaderInit (BKBlipReader * reader, char const * data, BKSize dataSize)
 {
 	memset (reader, 0, sizeof (BKBlipReader));
 
@@ -118,7 +118,7 @@ static int BKBlipReaderGetCharTrimWhitespace (BKBlipReader * reader)
 
 static void BKBlipReaderRemapArgs (BKBlipReader * reader, unsigned char * oldBuffer, unsigned char * newBuffer)
 {
-	size_t offset;
+	BKSize offset;
 	BKBlipArgument * arg;
 
 	for (arg = reader -> argBuffer; arg < reader -> argPtr; arg ++) {
@@ -127,7 +127,7 @@ static void BKBlipReaderRemapArgs (BKBlipReader * reader, unsigned char * oldBuf
 	}
 }
 
-static BKInt BKBlipReaderResizeBuffer (BKBlipReader * reader, size_t newCapacity)
+static BKInt BKBlipReaderResizeBuffer (BKBlipReader * reader, BKSize newCapacity)
 {
 	unsigned char * newBuffer;
 
@@ -149,7 +149,7 @@ static BKInt BKBlipReaderResizeBuffer (BKBlipReader * reader, size_t newCapacity
 	return 0;
 }
 
-static BKInt BKBlipReaderBufferEnsureSpace (BKBlipReader * reader, size_t space)
+static BKInt BKBlipReaderBufferEnsureSpace (BKBlipReader * reader, BKSize space)
 {
 	if (reader -> bufferPtr >= & reader -> buffer [reader -> bufferCapacity] - space) {
 		if (BKBlipReaderResizeBuffer (reader, reader -> bufferCapacity * 2) < 0)
@@ -171,10 +171,10 @@ static BKInt BKBlipReaderBufferPutChar (BKBlipReader * reader, int c)
 	return 0;
 }
 
-static BKInt BKBlipReaderBufferPutChars (BKBlipReader * reader, char const * chars, size_t size)
+static BKInt BKBlipReaderBufferPutChars (BKBlipReader * reader, char const * chars, BKSize size)
 {
-	size_t newSize;
-	size_t remaningSize = reader -> bufferCapacity - (reader -> bufferPtr - reader -> buffer);
+	BKSize newSize;
+	BKSize remaningSize = reader -> bufferCapacity - (reader -> bufferPtr - reader -> buffer);
 
 	if (size > remaningSize) {
 		newSize = BKMax (reader -> bufferCapacity * 2, reader -> bufferCapacity + size);
@@ -364,7 +364,7 @@ static BKBlipArgument * BKBlipReaderPrepareArgument (BKBlipReader * reader)
 {
 	BKBlipArgument * arg;
 	BKBlipArgument * newBuffer;
-	size_t           newCapacity;
+	BKSize           newCapacity;
 
 	if (reader -> argPtr >= & reader -> argBuffer [reader -> argBufferCapacity]) {
 		newCapacity = reader -> argBufferCapacity * 2;
@@ -437,7 +437,7 @@ BKInt BKBlipReaderNextCommand (BKBlipReader * reader, BKBlipCommand * command)
 	return 1;
 }
 
-void BKBlipReaderReset (BKBlipReader * reader, char const * data, size_t dataSize)
+void BKBlipReaderReset (BKBlipReader * reader, char const * data, BKSize dataSize)
 {
 	if (data == NULL) {
 		data     = "";

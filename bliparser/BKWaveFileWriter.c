@@ -111,9 +111,9 @@ static BKInt BKWaveFileWriterWriteHeader (BKWaveFileWriter * writer)
 
 BKInt BKWaveFileWriterAppendFrames (BKWaveFileWriter * writer, BKFrame const * frames, BKInt numFrames)
 {
-	size_t  dataSize;
-	size_t  writeSize;
-	size_t  bufferSize = 1024;
+	BKSize  dataSize;
+	BKSize  writeSize;
+	BKSize  bufferSize = 1024;
 	BKFrame buffer [bufferSize];
 
 	if (writer -> dataSize == 0) {

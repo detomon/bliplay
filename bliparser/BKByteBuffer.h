@@ -30,8 +30,8 @@ typedef struct BKByteBuffer BKByteBuffer;
 
 struct BKByteBuffer
 {
-	size_t size;
-	size_t capacity;
+	BKSize size;
+	BKSize capacity;
 	void * data;
 };
 
@@ -41,7 +41,7 @@ struct BKByteBuffer
  * If `initCapacity` is greater than 0 space for the specific number of bytes
  * is reserved
  */
-extern BKInt BKByteBufferInit (BKByteBuffer * buffer, size_t initCapacity);
+extern BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity);
 
 /**
  * Dispose buffer
@@ -51,7 +51,7 @@ extern void BKByteBufferDispose (BKByteBuffer * buffer);
 /**
  * Get number of bytes
  */
-extern size_t BKByteBufferGetSize (BKByteBuffer const * buffer);
+extern BKSize BKByteBufferGetSize (BKByteBuffer const * buffer);
 
 /**
  * Append character
@@ -71,7 +71,7 @@ extern BKInt BKByteBufferAppendInt32 (BKByteBuffer * buffer, uint32_t c);
 /**
  * Append integer
  */
-extern BKInt BKByteBufferAppendPtr (BKByteBuffer * buffer, void const * ptr, size_t size);
+extern BKInt BKByteBufferAppendPtr (BKByteBuffer * buffer, void const * ptr, BKSize size);
 
 /**
  * Empty buffer

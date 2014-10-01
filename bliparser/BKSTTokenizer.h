@@ -47,12 +47,12 @@ struct BKSTTokenizer
 {
 	uint8_t * data;
 	uint8_t * dataPtr;
-	size_t    dataSize;
+	BKSize    dataSize;
 	FILE    * file;
 	int       prevChars [2];
 	uint8_t * readBuf;
 	uint8_t * readBufPtr;
-	size_t    readBufCapacity;
+	BKSize    readBufCapacity;
 	int       lineno;
 	int       colno;
 };
@@ -61,7 +61,7 @@ struct BKSTToken
 {
 	BKSTTokenType type;
 	char const  * value;
-	size_t        size;
+	BKSize        size;
 	int           lineno;
 	int           colno;
 };
@@ -69,7 +69,7 @@ struct BKSTToken
 /**
  * Initialize tokenizer object with data
  */
-extern BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, size_t dataSize);
+extern BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, BKSize dataSize);
 
 /**
  * Initialize tokenizer object with file
@@ -98,7 +98,7 @@ extern void BKSTTokenizerClearTokens (BKSTTokenizer * tokenizer);
  *
  * Allocated memory is reused
  */
-extern void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t dataSize);
+extern void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, BKSize dataSize);
 
 /**
  * Reset tokenizer with new file

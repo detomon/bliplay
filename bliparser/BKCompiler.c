@@ -174,7 +174,7 @@ void BKCompilerDispose (BKCompiler * compiler)
 /**
  * Lookup index from name
  */
-static BKInt BKCompilerLookupValue (strval table [], size_t size, char const * name)
+static BKInt BKCompilerLookupValue (strval table [], BKSize size, char const * name)
 {
 	strval * item;
 	BKUInt   index = -1;

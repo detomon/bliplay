@@ -55,7 +55,7 @@ static char const base64Chars [256] =
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, size_t dataSize)
+BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, BKSize dataSize)
 {
 	memset (tokenizer, 0, sizeof (*tokenizer));
 
@@ -101,7 +101,7 @@ void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 static BKInt BKSTTokenizerReadBufferGrow (BKSTTokenizer * tokenizer)
 {
 	off_t bufOff;
-	size_t newCapacity = tokenizer -> readBufCapacity * 2;
+	BKSize newCapacity = tokenizer -> readBufCapacity * 2;
 	uint8_t * newBuf = realloc (tokenizer -> readBuf, newCapacity);
 
 	if (newBuf == NULL) {
@@ -395,7 +395,7 @@ void BKSTTokenizerClearTokens (BKSTTokenizer * tokenizer)
 	tokenizer -> readBufPtr = tokenizer -> readBuf;
 }
 
-void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, size_t dataSize)
+void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, BKSize dataSize)
 {
 	if (data == NULL) {
 		dataSize = 0;

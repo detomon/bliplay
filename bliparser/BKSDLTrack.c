@@ -243,7 +243,7 @@ static BKEnum numBitsParamFromNumBitsName (char const * numBitsString)
 	return param;
 }
 
-static char * dataFromFile (char const * filename, size_t * outSize)
+static char * dataFromFile (char const * filename, BKSize * outSize)
 {
 	int f = open (filename, O_RDONLY);
 	char * data;
@@ -277,7 +277,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 	BKEnum        format;
 	char const  * filename;
 	void        * data = NULL;
-	size_t        dataSize;
+	BKSize        dataSize;
 
 	sample = malloc (sizeof (BKData));
 
@@ -526,7 +526,7 @@ static char * bk_dirname (char * path)
 	return path;
 }
 
-BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
+BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, BKSize size)
 {
 	BKBlipReader   parser;
 	BKCompiler     compiler;
@@ -732,7 +732,7 @@ BKInt BKSDLContextLoadData (BKSDLContext * ctx, void const * data, size_t size)
 
 BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 {
-	size_t size;
+	BKSize size;
 	char * data;
 	char   dirbuf [PATH_MAX], * dir;
 	char   cwd [PATH_MAX];

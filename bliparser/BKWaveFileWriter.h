@@ -35,8 +35,8 @@ struct BKWaveFileWriter
 	FILE * file;
 	BKInt  sampleRate;
 	BKInt  numChannels;
-	size_t fileSize;
-	size_t dataSize;
+	BKSize fileSize;
+	BKSize dataSize;
 	BKInt  reverseEndian;
 };
 

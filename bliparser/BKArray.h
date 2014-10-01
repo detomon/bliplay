@@ -30,9 +30,9 @@ typedef struct BKArray BKArray;
 
 struct BKArray
 {
-	size_t length;
-	size_t capacity;
-	size_t itemSize;
+	BKSize length;
+	BKSize capacity;
+	BKSize itemSize;
 	void * items;
 };
 
@@ -43,7 +43,7 @@ struct BKArray
  * If `initCapacity` is greater than 0 space for the specific number of items
  * is reserved
  */
-extern BKInt BKArrayInit (BKArray * array, size_t itemSize, size_t initCapacity);
+extern BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity);
 
 /**
  * Dispose array
@@ -53,21 +53,21 @@ extern void BKArrayDispose (BKArray * array);
 /**
  * Get number of items
  */
-extern size_t BKArrayGetLength (BKArray const * array);
+extern BKSize BKArrayGetLength (BKArray const * array);
 
 /**
  * Get item at index
  *
  * Returns NULL if index is out of bounds
  */
-extern void * BKArrayGetItemAtIndex (BKArray const * array, size_t index);
+extern void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index);
 
 /**
  * Get item at index and copy to `outItem`
  *
  * Returns -1 if index is out of bounds
  */
-extern BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, size_t index, void * outItem);
+extern BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, void * outItem);
 
 /**
  * Get last item
