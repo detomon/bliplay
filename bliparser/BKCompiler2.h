@@ -29,17 +29,22 @@
 #include "BKArray.h"
 #include "BKByteBuffer.h"
 
-typedef struct BKCompiler2 BKCompiler2;
+typedef struct BKCompiler2     BKCompiler2;
+typedef struct BKCompilerTrack BKCompilerTrack;
+
+struct BKCompilerTrack
+{
+	BKArray      cmdGroups;
+	BKByteBuffer globalCmds;
+};
 
 struct BKCompiler2
 {
 	BKUInt          flags;
 	BKArray         groupStack;
-	BKArray         cmdGroups;
 	BKArray         tracks;
-	BKByteBuffer    globalCmds;
-	BKUInt          ignoreGroupLevel;
-	BKInterpreter * interpreter;
+	BKCompilerTrack globalTrack;
+	BKInt           ignoreGroupLevel;
 };
 
 /**
@@ -74,6 +79,6 @@ extern BKInt BKCompiler2Terminate (BKCompiler2 * compiler, BKEnum options);
 /**
  * Reset compiler for compiling new data
  */
-extern void BKCompiler2Reset (BKCompiler2 * compiler);
+extern void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData);
 
 #endif /* ! _BK_COMPILER2_H_ */

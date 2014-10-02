@@ -21,14 +21,17 @@
  * IN THE SOFTWARE.
  */
 
+#include <assert.h>
 #include "BKArray.h"
 
-#define MIN_CAPACITY 8
+#define MIN_CAPACITY 4
 
 static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 {
 	void * newItems;
 	BKSize newCapacity;
+
+	assert (array -> itemSize > 0);
 
 	newCapacity = BKMax (array -> capacity + minCapacity * array -> itemSize, array -> capacity * 1.5);
 	newCapacity = BKMax (MIN_CAPACITY, newCapacity);
@@ -47,7 +50,7 @@ static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 
 BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 {
-	memset (array, 0, sizeof (*array));
+	memset (array, 0, sizeof (* array));
 
 	array -> itemSize = BKMax (1, itemSize);
 	array -> capacity = initCapacity;
@@ -66,7 +69,7 @@ void BKArrayDispose (BKArray * array)
 		free (array -> items);
 	}
 
-	memset (array, 0, sizeof (*array));
+	memset (array, 0, sizeof (* array));
 }
 
 BKSize BKArrayGetLength (BKArray const * array)
@@ -126,6 +129,8 @@ BKInt BKArrayPush (BKArray * array, void const * item)
 		}
 	}
 
+	assert (array -> itemSize > 0);
+
 	memcpy (array -> items + array -> length * array -> itemSize, item, array -> itemSize);
 	array -> length ++;
 
@@ -141,6 +146,8 @@ void * BKArrayPushPtr (BKArray * array)
 			return NULL;
 		}
 	}
+
+	assert (array -> itemSize > 0);
 
 	ptr = array -> items + array -> length * array -> itemSize;
 	memset (ptr, 0, array -> itemSize);

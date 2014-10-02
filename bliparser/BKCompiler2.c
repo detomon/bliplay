@@ -25,6 +25,7 @@
 #include "BKTone.h"
 #include "BKCompiler2.h"
 
+#define MAX_GROUPS 255
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
@@ -48,9 +49,10 @@ typedef struct
  * Group stack item
  */
 typedef struct {
-	BKUInt         level;
-	BKInstruction  groupType;
-	BKByteBuffer * cmdBuffer;
+	BKUInt            level;
+	BKInstruction     groupType;
+	BKCompilerTrack * track;
+	BKByteBuffer    * cmdBuffer;
 } BKCompiler2Group;
 
 /**
@@ -102,6 +104,7 @@ static strval cmdNames [] =
 	{"st",    BKIntrStepTicks},
 	{"t",     BKIntrTicks},
 	{"track", BKIntrTrackDef, BKCompiler2FlagOpenGroup},
+	{"v",     BKIntrVolume},
 	{"vm",    BKIntrMasterVolume},
 	{"w",     BKIntrWaveform},
 	{"wave",  BKIntrWaveformDef, BKCompiler2FlagOpenGroup},
@@ -166,34 +169,60 @@ static int strvalcmp (char const * name, strval const * item)
 	return strcmp (name, item -> name);
 }
 
+static BKInt BKCompilerTrackInit (BKCompilerTrack * track)
+{
+	memset (track, 0, sizeof (* track));
+
+	if (BKArrayInit (& track -> cmdGroups, sizeof (BKByteBuffer *), 0) < 0) {
+		return -1;
+	}
+
+	if (BKByteBufferInit (& track -> globalCmds, 0) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static void BKCompilerTrackDispose (BKCompilerTrack * track)
+{
+	BKArrayDispose (& track -> cmdGroups);
+	BKByteBufferDispose (& track -> globalCmds);
+
+	memset (track, 0, sizeof (* track));
+}
+
+static void BKCompilerTrackClear (BKCompilerTrack * track, BKInt keepData)
+{
+	BKArrayEmpty (& track -> cmdGroups, keepData);
+	BKByteBufferEmpty (& track -> globalCmds, keepData);
+}
+
 BKInt BKCompiler2Init (BKCompiler2 * compiler)
 {
-	memset (compiler, 0, sizeof (*compiler));
+	memset (compiler, 0, sizeof (* compiler));
 
-	if (BKArrayInit (& compiler -> cmdGroups, sizeof (BKByteBuffer), 0) < 0) {
+	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompiler2Group), 8) < 0) {
 		return -1;
 	}
 
-	if (BKByteBufferInit (& compiler -> globalCmds, 0) < 0) {
+	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack), 8) < 0) {
 		return -1;
 	}
 
-	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompiler2Group), 0) < 0) {
+	if (BKCompilerTrackInit (& compiler -> globalTrack) < 0) {
 		return -1;
 	}
 
-	BKCompiler2Reset (compiler);
+	BKCompiler2Reset (compiler, 0);
 
 	return 0;
 }
 
 void BKCompiler2Dispose (BKCompiler2 * compiler)
 {
-	BKArrayDispose (& compiler -> cmdGroups);
-	BKByteBufferDispose (& compiler -> globalCmds);
-	BKArrayDispose (& compiler -> groupStack);
-
-	memset (compiler, 0, sizeof (*compiler));
+	BKCompiler2Reset (compiler, 0);
+	memset (compiler, 0, sizeof (* compiler));
 }
 
 static BKInt BKCompilerStrvalTableLookup (strval table [], BKSize size, char const * name, BKInt * outValue, BKUInt * outFlags)
@@ -240,31 +269,35 @@ static BKInt BKCompiler2ParseNote (char const * name)
 
 static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BKInt index)
 {
-	BKByteBuffer * buffer = NULL;
+	BKByteBuffer     * buffer = NULL;
+	BKCompiler2Group * group  = BKArrayGetLastItem (& compiler -> groupStack);
+	BKCompilerTrack  * track  = group -> track;
 
 	// search for free slot
 	if (index == -1) {
-		for (BKInt i = 0; i < compiler -> cmdGroups.length; i ++) {
-			buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, i);
+		for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
+			buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, i);
 
 			// is empty slot
 			if (buffer -> size == 0) {
+				printf("!! i: %u grp: %lu, buf: %lu trk: %lu\n", i, group, buffer, track);
 				index = i;
 				break;
 			}
 		}
 
 		if (index == -1) {
-			index = compiler -> cmdGroups.length;
+			index  = track -> cmdGroups.length;
+			buffer = NULL;
 		}
 	}
 	else {
-		buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, index);
+		buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, index);
 	}
 
 	if (buffer == NULL) {
-		while (compiler -> cmdGroups.length <= index) {
-			buffer = BKArrayPushPtr (& compiler -> cmdGroups);
+		while (track -> cmdGroups.length <= index) {
+			buffer = BKArrayPushPtr (& track -> cmdGroups);
 
 			if (buffer == NULL) {
 				return NULL;
@@ -275,7 +308,19 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 	return buffer;
 }
 
-static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
+static BKInt BKCompiler2PushCommandInstrument (BKCompiler2 * compiler, BKSTCmd const * cmd)
+{
+	printf("-instrument\n");
+	return 0;
+}
+
+static BKInt BKCompiler2PushCommandSample (BKCompiler2 * compiler, BKSTCmd const * cmd)
+{
+	printf("-sample\n");
+	return 0;
+}
+
+static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const * cmd)
 {
 	char const       * arg0str;
 	BKInt              values [2];
@@ -284,6 +329,8 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 	BKInstruction      instr;
 	BKCompiler2Group * group = BKArrayGetLastItem (& compiler -> groupStack);
 	BKByteBuffer     * cmds  = group -> cmdBuffer;
+
+	printf(">> grp: %lu %s\n", group, cmd -> name);
 
 	arg0str = cmd -> args [0].arg;
 	numArgs = cmd -> numArgs;
@@ -541,6 +588,12 @@ static BKInt BKCompiler2PushTrackCommand (BKCompiler2 * compiler, BKSTCmd const 
 	return 0;
 }
 
+static BKInt BKCompiler2PushCommandWaveform (BKCompiler2 * compiler, BKSTCmd const * cmd)
+{
+	printf("-waveform\n");
+	return 0;
+}
+
 BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 {
 	BKInt              index, value;
@@ -552,18 +605,44 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 	switch (cmd -> token) {
 		case BKSTTokenValue: {
 			// ignore current group
-			if (compiler -> ignoreGroupLevel) {
+			if (compiler -> ignoreGroupLevel > -1) {
 				return 0;
 			}
 
-			if (BKCompiler2PushTrackCommand (compiler, cmd) < 0) {
-				return -1;
+			group = BKArrayGetLastItem (& compiler -> groupStack);
+
+			switch (group -> groupType) {
+				case BKIntrInstrumentDef: {
+					if (BKCompiler2PushCommandInstrument (compiler, cmd) < 0) {
+						return -1;
+					}
+					break;
+				}
+				case BKIntrSampleDef: {
+					if (BKCompiler2PushCommandSample (compiler, cmd) < 0) {
+						return -1;
+					}
+					break;
+				}
+				default:
+				case BKIntrGroupDef:
+				case BKIntrTrackDef: {
+					if (BKCompiler2PushCommandTrack (compiler, cmd) < 0) {
+						return -1;
+					}
+					break;
+				}
+				case BKIntrWaveformDef: {
+					if (BKCompiler2PushCommandWaveform (compiler, cmd) < 0) {
+						return -1;
+					}
+					break;
+				}
 			}
 
 			break;
 		}
 		case BKSTTokenGrpBegin: {
-			group    = BKArrayGetLastItem (& compiler -> groupStack);
 			newGroup = BKArrayPushPtr (& compiler -> groupStack);
 
 			if (newGroup == NULL) {
@@ -571,14 +650,20 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 				return -1;
 			}
 
+			printf("[%s\n", cmd -> name);
+
+			group = BKArrayGetItemAtIndex (& compiler -> groupStack, compiler -> groupStack.length - 2);
+
 			memcpy (newGroup, group, sizeof (* group));
 			newGroup -> level ++;
+
+			printf("++ trk: %lu grp: %lu\n", newGroup -> track, newGroup);
 
 			flags = 0;
 			value = 0;
 
 			if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, & flags) == 0) {
-				fprintf (stderr, "Unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				fprintf (stderr, "Ignoring unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
 				compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 				return 0;
 			}
@@ -587,14 +672,21 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 
 			switch (instr) {
 				case BKIntrGroupDef: {
-					index  = atoix (cmd -> args [0].arg, -1);
+					index = atoix (cmd -> args [0].arg, -1);
+
+					if (index >= MAX_GROUPS) {
+						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> name, cmd -> lineno, cmd -> colno);
+						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						return 0;
+					}
+
 					buffer = BKCompiler2GetCmdGroupForIndex (compiler, index);
 
 					if (buffer == NULL) {
 						return -1;
 					}
 
-					group -> cmdBuffer = buffer;
+					newGroup -> cmdBuffer = buffer;
 					break;
 				}
 				case BKIntrInstrumentDef: {
@@ -619,12 +711,14 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 				}
 			}
 
-			group -> groupType = instr;
+			newGroup -> groupType = instr;
 
 			break;
 		}
 		case BKSTTokenGrpEnd: {
-			if (compiler -> groupStack.length <= 0) {
+			printf("]\n");
+
+			if (compiler -> groupStack.length <= 1) { // needs at minimum 1 item
 				fprintf (stderr, "Unbalanced group on line %d:%d\n", cmd -> lineno, cmd -> colno);
 				return -1;
 			}
@@ -632,7 +726,7 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 			BKArrayPop (& compiler -> groupStack, NULL);
 
 			if (compiler -> groupStack.length <= compiler -> ignoreGroupLevel) {
-				compiler -> ignoreGroupLevel = 0;
+				compiler -> ignoreGroupLevel = -1;
 			}
 
 			break;
@@ -699,20 +793,29 @@ BKInt BKCompiler2Compile (BKCompiler2 * compiler, BKSTParser * parser, BKEnum op
 	return 0;
 }
 
-void BKCompiler2Reset (BKCompiler2 * compiler)
+void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 {
 	BKByteBuffer     * buffer;
 	BKCompiler2Group * group;
+	BKCompilerTrack  * track;
 
-	for (BKInt i = 0; i < compiler -> cmdGroups.length; i ++) {
-		buffer = BKArrayGetItemAtIndex (& compiler -> cmdGroups, i);
-		BKByteBufferEmpty (buffer, 0);
+	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
+		track = BKArrayGetItemAtIndex (& compiler -> tracks, i);
+		BKCompilerTrackClear (track, 0);
 	}
 
-	BKArrayEmpty (& compiler -> cmdGroups, 1);
-	BKArrayEmpty (& compiler -> groupStack, 1);
-	BKByteBufferEmpty (& compiler -> globalCmds, 1);
+	track = BKArrayGetItemAtIndex (& compiler -> tracks, 0);
 
+	if (track) {
+		BKArrayEmpty (& track -> cmdGroups, keepData);
+		BKByteBufferEmpty (& track -> globalCmds, keepData);
+	}
+
+	BKArrayEmpty (& compiler -> groupStack, keepData);
 	group = BKArrayPushPtr (& compiler -> groupStack);
-	group -> cmdBuffer = & compiler -> globalCmds;
+	group -> track = & compiler -> globalTrack;
+	group -> cmdBuffer = & group -> track -> globalCmds;
+	group -> groupType = BKIntrGroupDef;
+
+	compiler -> ignoreGroupLevel = -1;
 }

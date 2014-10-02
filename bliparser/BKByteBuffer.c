@@ -30,8 +30,6 @@ static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 	void * newData;
 	BKSize newCapacity;
 
-	printf("***Grow %lu\n", buffer);
-
 	newCapacity = BKMax (buffer -> capacity + minCapacity, buffer -> capacity * 1.5);
 	newCapacity = BKMax (MIN_CAPACITY, newCapacity);
 
@@ -49,7 +47,7 @@ static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 
 BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 {
-	memset (buffer, 0, sizeof (*buffer));
+	memset (buffer, 0, sizeof (* buffer));
 
 	buffer -> capacity = BKMax (MIN_CAPACITY, initCapacity);
 	buffer -> data     = malloc (buffer -> capacity);
@@ -67,7 +65,7 @@ void BKByteBufferDispose (BKByteBuffer * buffer)
 		free (buffer -> data);
 	}
 
-	memset (buffer, 0, sizeof (*buffer));
+	memset (buffer, 0, sizeof (* buffer));
 }
 
 BKSize BKByteBufferGetSize (BKByteBuffer const * buffer)

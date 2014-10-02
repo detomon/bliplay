@@ -48,15 +48,18 @@ int main (int argc, char * argv [])
 	BKCompiler2Init (& compiler);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
-		printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
+		//printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
 
 		if (cmd.numArgs > 0) {
 			for (BKInt i = 0; i < cmd.numArgs; i ++) {
-				printf ("  '%s' (%ld)\n", cmd.args[i].arg, cmd.args[i].size);
+				//printf ("  '%s' (%ld)\n", cmd.args[i].arg, cmd.args[i].size);
 			}
 		}
 
-		BKCompiler2PushCommand (& compiler, & cmd);
+		if (BKCompiler2PushCommand (& compiler, & cmd)) {
+			printf("***Failed\n");
+			return 1;
+		}
 	}
 
 	if (BKCompiler2Terminate (& compiler, 0) < 0) {
@@ -65,11 +68,26 @@ int main (int argc, char * argv [])
 
 	printf("\n\n");
 
-	BKByteBuffer * buffer;
+	BKByteBuffer    * buffer;
+	BKCompilerTrack * track;
 
-	for (BKInt i = 0; i < compiler.cmdGroups.length; i ++) {
-		buffer = BKArrayGetItemAtIndex (& compiler.cmdGroups, i);
-		printf("%u %lu\n", i, buffer -> size);
+	printf("%u\n", compiler.tracks.length);
+	return 0;
+
+
+	for (BKInt i = 0; & compiler.tracks.length; i ++) {
+		track = BKArrayGetItemAtIndex (& compiler.tracks, i);
+
+		printf("%u\n", i);
+
+		if (track == NULL) {
+			continue;
+		}
+
+		for (BKInt j = 0; j < track -> cmdGroups.length; j ++) {
+			buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, j);
+			printf("    %u %lu\n", j, buffer -> size);
+		}
 	}
 
 	BKSTParserDispose (& parser);
