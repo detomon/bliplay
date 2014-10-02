@@ -173,7 +173,7 @@ static BKInt BKCompilerTrackInit (BKCompilerTrack * track)
 {
 	memset (track, 0, sizeof (* track));
 
-	if (BKArrayInit (& track -> cmdGroups, sizeof (BKByteBuffer *), 0) < 0) {
+	if (BKArrayInit (& track -> cmdGroups, sizeof (BKByteBuffer), 0) < 0) {
 		return -1;
 	}
 
@@ -273,6 +273,8 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 	BKCompiler2Group * group  = BKArrayGetLastItem (& compiler -> groupStack);
 	BKCompilerTrack  * track  = group -> track;
 
+	printf("* bufidx: %u\n", index);
+
 	// search for free slot
 	if (index == -1) {
 		for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
@@ -293,11 +295,20 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 	}
 	else {
 		buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, index);
+
+		if (buffer == NULL) {
+			printf("* EMPTY\n");
+		}
+		else {
+			printf("* EMPTY: %u %lu\n", buffer -> size, buffer -> data);
+		}
 	}
 
 	if (buffer == NULL) {
 		while (track -> cmdGroups.length <= index) {
 			buffer = BKArrayPushPtr (& track -> cmdGroups);
+
+			printf(".. size: %lu capa: %lu data: %lu itemSize: %lu\n", buffer -> size, buffer -> capacity, buffer -> data, track -> cmdGroups.itemSize);
 
 			if (buffer == NULL) {
 				return NULL;
@@ -601,6 +612,7 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 	BKByteBuffer     * buffer;
 	BKInstruction      instr;
 	BKCompiler2Group * group, * newGroup;
+	BKCompilerTrack  * track;
 
 	switch (cmd -> token) {
 		case BKSTTokenValue: {
