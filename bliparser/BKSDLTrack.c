@@ -30,6 +30,10 @@
 
 #define BK_PATH_MAX 2048
 
+#ifndef S_IFDIR
+#	define S_IFDIR __S_IFDIR
+#endif
+
 /**
  * Convert string to signed integer like `atoi`
  * If string is NULL the alternative value is returned
