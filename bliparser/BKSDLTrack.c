@@ -28,6 +28,12 @@
 #include "BKSDLTrack.h"
 #include "BKWaveFileReader.h"
 
+#define BK_PATH_MAX 2048
+
+#ifndef S_IFDIR
+#	define S_IFDIR __S_IFDIR
+#endif
+
 /**
  * Convert string to signed integer like `atoi`
  * If string is NULL the alternative value is returned
@@ -734,8 +740,8 @@ BKInt BKSDLContextLoadFile (BKSDLContext * ctx, char const * filename)
 {
 	size_t size;
 	char * data;
-	char   dirbuf [PATH_MAX], * dir;
-	char   cwd [PATH_MAX];
+	char   dirbuf [BK_PATH_MAX], * dir;
+	char   cwd [BK_PATH_MAX];
 	struct stat filestat;
 	BKInt  ret = 0;
 

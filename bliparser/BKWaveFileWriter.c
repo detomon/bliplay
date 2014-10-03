@@ -148,7 +148,7 @@ BKInt BKWaveFileWriterAppendFrames (BKWaveFileWriter * writer, BKFrame const * f
 
 BKInt BKWaveFileWriterTerminate (BKWaveFileWriter * writer)
 {
-	off_t                offset;
+	BKSize               offset;
 	BKWaveFileHeader     header;
 	BKWaveFileHeaderData dataHeader;
 

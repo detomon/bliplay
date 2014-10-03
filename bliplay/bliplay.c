@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/select.h>
 #include "BKSDLTrack.h"
 #include "BKWaveFileReader.h"
 #include "BKWaveFileWriter.h"
