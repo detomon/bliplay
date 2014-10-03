@@ -34,6 +34,7 @@ typedef struct BKCompilerTrack BKCompilerTrack;
 
 struct BKCompilerTrack
 {
+	BKUInt       flags;
 	BKArray      cmdGroups;
 	BKByteBuffer globalCmds;
 };

@@ -30,6 +30,7 @@ typedef struct BKArray BKArray;
 
 struct BKArray
 {
+	BKUInt flags;
 	BKSize length;
 	BKSize capacity;
 	BKSize itemSize;
@@ -37,13 +38,22 @@ struct BKArray
 };
 
 /**
- * Initialize array
+ * Initialize static array object
  *
- * `itemSize` is the size of single item
- * If `initCapacity` is greater than 0 space for the specific number of items
+ * The size of a single item is given with `itemSize`
+ * If `initCapacity` is greater than 0, space for the specific number of items
  * is reserved
  */
 extern BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity);
+
+/**
+ * Allocate array object
+ *
+ * The size of a single item is given with `itemSize`
+ * If `initCapacity` is greater than 0, space for the specific number of items
+ * is reserved
+ */
+extern BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity);
 
 /**
  * Dispose array
@@ -101,14 +111,15 @@ extern void * BKArrayPushPtr (BKArray * array);
  * Remove last item
  *
  * Returns -1 if array is empty
- * If `outItem` is not NULL it set to the last item or is emptied if array is empty
+ * If `outItem` is not NULL the last item is copied into it or emptied if array
+ * is empty
  */
 extern BKInt BKArrayPop (BKArray * array, void * outItem);
 
 /**
  * Empty array
  *
- * If `keepData` is not 0 the allocated buffer is reused
+ * If `keepData` is 1 the allocated buffer is reused
  */
 extern void BKArrayEmpty (BKArray * array, BKInt keepData);
 

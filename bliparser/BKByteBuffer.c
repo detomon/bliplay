@@ -25,6 +25,11 @@
 
 #define MIN_CAPACITY 256
 
+enum BKByteBufferFlag
+{
+	BKByteBufferFlagAllocated = 1 << 0,
+};
+
 static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 {
 	void * newData;
@@ -49,23 +54,55 @@ BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 {
 	memset (buffer, 0, sizeof (* buffer));
 
-	buffer -> capacity = BKMax (MIN_CAPACITY, initCapacity);
-	buffer -> data     = malloc (buffer -> capacity);
+	buffer -> capacity = initCapacity;
 
-	if (buffer -> data == NULL) {
+	if (buffer -> capacity) {
+		buffer -> data = malloc (buffer -> capacity);
+
+		if (buffer -> data == NULL) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
+{
+	BKInt res;
+	BKByteBuffer * buffer = malloc (sizeof (* buffer));
+
+	if (buffer == NULL) {
 		return -1;
 	}
+
+	res = BKByteBufferInit (buffer, initCapacity);
+
+	if (res != 0) {
+		free (buffer);
+		return res;
+	}
+
+	buffer -> flags |= BKByteBufferFlagAllocated;
 
 	return 0;
 }
 
 void BKByteBufferDispose (BKByteBuffer * buffer)
 {
+	if (buffer == NULL) {
+		return;
+	}
+
 	if (buffer -> data) {
 		free (buffer -> data);
 	}
 
 	memset (buffer, 0, sizeof (* buffer));
+
+	if (buffer -> flags & BKByteBufferFlagAllocated) {
+		free (buffer);
+	}
 }
 
 BKSize BKByteBufferGetSize (BKByteBuffer const * buffer)

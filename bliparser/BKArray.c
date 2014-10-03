@@ -26,6 +26,11 @@
 
 #define MIN_CAPACITY 4
 
+enum BKArrayFlag
+{
+	BKArrayFlagAllocated = 1 << 0,
+};
+
 static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 {
 	void * newItems;
@@ -54,22 +59,54 @@ BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 
 	array -> itemSize = BKMax (1, itemSize);
 	array -> capacity = initCapacity;
-	array -> items    = malloc (array -> capacity * array -> itemSize);
 
-	if (array -> items == NULL) {
+	if (array -> capacity) {
+		array -> items = malloc (array -> capacity * array -> itemSize);
+
+		if (array -> items == NULL) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
+{
+	BKInt res;
+	BKArray * array = malloc (sizeof (* array));
+
+	if (array == NULL) {
 		return -1;
 	}
+
+	res = BKArrayInit (array, itemSize, initCapacity);
+
+	if (res != 0) {
+		free (array);
+		return res;
+	}
+
+	array -> flags |= BKArrayFlagAllocated;
 
 	return 0;
 }
 
 void BKArrayDispose (BKArray * array)
 {
+	if (array == NULL) {
+		return;
+	}
+
 	if (array -> items) {
 		free (array -> items);
 	}
 
 	memset (array, 0, sizeof (* array));
+
+	if (array -> flags & BKArrayFlagAllocated) {
+		free (array);
+	}
 }
 
 BKSize BKArrayGetLength (BKArray const * array)

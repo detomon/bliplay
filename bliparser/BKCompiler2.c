@@ -31,8 +31,9 @@
 
 enum
 {
-	BKCompiler2FlagOpenGroup = 1 << 0,
-	BKCompiler2FlagArpeggio  = 1 << 1,
+	BKCompiler2FlagAllocated = 1 << 0,
+	BKCompiler2FlagOpenGroup = 1 << 1,
+	BKCompiler2FlagArpeggio  = 1 << 2,
 };
 
 /**
@@ -184,12 +185,48 @@ static BKInt BKCompilerTrackInit (BKCompilerTrack * track)
 	return 0;
 }
 
+static BKInt BKCompilerTrackAlloc (BKCompilerTrack ** outTrack)
+{
+	BKInt res;
+	BKCompilerTrack * track = malloc (sizeof (* track));
+
+	if (track == NULL) {
+		return -1;
+	}
+
+	res = BKCompilerTrackInit (track);
+
+	if (res != 0) {
+		free (track);
+		return res;
+	}
+
+	track -> flags |= BKCompiler2FlagAllocated;
+
+	return 0;
+}
+
 static void BKCompilerTrackDispose (BKCompilerTrack * track)
 {
+	BKByteBuffer * buffer;
+
+	if (track == NULL) {
+		return;
+	}
+
+	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
+		buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, i);
+		BKByteBufferDispose (buffer);
+	}
+
 	BKArrayDispose (& track -> cmdGroups);
 	BKByteBufferDispose (& track -> globalCmds);
 
 	memset (track, 0, sizeof (* track));
+
+	if (track -> flags & BKCompiler2FlagAllocated) {
+		free (track);
+	}
 }
 
 static void BKCompilerTrackClear (BKCompilerTrack * track, BKInt keepData)
