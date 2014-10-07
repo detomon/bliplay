@@ -72,6 +72,8 @@ BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
 	BKInt res;
 	BKByteBuffer * buffer = malloc (sizeof (* buffer));
 
+	* outBuffer = NULL;
+
 	if (buffer == NULL) {
 		return -1;
 	}
@@ -84,6 +86,7 @@ BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
 	}
 
 	buffer -> flags |= BKByteBufferFlagAllocated;
+	* outBuffer = buffer;
 
 	return 0;
 }

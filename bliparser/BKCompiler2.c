@@ -190,6 +190,8 @@ static BKInt BKCompilerTrackAlloc (BKCompilerTrack ** outTrack)
 	BKInt res;
 	BKCompilerTrack * track = malloc (sizeof (* track));
 
+	* outTrack = NULL;
+
 	if (track == NULL) {
 		return -1;
 	}
@@ -202,12 +204,14 @@ static BKInt BKCompilerTrackAlloc (BKCompilerTrack ** outTrack)
 	}
 
 	track -> flags |= BKCompiler2FlagAllocated;
+	* outTrack = track;
 
 	return 0;
 }
 
 static void BKCompilerTrackDispose (BKCompilerTrack * track)
 {
+	BKUInt flags;
 	BKByteBuffer * buffer;
 
 	if (track == NULL) {
@@ -222,9 +226,10 @@ static void BKCompilerTrackDispose (BKCompilerTrack * track)
 	BKArrayDispose (& track -> cmdGroups);
 	BKByteBufferDispose (& track -> globalCmds);
 
+	flags = track -> flags;
 	memset (track, 0, sizeof (* track));
 
-	if (track -> flags & BKCompiler2FlagAllocated) {
+	if (flags) {
 		free (track);
 	}
 }

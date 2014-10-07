@@ -76,6 +76,8 @@ BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
 	BKInt res;
 	BKArray * array = malloc (sizeof (* array));
 
+	* outArray = NULL;
+
 	if (array == NULL) {
 		return -1;
 	}
@@ -88,6 +90,7 @@ BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
 	}
 
 	array -> flags |= BKArrayFlagAllocated;
+	* outArray = array;
 
 	return 0;
 }
@@ -128,6 +131,7 @@ BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, void * out
 	void const * item = BKArrayGetItemAtIndex (array, index);
 
 	if (item == NULL) {
+		memset (outItem, 0, array -> itemSize);
 		return -1;
 	}
 
@@ -150,6 +154,7 @@ BKInt BKArrayGetLastItemCopy (BKArray const * array, void * outItem)
 	void const * item = BKArrayGetLastItem (array);
 
 	if (item == NULL) {
+		memset (outItem, 0, array -> itemSize);
 		return -1;
 	}
 
@@ -215,6 +220,10 @@ BKInt BKArrayPop (BKArray * array, void * outItem)
 
 void BKArrayEmpty (BKArray * array, BKInt keepData)
 {
+	if (array == NULL) {
+		return;
+	}
+
 	if (keepData == 0) {
 		if (array -> items) {
 			free (array -> items);
