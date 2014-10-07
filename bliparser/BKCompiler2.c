@@ -174,7 +174,7 @@ static BKInt BKCompilerTrackInit (BKCompilerTrack * track)
 {
 	memset (track, 0, sizeof (* track));
 
-	if (BKArrayInit (& track -> cmdGroups, sizeof (BKByteBuffer), 0) < 0) {
+	if (BKArrayInit (& track -> cmdGroups, sizeof (BKByteBuffer *), 0) < 0) {
 		return -1;
 	}
 
@@ -219,7 +219,7 @@ static void BKCompilerTrackDispose (BKCompilerTrack * track)
 	}
 
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
-		buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, i);
+		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & buffer);
 		BKByteBufferDispose (buffer);
 	}
 
@@ -248,7 +248,7 @@ BKInt BKCompiler2Init (BKCompiler2 * compiler)
 		return -1;
 	}
 
-	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack), 8) < 0) {
+	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack *), 8) < 0) {
 		return -1;
 	}
 
@@ -320,10 +320,10 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 	// search for free slot
 	if (index == -1) {
 		for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
-			buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, i);
+			BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & buffer);
 
 			// is empty slot
-			if (buffer -> size == 0) {
+			if (buffer == NULL) {
 				printf("!! i: %u grp: %lu, buf: %lu trk: %lu\n", i, group, buffer, track);
 				index = i;
 				break;
@@ -336,7 +336,7 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 		}
 	}
 	else {
-		buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, index);
+		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, index, & buffer);
 
 		if (buffer == NULL) {
 			printf("* EMPTY\n");
@@ -348,13 +348,13 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 
 	if (buffer == NULL) {
 		while (track -> cmdGroups.length <= index) {
-			buffer = BKArrayPushPtr (& track -> cmdGroups);
+			if (BKByteBufferAlloc (& buffer, 0) < 0) {
+				return -1;
+			}
+
+			BKArrayPush (& track -> cmdGroups, & buffer);
 
 			printf(".. size: %lu capa: %lu data: %lu itemSize: %lu\n", buffer -> size, buffer -> capacity, buffer -> data, track -> cmdGroups.itemSize);
-
-			if (buffer == NULL) {
-				return NULL;
-			}
 		}
 	}
 
@@ -854,13 +854,11 @@ void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 	BKCompilerTrack  * track;
 
 	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
-		track = BKArrayGetItemAtIndex (& compiler -> tracks, i);
-		BKCompilerTrackClear (track, 0);
+		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
+		BKCompilerTrackDispose (track);
 	}
 
-	track = BKArrayGetItemAtIndex (& compiler -> tracks, 0);
-
-	if (track) {
+	if (BKArrayGetItemAtIndexCopy (& compiler -> tracks, 0, & track) == 0) {
 		BKArrayEmpty (& track -> cmdGroups, keepData);
 		BKByteBufferEmpty (& track -> globalCmds, keepData);
 	}
