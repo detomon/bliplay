@@ -9,8 +9,6 @@ libbliparser_a_SOURCES = \
 	BKCompiler.c \
 	BKCompiler2.c \
 	BKInterpreter.c \
-	BKWaveFileReader.c \
-	BKWaveFileWriter.c \
 	BKSTTokenizer.c \
 	BKSTParser.c \
 	BKArray.c \
@@ -22,8 +20,6 @@ dist_noinst_HEADERS = \
 	BKBlipWriter.h \
 	BKCompiler.h \
 	BKInterpreter.h \
-	BKWaveFileReader.h \
-	BKWaveFileWriter.h \
 	BKSTTokenizer.h \
 	BKSTParser.h \
 	BKArray.h \

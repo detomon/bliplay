@@ -334,11 +334,7 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 				if (length >= 1) {
 					filename = item.args [1].arg;
 
-					FILE * file;
-					BKWaveFileReader reader;
-					BKInt numChannels, sampleRate, numFrames;
-
-					file = fopen (filename, "rb");
+					FILE * file = fopen (filename, "rb");
 
 					if (file == NULL) {
 						fprintf (stderr, "*** Failed to open sample file '%s'\n", filename);
@@ -346,40 +342,14 @@ static BKData * parseSample (BKSDLContext * ctx, BKBlipReader * parser)
 						free (sample);
 					}
 
-					if (BKWaveFileReaderInit (& reader, file) < 0) {
-						fprintf (stderr, "*** Failed to init WAVE reader\n");
-						BKDataDispose (sample);
-						free (sample);
-						fclose (file);
-						return NULL;
-					}
-
-					if (BKWaveFileReaderReadHeader (& reader, & numChannels, & sampleRate, & numFrames) < 0) {
-						fprintf (stderr, "*** Failed to read WAVE header of file '%s'\n", filename);
-						BKDataDispose (sample);
-						free (sample);
-						fclose (file);
-						return NULL;
-					}
-
-					dataSize = numChannels * numFrames * sizeof (BKFrame);
-					data = malloc (dataSize);
-
-					if (BKWaveFileReaderReadFrames (& reader, data) < 0) {
+					if (BKDataInitAndLoadWAVE (sample, file) < 0) {
 						fprintf (stderr, "*** Failed to read WAVE file '%s'\n", filename);
 						BKDataDispose (sample);
 						free (sample);
 						fclose (file);
-						return NULL;
 					}
+					BKDataNormalize (sample);
 
-					if (data) {
-						BKDataSetData (sample, data, dataSize, numChannels, BK_16_BIT_SIGNED);
-						BKDataNormalize (sample);
-						free (data);
-					}
-
-					BKWaveFileReaderDispose (& reader);
 					fclose (file);
 				}
 			}
