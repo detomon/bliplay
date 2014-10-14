@@ -68,27 +68,39 @@ int main (int argc, char * argv [])
 
 	printf("\n\n");
 
+	BKInt totalSize = 0;
+
 	BKByteBuffer    * buffer;
 	BKCompilerTrack * track;
 
-	printf("%u\n", compiler.tracks.length);
-	return 0;
+	printf("%ld tracks\n", compiler.tracks.length);
 
 
-	for (BKInt i = 0; & compiler.tracks.length; i ++) {
-		track = BKArrayGetItemAtIndex (& compiler.tracks, i);
+	printf("%ld globalGroups\n", compiler.globalTrack.cmdGroups.length);
+	printf("%ld globalCmds\n", compiler.globalTrack.globalCmds.size);
 
-		printf("%u\n", i);
+	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & track);
 
-		if (track == NULL) {
-			continue;
-		}
+		printf("%ld groups\n", i);
+		printf("global cmds %u\n", track -> globalCmds.size);
+
+		totalSize += track -> globalCmds.size;
 
 		for (BKInt j = 0; j < track -> cmdGroups.length; j ++) {
-			buffer = BKArrayGetItemAtIndex (& track -> cmdGroups, j);
+			BKArrayGetItemAtIndexCopy (& track -> cmdGroups, j, & buffer);
+
+			if (buffer == NULL) {
+				continue;
+			}
+
 			printf("    %u %lu\n", j, buffer -> size);
+
+			totalSize += buffer -> size;
 		}
 	}
+
+	printf ("total byte code: %d\n", totalSize);
 
 	BKSTParserDispose (& parser);
 	BKCompiler2Dispose (& compiler);

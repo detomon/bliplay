@@ -315,8 +315,6 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 	BKCompiler2Group * group  = BKArrayGetLastItem (& compiler -> groupStack);
 	BKCompilerTrack  * track  = group -> track;
 
-	printf("* bufidx: %u\n", index);
-
 	// search for free slot
 	if (index == -1) {
 		for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
@@ -324,7 +322,6 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 
 			// is empty slot
 			if (buffer == NULL) {
-				printf("!! i: %u grp: %lu, buf: %lu trk: %lu\n", i, group, buffer, track);
 				index = i;
 				break;
 			}
@@ -336,25 +333,31 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 		}
 	}
 	else {
+		// search buffer at slot
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, index, & buffer);
 
-		if (buffer == NULL) {
-			printf("* EMPTY\n");
-		}
-		else {
-			printf("* EMPTY: %u %lu\n", buffer -> size, buffer -> data);
+		// overwrite existing buffer
+		if (buffer != NULL) {
+			BKByteBufferEmpty (buffer, 1);
 		}
 	}
 
+	// create new buffer
 	if (buffer == NULL) {
-		while (track -> cmdGroups.length <= index) {
-			if (BKByteBufferAlloc (& buffer, 0) < 0) {
+		// fill slots with empty buffers
+		while (track -> cmdGroups.length < index) {
+			if (BKArrayPushPtr (& track -> cmdGroups) == NULL) {
 				return -1;
 			}
+		}
 
-			BKArrayPush (& track -> cmdGroups, & buffer);
+		if (BKByteBufferAlloc (& buffer, 0) < 0) {
+			return -1;
+		}
 
-			printf(".. size: %lu capa: %lu data: %lu itemSize: %lu\n", buffer -> size, buffer -> capacity, buffer -> data, track -> cmdGroups.itemSize);
+		// append new buffer
+		if (BKArrayPush (& track -> cmdGroups, & buffer) < 0) {
+			return -1;
 		}
 	}
 
@@ -402,8 +405,9 @@ static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const 
 			args [0] = atoix (cmd -> args [1].arg, 0);
 
 			// jump to group
+			// command will be replaced with BKIntrCall + Offset
 			BKByteBufferAppendInt8 (cmds, instr);
-			BKByteBufferAppendInt8 (cmds, atoix (arg0str, 0));
+			BKByteBufferAppendInt32 (cmds, atoix (arg0str, 0));
 			break;
 		}
 		// command:8
@@ -551,7 +555,7 @@ static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const 
 		// panning:16
 		case BKIntrPanning: {
 			BKByteBufferAppendInt8 (cmds, instr);
-			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT / 2);
+			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT);
 			break;
 		}
 		// command:8
@@ -612,7 +616,7 @@ static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const 
 		// speed:8
 		case BKIntrArpeggioSpeed: {
 			BKByteBufferAppendInt8 (cmds, instr);
-			BKByteBufferAppendInt8 (cmds, BKMax (atoix (arg0str, 0), 1));
+			BKByteBufferAppendInt16 (cmds, BKMax (atoix (arg0str, 0), 1));
 			break;
 		}
 		// command:8
@@ -729,7 +733,7 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 					index = atoix (cmd -> args [0].arg, -1);
 
 					if (index >= MAX_GROUPS) {
-						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> name, cmd -> lineno, cmd -> colno);
+						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -752,7 +756,16 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 					break;
 				}
 				case BKIntrTrackDef: {
+					if (BKCompilerTrackAlloc (& track) < 0) {
+						return -1;
+					}
 
+					if (BKArrayPush (& compiler -> tracks, & track) < 0) {
+						return -1;
+					}
+
+					newGroup -> track     = track;
+					newGroup -> cmdBuffer = & track -> globalCmds;
 					break;
 				}
 				case BKIntrWaveformDef: {
@@ -798,12 +811,213 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 	return 0;
 }
 
-/**
- * Append commands from array
- */
-static BKInt * BKCompiler2Combine (BKCompiler2 * compiler)
+static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * group, BKArray * groupOffsets)
 {
-	return NULL;
+	void * opcode    = group -> data;
+	void * opcodeEnd = group -> data + group -> size;
+	uint8_t cmd;
+	BKInt arg, idx;
+	BKInt cmdSize;
+
+	while (opcode < opcodeEnd) {
+		cmd = * (uint8_t *) opcode ++;
+
+		switch (cmd) {
+			case BKIntrGroupJump: {
+				arg = * (uint32_t *) opcode;
+
+				if (arg < groupOffsets -> length) {
+					opcode --;
+					cmdSize = 4;
+
+					BKArrayGetItemAtIndexCopy (groupOffsets, arg, & idx);
+
+					(* (uint8_t *) opcode ++) = BKIntrJump;
+					(* (uint32_t *) opcode)   = idx;
+				}
+				else {
+					fprintf (stderr, "Undefined group number %u\n", arg);
+					return -1;
+				}
+				break;
+			}
+			case BKIntrAttack: {
+				cmdSize = 4;
+				break;
+			}
+			case BKIntrArpeggio: {
+				arg = * (uint8_t *) opcode ++;
+				cmdSize = 1 + arg * 4;
+				break;
+			}
+			case BKIntrRelease:
+			case BKIntrMute: {
+				cmdSize = 0;
+				break;
+			}
+			case BKIntrAttackTicks:
+			case BKIntrReleaseTicks: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrVolume: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrMasterVolume: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrStep:
+			case BKIntrTicks:
+			case BKIntrStepTicks: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrEffect: {
+				cmdSize = 4 + 4 + 4 + 4;
+				break;
+			}
+			case BKIntrDutyCycle: {
+				cmdSize = 1;
+				break;
+			}
+			case BKIntrPhaseWrap: {
+				cmdSize = 4;
+				break;
+			}
+			case BKIntrPanning: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrPitch: {
+				cmdSize = 4;
+				break;
+			}
+			case BKIntrInstrument: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrWaveform: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrSample: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrSampleRepeat: {
+				cmdSize = 1;
+				break;
+			}
+			case BKIntrSampleRange: {
+				cmdSize = 4 + 4;
+				break;
+			}
+			case BKIntrArpeggioSpeed: {
+				cmdSize = 2;
+				break;
+			}
+			case BKIntrSetRepeatStart: {
+				cmdSize = 0;
+				break;
+			}
+			case BKIntrRepeat: {
+				cmdSize = 4;
+				break;
+			}
+		}
+
+		opcode += cmdSize;
+	}
+
+	return 0;
+}
+
+/**
+ * Combine group commands into globa commands of track
+ */
+static BKInt BKCompiler2TrackLink (BKCompilerTrack * track)
+{
+	BKArray groupOffsets;
+	BKByteBuffer * group;
+	BKInt codeOffset;
+
+	if (BKArrayInit (& groupOffsets, sizeof (BKInt), track -> cmdGroups.length) < 0) {
+		return -1;
+	}
+
+	codeOffset = track -> globalCmds.size;
+
+	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & group);
+
+		if (group == NULL) {
+			continue;
+		}
+
+		// add return command
+		BKByteBufferAppendInt8 (group, BKIntrReturn);
+
+		if (BKArrayPush (& groupOffsets, & codeOffset) < 0) {
+			return -1;
+		}
+
+		codeOffset += group -> size;
+	}
+
+	// link global commands
+	if (BKCompiler2ByteCodeLink (track, & track -> globalCmds, & groupOffsets) < 0) {
+		return -1;
+	}
+
+	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & group);
+
+		if (group == NULL) {
+			continue;
+		}
+
+		// link group
+		if (BKCompiler2ByteCodeLink (track, group, & groupOffsets) < 0) {
+			return -1;
+		}
+
+		// append group
+		if (BKByteBufferAppendPtr (& track -> globalCmds, group -> data, group -> size) < 0) {
+			return -1;
+		}
+
+		//BKByteBufferEmpty (group, 0);
+	}
+
+	BKArrayDispose (& groupOffsets);
+
+	return 0;
+}
+
+/**
+ * Combine each track's commands into the global commands
+ */
+static BKInt BKCompiler2Link (BKCompiler2 * compiler)
+{
+	BKCompilerTrack * track;
+
+	track = & compiler -> globalTrack;
+
+	if (BKCompiler2TrackLink (track) < 0) {
+		return -1;
+	}
+
+	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
+
+		if (BKCompiler2TrackLink (track) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 BKInt BKCompiler2Terminate (BKCompiler2 * compiler, BKEnum options)
@@ -814,7 +1028,7 @@ BKInt BKCompiler2Terminate (BKCompiler2 * compiler, BKEnum options)
 	}
 
 	// combine commands and group commands into one array
-	if (BKCompiler2Combine (compiler) < 0) {
+	if (BKCompiler2Link (compiler) < 0) {
 		return -1;
 	}
 
@@ -853,14 +1067,14 @@ void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 	BKCompiler2Group * group;
 	BKCompilerTrack  * track;
 
-	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
-		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
-		BKCompilerTrackDispose (track);
-	}
-
 	if (BKArrayGetItemAtIndexCopy (& compiler -> tracks, 0, & track) == 0) {
 		BKArrayEmpty (& track -> cmdGroups, keepData);
 		BKByteBufferEmpty (& track -> globalCmds, keepData);
+	}
+
+	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
+		BKCompilerTrackDispose (track);
 	}
 
 	BKArrayEmpty (& compiler -> groupStack, keepData);
