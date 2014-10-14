@@ -952,18 +952,16 @@ static BKInt BKCompiler2TrackLink (BKCompilerTrack * track)
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & group);
 
-		if (group == NULL) {
-			continue;
-		}
-
-		// add return command
-		BKByteBufferAppendInt8 (group, BKIntrReturn);
-
 		if (BKArrayPush (& groupOffsets, & codeOffset) < 0) {
 			return -1;
 		}
 
-		codeOffset += group -> size;
+		if (group) {
+			// add return command
+			BKByteBufferAppendInt8 (group, BKIntrReturn);
+
+			codeOffset += group -> size;
+		}
 	}
 
 	// link global commands
