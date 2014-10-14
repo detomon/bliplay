@@ -76,14 +76,13 @@ int main (int argc, char * argv [])
 	printf("%ld tracks\n", compiler.tracks.length);
 
 
-	printf("%ld globalGroups\n", compiler.globalTrack.cmdGroups.length);
-	printf("%ld globalCmds\n", compiler.globalTrack.globalCmds.size);
+	printf("global groups:%ld \n", compiler.globalTrack.cmdGroups.length);
+	printf("global byte code length: %ld\n", compiler.globalTrack.globalCmds.size);
 
 	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & track);
 
-		printf("%ld groups\n", i);
-		printf("global cmds %u\n", track -> globalCmds.size);
+		printf("track #%d byte code length: %ld\n", i, track -> globalCmds.size);
 
 		totalSize += track -> globalCmds.size;
 
@@ -94,7 +93,7 @@ int main (int argc, char * argv [])
 				continue;
 			}
 
-			printf("    %u %lu\n", j, buffer -> size);
+			printf("    #%u size: %lu\n", j, buffer -> size);
 
 			totalSize += buffer -> size;
 		}

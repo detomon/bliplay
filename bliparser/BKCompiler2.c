@@ -837,7 +837,7 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 					(* (uint32_t *) opcode)   = idx;
 				}
 				else {
-					fprintf (stderr, "Undefined group number %u\n", arg);
+					fprintf (stderr, "Undefined group number %u (%u)\n", arg, groupOffsets -> length);
 					return -1;
 				}
 				break;
