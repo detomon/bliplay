@@ -46,6 +46,9 @@ struct BKCompiler2
 	BKArray         tracks;
 	BKCompilerTrack globalTrack;
 	BKInt           ignoreGroupLevel;
+	BKArray         instruments;
+	BKArray         waveforms;
+	BKArray         samples;
 };
 
 /**

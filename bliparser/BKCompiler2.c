@@ -245,14 +245,32 @@ BKInt BKCompiler2Init (BKCompiler2 * compiler)
 	memset (compiler, 0, sizeof (* compiler));
 
 	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompiler2Group), 8) < 0) {
+		BKCompiler2Dispose (& compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack *), 8) < 0) {
+		BKCompiler2Dispose (& compiler);
 		return -1;
 	}
 
 	if (BKCompilerTrackInit (& compiler -> globalTrack) < 0) {
+		BKCompiler2Dispose (& compiler);
+		return -1;
+	}
+
+	if (BKArrayInit (& compiler -> instruments, sizeof (BKInstrument *), 4) < 0) {
+		BKCompiler2Dispose (& compiler);
+		return -1;
+	}
+
+	if (BKArrayInit (& compiler -> waveforms, sizeof (BKData *), 4) < 0) {
+		BKCompiler2Dispose (& compiler);
+		return -1;
+	}
+
+	if (BKArrayInit (& compiler -> samples, sizeof (BKData *), 4) < 0) {
+		BKCompiler2Dispose (& compiler);
 		return -1;
 	}
 
@@ -1083,4 +1101,8 @@ void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 	group -> groupType = BKIntrGroupDef;
 
 	compiler -> ignoreGroupLevel = -1;
+
+	BKArrayEmpty (& compiler -> instruments, keepData);
+	BKArrayEmpty (& compiler -> waveforms, keepData);
+	BKArrayEmpty (& compiler -> samples, keepData);
 }
