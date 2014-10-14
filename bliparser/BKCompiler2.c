@@ -821,6 +821,7 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 
 	while (opcode < opcodeEnd) {
 		cmd = * (uint8_t *) opcode ++;
+		cmdSize = 0;
 
 		switch (cmd) {
 			case BKIntrGroupJump: {
