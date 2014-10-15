@@ -110,9 +110,9 @@ struct BKInterpreter
 	//BKLongJump      jumpStack [BK_INTR_JUMP_STACK_SIZE];
 	//BKLongJump    * jumpStackPtr;
 	//BKLongJump    * jumpStackEnd;
-	BKArray         instruments;
-	BKArray         waveforms;
-	BKArray         samples;
+	BKArray       * instruments;
+	BKArray       * waveforms;
+	BKArray       * samples;
 	BKUInt          stepTickCount;
 	BKUInt          numSteps;
 	BKUInt          nextNoteIndex;

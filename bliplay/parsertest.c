@@ -108,6 +108,10 @@ int main (int argc, char * argv [])
 	BKInterpreterInit (& interpreter);
 	BKTrackInit (& track, BK_SQUARE);
 
+	interpreter.instruments = & compiler.instruments;
+	interpreter.waveforms   = & compiler.waveforms;
+	interpreter.samples     = & compiler.samples;
+
 	BKArrayGetItemAtIndexCopy (& compiler.tracks, 0, & cTrack);
 	interpreter.opcode    = cTrack -> globalCmds.data;
 	interpreter.opcodePtr = interpreter.opcode;

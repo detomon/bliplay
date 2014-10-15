@@ -29,11 +29,26 @@
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
-enum
+#define BK_MAX_SEQ_LENGTH 256
+
+enum BKCompilerFlag
 {
 	BKCompilerFlagAllocated = 1 << 0,
 	BKCompilerFlagOpenGroup = 1 << 1,
 	BKCompilerFlagArpeggio  = 1 << 2,
+};
+
+enum BKCompilerEnvelopeType
+{
+	BKCompilerEnvelopeTypeVolumeSeq,
+	BKCompilerEnvelopeTypePitchSeq,
+	BKCompilerEnvelopeTypePanningSeq,
+	BKCompilerEnvelopeTypeDutyCycleSeq,
+	BKCompilerEnvelopeTypeADSR,
+	BKCompilerEnvelopeTypeVolumeEnv,
+	BKCompilerEnvelopeTypePitchEnv,
+	BKCompilerEnvelopeTypePanningEnv,
+	BKCompilerEnvelopeTypeDutyCycleEnv,
 };
 
 /**
@@ -139,10 +154,27 @@ static strval waveformNames [] =
 	{"triangle", BK_TRIANGLE},
 };
 
+/**
+ * Envelope lookup table
+ */
+static strval envelopeNames [] =
+{
+	{"a",    BKCompilerEnvelopeTypePitchSeq},
+	{"adsr", BKCompilerEnvelopeTypeADSR},
+	{"anv",  BKCompilerEnvelopeTypePitchEnv},
+	{"dc",   BKCompilerEnvelopeTypeDutyCycleSeq},
+	{"dcnv", BKCompilerEnvelopeTypeDutyCycleEnv},
+	{"p",    BKCompilerEnvelopeTypePanningSeq},
+	{"pnv",  BKCompilerEnvelopeTypePanningEnv},
+	{"v",    BKCompilerEnvelopeTypeVolumeSeq},
+	{"vnv",  BKCompilerEnvelopeTypeVolumeEnv},
+};
+
 #define NUM_WAVEFORM_NAMES (sizeof (waveformNames) / sizeof (strval))
 #define NUM_CMD_NAMES (sizeof (cmdNames) / sizeof (strval))
 #define NUM_EFFECT_NAMES (sizeof (effectNames) / sizeof (strval))
 #define NUM_NOTE_NAMES (sizeof (noteNames) / sizeof (strval))
+#define NUM_ENVELOPE_NAMES (sizeof (envelopeNames) / sizeof (strval))
 
 /**
  * Convert string to signed integer like `atoi`
@@ -330,9 +362,9 @@ static BKInt BKCompilerParseNote (char const * name)
 
 static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKInt index)
 {
-	BKByteBuffer     * buffer = NULL;
+	BKByteBuffer    * buffer = NULL;
 	BKCompilerGroup * group  = BKArrayGetLastItem (& compiler -> groupStack);
-	BKCompilerTrack  * track  = group -> track;
+	BKCompilerTrack * track  = group -> track;
 
 	// search for free slot
 	if (index == -1) {
@@ -383,10 +415,201 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 	return buffer;
 }
 
+static BKInt BKInstrumentAlloc (BKInstrument ** outInstrument)
+{
+	BKInstrument * instrument;
+
+	instrument = malloc (sizeof (* instrument));
+
+	if (instrument == NULL) {
+		return -1;
+	}
+
+	if (BKInstrumentInit (instrument) < 0) {
+		free (instrument);
+		return -1;
+	}
+
+	* outInstrument = instrument;
+
+	return 0;
+}
+
+static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BKInt index)
+{
+	BKInstrument * instrument = NULL;
+
+	// search for free slot
+	if (index == -1) {
+		for (BKInt i = 0; i < compiler -> instruments.length; i ++) {
+			BKArrayGetItemAtIndexCopy (& compiler -> instruments, i, & instrument);
+
+			// is empty slot
+			if (instrument == NULL) {
+				index = i;
+				break;
+			}
+		}
+
+		if (index == -1) {
+			index = compiler -> instruments.length;
+			instrument = NULL;
+		}
+	}
+	else {
+		// search instrument at slot
+		BKArrayGetItemAtIndexCopy (& compiler -> instruments, index, & instrument);
+	}
+
+	// create new instrument
+	if (instrument == NULL) {
+		// fill slots with empty buffers
+		while (compiler -> instruments.length < index) {
+			if (BKArrayPushPtr (& compiler -> instruments) == NULL) {
+				return NULL;
+			}
+		}
+
+		if (BKInstrumentAlloc (& instrument) < 0) {
+			return NULL;
+		}
+
+		// append new instrument
+		if (BKArrayPush (& compiler -> instruments, & instrument) < 0) {
+			return NULL;
+		}
+	}
+
+	return instrument;
+
+}
+
+static BKInt BKCompilerInstrumentSequenceParse (BKSTCmd const * cmd, BKInt * sequence, BKInt * outRepeatBegin, BKInt * outRepeatLength, BKInt multiplier)
+{
+	BKInt length = (BKInt) cmd -> numArgs - 2;
+	BKInt repeatBegin = 0, repeatLength = 0;
+
+	length       = BKMin (length, BK_MAX_SEQ_LENGTH);
+	repeatBegin  = atoix (cmd -> args [0].arg, 0);
+	repeatLength = atoix (cmd -> args [1].arg, 1);
+
+	if (repeatBegin > length) {
+		repeatBegin = length;
+	}
+
+	if (repeatBegin + repeatLength > length) {
+		repeatLength = length - repeatBegin;
+	}
+
+	* outRepeatBegin  = repeatBegin;
+	* outRepeatLength = repeatLength;
+
+	for (BKInt i = 0; i < length; i ++) {
+		sequence [i] = atoix (cmd -> args [i + 2].arg, 0) * multiplier;
+	}
+
+	return length;
+}
+
+static BKInt BKCompilerInstrumentEnvelopeParse (BKSTCmd const * cmd, BKSequencePhase * phases, BKInt * outRepeatBegin, BKInt * outRepeatLength, BKInt multiplier)
+{
+	BKInt length = (BKInt) cmd -> numArgs - 2;
+	BKInt repeatBegin = 0, repeatLength = 0;
+
+	length       = BKMin (length, BK_MAX_SEQ_LENGTH);
+	repeatBegin  = atoix (cmd -> args [0].arg, 0);
+	repeatLength = atoix (cmd -> args [1].arg, 1);
+
+	if (repeatBegin > length) {
+		repeatBegin = length;
+	}
+
+	if (repeatBegin + repeatLength > length) {
+		repeatLength = length - repeatBegin;
+	}
+
+	* outRepeatBegin  = repeatBegin;
+	* outRepeatLength = repeatLength;
+
+	for (BKInt i = 0, j = 0; i < length; i += 2, j ++) {
+		phases [j].steps = atoix (cmd -> args [i + 2].arg, 0);
+		phases [j].value = atoix (cmd -> args [i + 3].arg, 0) * multiplier;
+	}
+
+	return length / 2;
+}
+
 static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd const * cmd)
 {
-	printf("-instrument\n");
-	return 0;
+	BKInt value;
+	BKInt sequence [BK_MAX_SEQ_LENGTH];
+	BKSequencePhase phases [BK_MAX_SEQ_LENGTH];
+	BKInt sequenceLength, repeatBegin, repeatLength;
+	BKInt asdr [4];
+	BKInt res = 0;
+	BKInstrument * instrument = compiler -> currentInstrument;
+
+	if (BKCompilerStrvalTableLookup (envelopeNames, NUM_ENVELOPE_NAMES, cmd -> name, & value, NULL) == 0) {
+		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+		return 0;
+	}
+
+	printf("set seq: %u\n", value);
+
+	switch (value) {
+		case BKCompilerEnvelopeTypeVolumeSeq: {
+			sequenceLength = BKCompilerInstrumentSequenceParse (cmd, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_VOLUME, sequence, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+		case BKCompilerEnvelopeTypePitchSeq: {
+			sequenceLength = BKCompilerInstrumentSequenceParse (cmd, sequence, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_PITCH, sequence, sequenceLength, repeatBegin, repeatLength);
+			break;
+		};
+		case BKCompilerEnvelopeTypePanningSeq: {
+			sequenceLength = BKCompilerInstrumentSequenceParse (cmd, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_PANNING, sequence, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+		case BKCompilerEnvelopeTypeDutyCycleSeq: {
+			sequenceLength = BKCompilerInstrumentSequenceParse (cmd, sequence, & repeatBegin, & repeatLength, 1);
+			res = BKInstrumentSetSequence (instrument, BK_SEQUENCE_DUTY_CYCLE, sequence, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+		case BKCompilerEnvelopeTypeADSR: {
+			asdr [0] = atoix (cmd -> args [0].arg, 0);
+			asdr [1] = atoix (cmd -> args [1].arg, 0);
+			asdr [2] = atoix (cmd -> args [2].arg, 0) * (BK_MAX_VOLUME / 255);
+			asdr [3] = atoix (cmd -> args [3].arg, 0);
+			res = BKInstrumentSetEnvelopeADSR (instrument, asdr [0], asdr [1], asdr [2], asdr [3]);
+		}
+		case BKCompilerEnvelopeTypeVolumeEnv: {
+			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_VOLUME, phases, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+		case BKCompilerEnvelopeTypePitchEnv: {
+			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, (BK_FINT20_UNIT / 100));
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PITCH, phases, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+		case BKCompilerEnvelopeTypePanningEnv: {
+			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PANNING, phases, sequenceLength, repeatBegin, repeatLength);
+		}
+		case BKCompilerEnvelopeTypeDutyCycleEnv: {
+			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, 1);
+			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_DUTY_CYCLE, phases, sequenceLength, repeatBegin, repeatLength);
+			break;
+		}
+	}
+
+	if (res < 0) {
+		fprintf (stderr, "Invalid sequence '%s' (%d)\n", cmd -> name, res);
+	}
+
+	return res;
 }
 
 static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const * cmd)
@@ -397,13 +620,13 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 
 static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * cmd)
 {
-	char const       * arg0str;
-	BKInt              values [2];
-	BKInt              args [3];
-	BKInt              numArgs, value;
-	BKInstruction      instr;
+	char const      * arg0str;
+	BKInt             values [2];
+	BKInt             args [3];
+	BKInt             numArgs, value;
+	BKInstruction     instr;
 	BKCompilerGroup * group = BKArrayGetLastItem (& compiler -> groupStack);
-	BKByteBuffer     * cmds  = group -> cmdBuffer;
+	BKByteBuffer    * cmds  = group -> cmdBuffer;
 
 	arg0str = cmd -> args [0].arg;
 	numArgs = cmd -> numArgs;
@@ -670,13 +893,12 @@ static BKInt BKCompilerPushCommandWaveform (BKCompiler * compiler, BKSTCmd const
 
 BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 {
-	BKInt              index, value;
-	BKUInt             flags;
-	BKByteBuffer     * buffer;
-	BKInstruction      instr;
+	BKInt             index, value;
+	BKUInt            flags;
+	BKInstruction     instr;
 	BKCompilerGroup * group, * newGroup;
-	BKCompilerTrack  * track;
-	char const       * args [2];
+	BKCompilerTrack * track;
+	char const      * args [2];
 
 	switch (cmd -> token) {
 		case BKSTTokenValue: {
@@ -748,6 +970,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 			switch (instr) {
 				case BKIntrGroupDef: {
+					BKByteBuffer * buffer;
+
 					index = atoix (cmd -> args [0].arg, -1);
 
 					if (index >= MAX_GROUPS) {
@@ -762,16 +986,40 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 						return -1;
 					}
 
-					printf("buf: %p\n", buffer);
-
 					newGroup -> cmdBuffer = buffer;
 					break;
 				}
 				case BKIntrInstrumentDef: {
+					BKInstrument * instrument;
+
+					index = atoix (cmd -> args [0].arg, -1);
+
+					if (index >= MAX_GROUPS) {
+						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						return 0;
+					}
+
+					instrument = BKCompilerGetInstrumentForIndex (compiler, index);
+
+					if (instrument == NULL) {
+						return -1;
+					}
+
+					compiler -> currentInstrument = instrument;
 
 					break;
 				}
 				case BKIntrSampleDef: {
+					index = atoix (cmd -> args [0].arg, -1);
+
+					if (index >= MAX_GROUPS) {
+						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						return 0;
+					}
+
+					// ...
 
 					break;
 				}
@@ -809,6 +1057,15 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 					break;
 				}
 				case BKIntrWaveformDef: {
+					index = atoix (cmd -> args [0].arg, -1);
+
+					if (index >= MAX_GROUPS) {
+						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						return 0;
+					}
+
+					// ...
 
 					break;
 				}
@@ -1113,7 +1370,9 @@ BKInt BKCompilerCompile (BKCompiler * compiler, BKSTParser * parser, BKEnum opti
 void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 {
 	BKCompilerGroup * group;
-	BKCompilerTrack  * track;
+	BKCompilerTrack * track;
+	BKInstrument    * instrument;
+	BKData          * data;
 
 	if (BKArrayGetItemAtIndexCopy (& compiler -> tracks, 0, & track) == 0) {
 		BKArrayEmpty (& track -> cmdGroups, keepData);
@@ -1132,6 +1391,33 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	group -> groupType = BKIntrGroupDef;
 
 	compiler -> ignoreGroupLevel = -1;
+
+	for (BKInt i = 0; i < compiler -> instruments.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> instruments, i, & instrument);
+
+		if (instrument) {
+			BKInstrumentDispose (instrument);
+			free (instrument);
+		}
+	}
+
+	for (BKInt i = 0; i < compiler -> waveforms.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> waveforms, i, & data);
+
+		if (data) {
+			BKDataDispose (data);
+			free (data);
+		}
+	}
+
+	for (BKInt i = 0; i < compiler -> samples.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> samples, i, & data);
+
+		if (data) {
+			BKDataDispose (data);
+			free (data);
+		}
+	}
 
 	BKArrayEmpty (& compiler -> instruments, keepData);
 	BKArrayEmpty (& compiler -> waveforms, keepData);

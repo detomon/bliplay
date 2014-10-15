@@ -50,6 +50,9 @@ struct BKCompiler
 	BKArray         waveforms;
 	BKArray         samples;
 	BKUInt          stepTicks;
+	BKInstrument  * currentInstrument;
+	BKData        * currentWaveform;
+	BKData        * currentSample;
 };
 
 /**
