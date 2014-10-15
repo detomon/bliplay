@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012-2014 Simon Schoenenberger
+ * Copyright (c) 2014 Simon Schoenenberger
  * http://blipkit.monoxid.net/
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,29 +21,35 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _BK_COMPILER_H_
-#define _BK_COMPILER_H_
+#ifndef _BK_COMPILER2_H_
+#define _BK_COMPILER2_H_
 
-#include "BKBlipReader.h"
+#include "BKSTParser.h"
 #include "BKInterpreter.h"
+#include "BKArray.h"
+#include "BKByteBuffer.h"
 
-typedef struct BKCompiler BKCompiler;
+typedef struct BKCompiler     BKCompiler;
+typedef struct BKCompilerTrack BKCompilerTrack;
+
+struct BKCompilerTrack
+{
+	BKUInt       flags;
+	BKArray      cmdGroups;
+	BKByteBuffer globalCmds;
+};
 
 struct BKCompiler
 {
 	BKUInt          flags;
-	BKInt         * cmds;
-	BKInt         * groupCmds;
-	BKInt         * groupOffsets;
-	BKInt        ** activeCmdList;
-	BKUInt          groupLevel;
-	BKInterpreter * interpreter;
-};
-
-enum
-{
-	BK_COMPILER_ADD_REPEAT = 1 << 0,
-	BK_COMPILER_ADD_END    = 1 << 1,
+	BKArray         groupStack;
+	BKArray         tracks;
+	BKCompilerTrack globalTrack;
+	BKInt           ignoreGroupLevel;
+	BKArray         instruments;
+	BKArray         waveforms;
+	BKArray         samples;
+	BKUInt          stepTicks;
 };
 
 /**
@@ -59,27 +65,25 @@ extern void BKCompilerDispose (BKCompiler * compiler);
 /**
  * Push command
  */
-extern BKInt BKCompilerPushCommand (BKCompiler * compiler, BKBlipCommand * item);
-
-/**
- * Compile commands and initialize interpreter
- *
- * Options may be one or more of `BK_COMPILER_ADD_REPEAT`, `BK_COMPILER_ADD_EXIT`
- * Default is `BK_COMPILER_ADD_EXIT`
- */
-extern BKInt BKCompilerTerminate (BKCompiler * compiler, BKInterpreter * interpreter, BKEnum options);
+extern BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd);
 
 /**
  * Compile all commands from parser and terminate compiler
  *
- * Options may be one or more of `BK_COMPILER_ADD_REPEAT`, `BK_COMPILER_ADD_EXIT`
- * Default is `BK_COMPILER_ADD_EXIT`
+ * No options are defined at the moment
  */
-extern BKInt BKCompilerCompile (BKCompiler * compiler, BKInterpreter * interpreter, BKBlipReader * parser, BKEnum options);
+extern BKInt BKCompilerCompile (BKCompiler * compiler, BKSTParser * parser, BKEnum options);
+
+/**
+ * Compile commands from parser
+ *
+ * No options are defined at the moment
+ */
+extern BKInt BKCompilerTerminate (BKCompiler * compiler, BKEnum options);
 
 /**
  * Reset compiler for compiling new data
  */
-extern void BKCompilerReset (BKCompiler * compiler);
+extern void BKCompilerReset (BKCompiler * compiler, BKInt keepData);
 
-#endif /* ! _BK_COMPILER_H_ */
+#endif /* ! _BK_COMPILER2_H_ */

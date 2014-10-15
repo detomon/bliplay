@@ -25,7 +25,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "BKSTParser.h"
-#include "BKCompiler2.h"
+#include "BKCompiler.h"
 
 static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
 //static char const * filename = "/Users/simon/Downloads/base64.blip";
@@ -35,7 +35,7 @@ int main (int argc, char * argv [])
 	BKSTTokenType token;
 	BKSTParser parser;
 	BKSTCmd cmd;
-	BKCompiler2 compiler;
+	BKCompiler compiler;
 
 	FILE * file = fopen (filename, "r");
 
@@ -45,7 +45,7 @@ int main (int argc, char * argv [])
 	}
 
 	BKSTParserInitWithFile (& parser, file);
-	BKCompiler2Init (& compiler);
+	BKCompilerInit (& compiler);
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
 		//printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
@@ -56,13 +56,13 @@ int main (int argc, char * argv [])
 			}
 		}
 
-		if (BKCompiler2PushCommand (& compiler, & cmd)) {
+		if (BKCompilerPushCommand (& compiler, & cmd)) {
 			printf("***Failed\n");
 			return 1;
 		}
 	}
 
-	if (BKCompiler2Terminate (& compiler, 0) < 0) {
+	if (BKCompilerTerminate (& compiler, 0) < 0) {
 		return 1;
 	}
 
@@ -117,7 +117,7 @@ int main (int argc, char * argv [])
 	}
 
 	BKSTParserDispose (& parser);
-	BKCompiler2Dispose (& compiler);
+	BKCompilerDispose (& compiler);
 
 	fclose (file);
 
