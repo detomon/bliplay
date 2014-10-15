@@ -71,23 +71,22 @@ int main (int argc, char * argv [])
 	BKInt totalSize = 0;
 
 	BKByteBuffer    * buffer;
-	BKCompilerTrack * track;
+	BKCompilerTrack * cTrack;
 
 	printf("%ld tracks\n", compiler.tracks.length);
-
 
 	printf("global groups:%ld \n", compiler.globalTrack.cmdGroups.length);
 	printf("global byte code length: %ld\n", compiler.globalTrack.globalCmds.size);
 
 	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
-		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & track);
+		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & cTrack);
 
-		printf("track #%d byte code length: %ld\n", i, track -> globalCmds.size);
+		printf("track #%d byte code length: %ld\n", i, cTrack -> globalCmds.size);
 
-		totalSize += track -> globalCmds.size;
+		totalSize += cTrack -> globalCmds.size;
 
-		for (BKInt j = 0; j < track -> cmdGroups.length; j ++) {
-			BKArrayGetItemAtIndexCopy (& track -> cmdGroups, j, & buffer);
+		for (BKInt j = 0; j < cTrack -> cmdGroups.length; j ++) {
+			BKArrayGetItemAtIndexCopy (& cTrack -> cmdGroups, j, & buffer);
 
 			if (buffer == NULL) {
 				continue;
@@ -100,6 +99,22 @@ int main (int argc, char * argv [])
 	}
 
 	printf ("total byte code: %d\n", totalSize);
+
+
+	BKTrack track;
+	BKInterpreter interpreter;
+
+	BKInt ticks;
+	BKInterpreterInit (& interpreter);
+	BKTrackInit (& track, BK_SQUARE);
+
+	BKArrayGetItemAtIndexCopy (& compiler.tracks, 0, & cTrack);
+	interpreter.opcode    = cTrack -> globalCmds.data;
+	interpreter.opcodePtr = interpreter.opcode;
+
+	while (BKInterpreterTrackAdvance (& interpreter, & track, & ticks)) {
+		printf(">  %d\n", ticks);
+	}
 
 	BKSTParserDispose (& parser);
 	BKCompiler2Dispose (& compiler);

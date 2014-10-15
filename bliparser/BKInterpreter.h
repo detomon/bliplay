@@ -26,7 +26,7 @@
 
 #include "BKBase.h"
 #include "BKTrack.h"
-#include "item_list.h"
+#include "BKArray.h"
 
 #define BK_INTR_CUSTOM_WAVEFOMR_FLAG (1 << 15)
 #define BK_INTR_STACK_SIZE 16
@@ -101,18 +101,18 @@ struct BKLongJump
 struct BKInterpreter
 {
 	BKUInt          flags;
-	BKInt         * opcode;
-	BKInt         * opcodePtr;
+	void          * opcode;
+	void          * opcodePtr;
 	BKInt           repeatStartAddr;
 	BKInt           stack [BK_INTR_STACK_SIZE];
 	BKInt         * stackPtr;
 	BKInt         * stackEnd;
-	BKLongJump      jumpStack [BK_INTR_JUMP_STACK_SIZE];
-	BKLongJump    * jumpStackPtr;
-	BKLongJump    * jumpStackEnd;
-	BKInstrument ** instruments;
-	BKData       ** waveforms;
-	BKData       ** samples;
+	//BKLongJump      jumpStack [BK_INTR_JUMP_STACK_SIZE];
+	//BKLongJump    * jumpStackPtr;
+	//BKLongJump    * jumpStackEnd;
+	BKArray         instruments;
+	BKArray         waveforms;
+	BKArray         samples;
 	BKUInt          stepTickCount;
 	BKUInt          numSteps;
 	BKUInt          nextNoteIndex;

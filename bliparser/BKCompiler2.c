@@ -81,37 +81,38 @@ static strval noteNames [] =
  */
 static strval cmdNames [] =
 {
-	{"a",     BKIntrAttack},
-	{"as",    BKIntrArpeggioSpeed},
-	{"at",    BKIntrAttackTicks},
-	{"d",     BKIntrSample},
-	{"dc",    BKIntrDutyCycle},
-	{"dn",    BKIntrSampleRange},
-	{"dr",    BKIntrSampleRepeat},
-	{"e",     BKIntrEffect},
-	{"g",     BKIntrGroupJump},
-	{"grp",   BKIntrGroupDef, BKCompiler2FlagOpenGroup},
-	{"i",     BKIntrInstrument},
-	{"instr", BKIntrInstrumentDef, BKCompiler2FlagOpenGroup},
-	{"m",     BKIntrMute},
-	{"mt",    BKIntrMuteTicks},
-	{"p",     BKIntrPanning},
-	{"pt",    BKIntrPitch},
-	{"pw",    BKIntrPhaseWrap},
-	{"r",     BKIntrRelease},
-	{"rt",    BKIntrReleaseTicks},
-	{"s",     BKIntrStep},
-	{"samp",  BKIntrSampleDef},
-	{"st",    BKIntrStepTicks},
-	{"t",     BKIntrTicks},
-	{"track", BKIntrTrackDef, BKCompiler2FlagOpenGroup},
-	{"v",     BKIntrVolume},
-	{"vm",    BKIntrMasterVolume},
-	{"w",     BKIntrWaveform},
-	{"wave",  BKIntrWaveformDef, BKCompiler2FlagOpenGroup},
-	{"x",     BKIntrRepeat},
-	{"xb",    BKIntrSetRepeatStart},
-	{"z",     BKIntrEnd},
+	{"a",         BKIntrAttack},
+	{"as",        BKIntrArpeggioSpeed},
+	{"at",        BKIntrAttackTicks},
+	{"d",         BKIntrSample},
+	{"dc",        BKIntrDutyCycle},
+	{"dn",        BKIntrSampleRange},
+	{"dr",        BKIntrSampleRepeat},
+	{"e",         BKIntrEffect},
+	{"g",         BKIntrGroupJump},
+	{"grp",       BKIntrGroupDef, BKCompiler2FlagOpenGroup},
+	{"i",         BKIntrInstrument},
+	{"instr",     BKIntrInstrumentDef, BKCompiler2FlagOpenGroup},
+	{"m",         BKIntrMute},
+	{"mt",        BKIntrMuteTicks},
+	{"p",         BKIntrPanning},
+	{"pt",        BKIntrPitch},
+	{"pw",        BKIntrPhaseWrap},
+	{"r",         BKIntrRelease},
+	{"rt",        BKIntrReleaseTicks},
+	{"s",         BKIntrStep},
+	{"samp",      BKIntrSampleDef},
+	{"st",        BKIntrStepTicks},
+	{"stepticks", BKIntrStepTicks},
+	{"t",         BKIntrTicks},
+	{"track",     BKIntrTrackDef, BKCompiler2FlagOpenGroup},
+	{"v",         BKIntrVolume},
+	{"vm",        BKIntrMasterVolume},
+	{"w",         BKIntrWaveform},
+	{"wave",      BKIntrWaveformDef, BKCompiler2FlagOpenGroup},
+	{"x",         BKIntrRepeat},
+	{"xb",        BKIntrSetRepeatStart},
+	{"z",         BKIntrEnd},
 };
 
 /**
@@ -245,32 +246,32 @@ BKInt BKCompiler2Init (BKCompiler2 * compiler)
 	memset (compiler, 0, sizeof (* compiler));
 
 	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompiler2Group), 8) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack *), 8) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
 	if (BKCompilerTrackInit (& compiler -> globalTrack) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> instruments, sizeof (BKInstrument *), 4) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> waveforms, sizeof (BKData *), 4) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> samples, sizeof (BKData *), 4) < 0) {
-		BKCompiler2Dispose (& compiler);
+		BKCompiler2Dispose (compiler);
 		return -1;
 	}
 
@@ -365,17 +366,17 @@ static BKByteBuffer * BKCompiler2GetCmdGroupForIndex (BKCompiler2 * compiler, BK
 		// fill slots with empty buffers
 		while (track -> cmdGroups.length < index) {
 			if (BKArrayPushPtr (& track -> cmdGroups) == NULL) {
-				return -1;
+				return NULL;
 			}
 		}
 
 		if (BKByteBufferAlloc (& buffer, 0) < 0) {
-			return -1;
+			return NULL;
 		}
 
 		// append new buffer
 		if (BKArrayPush (& track -> cmdGroups, & buffer) < 0) {
-			return -1;
+			return NULL;
 		}
 	}
 
@@ -403,8 +404,6 @@ static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const 
 	BKInstruction      instr;
 	BKCompiler2Group * group = BKArrayGetLastItem (& compiler -> groupStack);
 	BKByteBuffer     * cmds  = group -> cmdBuffer;
-
-	printf(">> grp: %lu %s\n", group, cmd -> name);
 
 	arg0str = cmd -> args [0].arg;
 	numArgs = cmd -> numArgs;
@@ -548,7 +547,7 @@ static BKInt BKCompiler2PushCommandTrack (BKCompiler2 * compiler, BKSTCmd const 
 				}
 
 				BKByteBufferAppendInt8 (cmds, instr);
-				BKByteBufferAppendInt32 (cmds, values [0]);
+				BKByteBufferAppendInt16 (cmds, values [0]);
 				BKByteBufferAppendInt32 (cmds, args [0]);
 				BKByteBufferAppendInt32 (cmds, args [1]);
 				BKByteBufferAppendInt32 (cmds, args [2]);
@@ -677,6 +676,7 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 	BKInstruction      instr;
 	BKCompiler2Group * group, * newGroup;
 	BKCompilerTrack  * track;
+	char const       * args [2];
 
 	switch (cmd -> token) {
 		case BKSTTokenValue: {
@@ -733,7 +733,7 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 			memcpy (newGroup, group, sizeof (* group));
 			newGroup -> level ++;
 
-			printf("++ trk: %lu grp: %lu\n", newGroup -> track, newGroup);
+			printf("++ trk: %p grp: %p\n", newGroup -> track, newGroup);
 
 			flags = 0;
 			value = 0;
@@ -762,6 +762,8 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 						return -1;
 					}
 
+					printf("buf: %p\n", buffer);
+
 					newGroup -> cmdBuffer = buffer;
 					break;
 				}
@@ -774,6 +776,8 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 					break;
 				}
 				case BKIntrTrackDef: {
+					BKInt waveform = BK_SQUARE;
+
 					if (BKCompilerTrackAlloc (& track) < 0) {
 						return -1;
 					}
@@ -784,10 +788,32 @@ BKInt BKCompiler2PushCommand (BKCompiler2 * compiler, BKSTCmd const * cmd)
 
 					newGroup -> track     = track;
 					newGroup -> cmdBuffer = & track -> globalCmds;
+
+					if (cmd -> numArgs > 0) {
+						args [0] = cmd -> args [0].arg;
+
+						// use custom waveform
+						if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, args [0], & waveform, NULL) == 0) {
+							waveform = atoix (args [0], 0) | BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+						}
+					}
+
+					// set initial waveform
+					BKByteBufferAppendInt8 (& track -> globalCmds, BKIntrWaveform);
+					BKByteBufferAppendInt16 (& track -> globalCmds, waveform);
+
+					// set stepticks
+					BKByteBufferAppendInt8 (& track -> globalCmds, BKIntrStepTicks);
+					BKByteBufferAppendInt16 (& track -> globalCmds, compiler -> stepTicks);
+
 					break;
 				}
 				case BKIntrWaveformDef: {
 
+					break;
+				}
+				case BKIntrStepTicks: {
+					compiler -> stepTicks = atoix (cmd -> args [0].arg, 0);
 					break;
 				}
 				default: {
@@ -851,11 +877,11 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 
 					BKArrayGetItemAtIndexCopy (groupOffsets, arg, & idx);
 
-					(* (uint8_t *) opcode ++) = BKIntrJump;
+					(* (uint8_t *) opcode ++) = BKIntrCall;
 					(* (uint32_t *) opcode)   = idx;
 				}
 				else {
-					fprintf (stderr, "Undefined group number %u (%u)\n", arg, groupOffsets -> length);
+					fprintf (stderr, "Undefined group number %d (%ld)\n", arg, groupOffsets -> length);
 					return -1;
 				}
 				break;
@@ -894,7 +920,7 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 				break;
 			}
 			case BKIntrEffect: {
-				cmdSize = 4 + 4 + 4 + 4;
+				cmdSize = 2 + 4 + 4 + 4;
 				break;
 			}
 			case BKIntrDutyCycle: {
@@ -913,14 +939,8 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 				cmdSize = 4;
 				break;
 			}
-			case BKIntrInstrument: {
-				cmdSize = 2;
-				break;
-			}
-			case BKIntrWaveform: {
-				cmdSize = 2;
-				break;
-			}
+			case BKIntrInstrument:
+			case BKIntrWaveform:
 			case BKIntrSample: {
 				cmdSize = 2;
 				break;
@@ -954,7 +974,7 @@ static BKInt BKCompiler2ByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gr
 }
 
 /**
- * Combine group commands into globa commands of track
+ * Combine group commands into global commands of track
  */
 static BKInt BKCompiler2TrackLink (BKCompilerTrack * track)
 {
@@ -1005,7 +1025,7 @@ static BKInt BKCompiler2TrackLink (BKCompilerTrack * track)
 			return -1;
 		}
 
-		//BKByteBufferEmpty (group, 0);
+		BKByteBufferEmpty (group, 0);
 	}
 
 	BKArrayDispose (& groupOffsets);
@@ -1022,10 +1042,22 @@ static BKInt BKCompiler2Link (BKCompiler2 * compiler)
 
 	track = & compiler -> globalTrack;
 
+	// append end command
+	BKByteBufferAppendInt8 (& track -> globalCmds, BKIntrEnd);
+
 	if (BKCompiler2TrackLink (track) < 0) {
 		return -1;
 	}
 
+	// before linking
+	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
+		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
+
+		// append end command
+		BKByteBufferAppendInt8 (& track -> globalCmds, BKIntrEnd);
+	}
+
+	// linking tracks
 	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);
 
@@ -1080,7 +1112,6 @@ BKInt BKCompiler2Compile (BKCompiler2 * compiler, BKSTParser * parser, BKEnum op
 
 void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 {
-	BKByteBuffer     * buffer;
 	BKCompiler2Group * group;
 	BKCompilerTrack  * track;
 
@@ -1105,4 +1136,6 @@ void BKCompiler2Reset (BKCompiler2 * compiler, BKInt keepData)
 	BKArrayEmpty (& compiler -> instruments, keepData);
 	BKArrayEmpty (& compiler -> waveforms, keepData);
 	BKArrayEmpty (& compiler -> samples, keepData);
+
+	compiler -> stepTicks = 24;
 }

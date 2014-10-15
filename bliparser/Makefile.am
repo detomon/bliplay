@@ -3,10 +3,6 @@ AM_CFLAGS = @BK_STD_CFLAGS@ -I$(srcdir)/../BlipKit/src -L$(srcdir)/../BlipKit/sr
 noinst_LIBRARIES = libbliparser.a
 
 libbliparser_a_SOURCES = \
-	BKSDLTrack.c \
-	BKBlipReader.c \
-	BKBlipWriter.c \
-	BKCompiler.c \
 	BKCompiler2.c \
 	BKInterpreter.c \
 	BKSTTokenizer.c \
@@ -15,16 +11,12 @@ libbliparser_a_SOURCES = \
 	BKByteBuffer.c
 
 dist_noinst_HEADERS = \
-	BKSDLTrack.h \
-	BKBlipReader.h \
-	BKBlipWriter.h \
-	BKCompiler.h \
+	BKCompiler2.h \
 	BKInterpreter.h \
 	BKSTTokenizer.h \
 	BKSTParser.h \
 	BKArray.h \
-	BKByteBuffer.h \
-	item_list.h
+	BKByteBuffer.h
 
 pkginclude_HEADERS = $(HEADER_LIST)
 

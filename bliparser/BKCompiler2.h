@@ -49,6 +49,7 @@ struct BKCompiler2
 	BKArray         instruments;
 	BKArray         waveforms;
 	BKArray         samples;
+	BKUInt          stepTicks;
 };
 
 /**
