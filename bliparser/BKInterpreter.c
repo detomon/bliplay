@@ -180,7 +180,7 @@ static uint16_t BKInterpreterOpcodeReadInt16 (void const ** opcode)
 
 static uint32_t BKInterpreterOpcodeReadInt32 (void const ** opcode)
 {
-	uint16_t i = * (uint32_t *) (* opcode);
+	uint32_t i = * (uint32_t *) (* opcode);
 	(* opcode) += 4;
 
 	return i;
@@ -276,8 +276,6 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 	do {
 		cmd = BKInterpreterOpcodeReadInt8 ((void *) & opcode);
 
-		printf(": %d\n", cmd);
-
 		switch (cmd) {
 			case BKIntrAttack: {
 				value0 = BKInterpreterOpcodeReadInt32 ((void *) & opcode);
@@ -300,6 +298,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				break;
 			}
 			case BKIntrArpeggio: {
+				BKInt arpeggio [1 + BK_MAX_ARPEGGIO];
+
 				value0 = BKInterpreterOpcodeReadInt8 ((void *) & opcode);
 
 				if (value0) {
@@ -308,11 +308,14 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					interpreter -> flags &= ~BKInterpreterFlagHasArpeggio;
 				}
 
+				arpeggio [0] = value0;
+				memcpy (& arpeggio [1], opcode, value0 * sizeof (BKInt));
+
 				if (interpreter -> flags & BKInterpreterFlagHasAttackEvent) {
-					memcpy (interpreter -> nextArpeggio, opcode, sizeof (BKInt) * (1 + value0));
+					memcpy (interpreter -> nextArpeggio, arpeggio, (1 + value0) * sizeof (BKInt));
 				}
 				else {
-					BKTrackSetPtr (track, BK_ARPEGGIO, opcode);
+					BKTrackSetPtr (track, BK_ARPEGGIO, arpeggio);
 				}
 
 				opcode += 4 * value0;
@@ -358,7 +361,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				break;
 			}
 			case BKIntrPanning: {
-				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
+				value0 = (int16_t) BKInterpreterOpcodeReadInt16 ((void *) & opcode);
 				BKTrackSetAttr (track, BK_PANNING, value0);
 				break;
 			}
@@ -487,8 +490,6 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				if (interpreter -> stackPtr > interpreter -> stack) {
 					value0 = * (-- interpreter -> stackPtr);
 					opcode = & interpreter -> opcode [value0];
-
-					printf("%p <-\n", interpreter -> stackPtr);
 				}
 				break;
 			}
@@ -506,8 +507,6 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 						interpreter -> jumpStackPtr ++;
 					}
 				}*/
-
-				printf("%p ->\n", interpreter -> stackPtr);
 
 				if (interpreter -> stackPtr < interpreter -> stackEnd) {
 					* (interpreter -> stackPtr ++) = opcode - interpreter -> opcode;

@@ -24,19 +24,59 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <SDL/SDL.h>
 #include "BKSTParser.h"
 #include "BKCompiler.h"
+
+static BKContext ctx;
+static BKTrack   track;
+static BKDivider divider;
+
+static BKSTTokenType token;
+static BKSTParser    parser;
+static BKSTCmd       cmd;
+static BKCompiler    compiler;
+static BKInterpreter interpreter;
+
+typedef struct
+{
+	BKInterpreter interpreter;
+	BKTrack       track;
+	BKDivider     divider;
+} BKTrackWrapper;
+
+static BKTrackWrapper trackWrappers [8];
 
 static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
 //static char const * filename = "/Users/simon/Downloads/base64.blip";
 
+static void fill_audio (void * ptr, Uint8 * stream, int len)
+{
+	// calculate needed frames for one channel
+	BKUInt numFrames = len / sizeof (BKFrame) / ctx.numChannels;
+
+	BKContextGenerate (& ctx, (BKFrame *) stream, numFrames);
+}
+
+static BKEnum track_tick (BKCallbackInfo * info, BKTrackWrapper * wrapper)
+{
+	BKInt ticks;
+
+	BKInterpreterTrackAdvance (& wrapper -> interpreter, & wrapper -> track, & ticks);
+
+	info -> divider = ticks;
+
+	//printf("> %d\n", ticks);
+
+	return 0;
+}
+
+#ifdef main
+#undef main
+#endif
+
 int main (int argc, char * argv [])
 {
-	BKSTTokenType token;
-	BKSTParser parser;
-	BKSTCmd cmd;
-	BKCompiler compiler;
-
 	FILE * file = fopen (filename, "r");
 
 	if (file == NULL) {
@@ -65,6 +105,9 @@ int main (int argc, char * argv [])
 	if (BKCompilerTerminate (& compiler, 0) < 0) {
 		return 1;
 	}
+
+	BKSTParserDispose (& parser);
+	fclose (file);
 
 	printf("\n\n");
 
@@ -100,30 +143,88 @@ int main (int argc, char * argv [])
 
 	printf ("total byte code: %d\n", totalSize);
 
+	BKInt const sampleRate  = 44100;
+	BKInt const numChannels = 2;
 
-	BKTrack track;
-	BKInterpreter interpreter;
+	BKContextInit (& ctx, numChannels, sampleRate);
 
-	BKInt ticks;
-	BKInterpreterInit (& interpreter);
+	SDL_Init (SDL_INIT_AUDIO);
+
+	SDL_AudioSpec wanted;
+
+	wanted.freq     = sampleRate;
+	wanted.format   = AUDIO_S16SYS;
+	wanted.channels = numChannels;
+	wanted.samples  = 512;
+	wanted.callback = (void *) fill_audio;
+	wanted.userdata = NULL;
+
+	if (SDL_OpenAudio (& wanted, NULL) < 0) {
+		fprintf (stderr, "Couldn't open audio: %s\n", SDL_GetError ());
+		return 1;
+	}
+
+	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
+		BKTrackWrapper * wrapper     = & trackWrappers [i];
+		BKInterpreter  * interpreter = & wrapper -> interpreter;
+
+		BKInterpreterInit (interpreter);
+		BKTrackInit (& wrapper -> track, BK_SQUARE);
+
+		BKCallback callback;
+		callback.func = track_tick;
+		callback.userInfo = wrapper;
+
+		BKDividerInit (& wrapper -> divider, 24, & callback);
+		BKContextAttachDivider (& ctx, & wrapper -> divider, BK_CLOCK_TYPE_BEAT);
+
+		interpreter -> instruments = & compiler.instruments;
+		interpreter -> waveforms   = & compiler.waveforms;
+		interpreter -> samples     = & compiler.samples;
+
+		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & cTrack);
+		interpreter -> opcode    = cTrack -> globalCmds.data;
+		interpreter -> opcodePtr = interpreter -> opcode;
+
+		BKTrackAttach (& wrapper -> track, & ctx);
+	}
+
+	SDL_PauseAudio (0);
+
+	/*BKInterpreterInit (& interpreter);
 	BKTrackInit (& track, BK_SQUARE);
+
+	BKTrackAttach (& track, & ctx);
+
+	BKTrackSetAttr (& track, BK_VOLUME, BK_MAX_VOLUME);
+
+	BKCallback callback;
+	callback.func = track_tick;
+	callback.userInfo = NULL;
+
+	BKDividerInit (& divider, 24, & callback);
+
+	BKContextAttachDivider (& ctx, & divider, BK_CLOCK_TYPE_BEAT);
 
 	interpreter.instruments = & compiler.instruments;
 	interpreter.waveforms   = & compiler.waveforms;
 	interpreter.samples     = & compiler.samples;
 
-	BKArrayGetItemAtIndexCopy (& compiler.tracks, 0, & cTrack);
+	BKArrayGetItemAtIndexCopy (& compiler.tracks, 3, & cTrack);
 	interpreter.opcode    = cTrack -> globalCmds.data;
-	interpreter.opcodePtr = interpreter.opcode;
+	interpreter.opcodePtr = interpreter.opcode;*/
 
-	while (BKInterpreterTrackAdvance (& interpreter, & track, & ticks)) {
-		printf(">  %d\n", ticks);
+	while (1) {
+		SDL_Delay (100);
 	}
 
-	BKSTParserDispose (& parser);
 	BKCompilerDispose (& compiler);
 
-	fclose (file);
+	SDL_PauseAudio (1);
+	SDL_CloseAudio ();
+
+	BKContextDispose (& ctx);
+	//BKTrackDispose (& track);
 
     return 0;
 }

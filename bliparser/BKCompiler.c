@@ -554,8 +554,6 @@ static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd con
 		return 0;
 	}
 
-	printf("set seq: %u\n", value);
-
 	switch (value) {
 		case BKCompilerEnvelopeTypeVolumeSeq: {
 			sequenceLength = BKCompilerInstrumentSequenceParse (cmd, sequence, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
@@ -583,6 +581,7 @@ static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd con
 			asdr [2] = atoix (cmd -> args [2].arg, 0) * (BK_MAX_VOLUME / 255);
 			asdr [3] = atoix (cmd -> args [3].arg, 0);
 			res = BKInstrumentSetEnvelopeADSR (instrument, asdr [0], asdr [1], asdr [2], asdr [3]);
+			break;
 		}
 		case BKCompilerEnvelopeTypeVolumeEnv: {
 			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
@@ -668,7 +667,7 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 					numArgs = BKMin (numArgs, BK_MAX_ARPEGGIO);
 
 					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
-					BKByteBufferAppendInt8 (cmds, (BKInt) numArgs);
+					BKByteBufferAppendInt8 (cmds, numArgs);
 
 					for (BKInt j = 0; j < numArgs; j ++) {
 						values [1] = BKCompilerParseNote (cmd -> args [j].arg);
@@ -748,6 +747,11 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt16 (cmds, values [0]);
+
+			if (instr == BKIntrStepTicks) {
+				compiler -> stepTicks = atoix (cmd -> args [0].arg, 0);
+			}
+
 			break;
 		}
 		// command:8
@@ -795,7 +799,7 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 		// panning:16
 		case BKIntrPanning: {
 			BKByteBufferAppendInt8 (cmds, instr);
-			BKByteBufferAppendInt16 (cmds, atoix (arg0str, 0) * VOLUME_UNIT);
+			BKByteBufferAppendInt16 (cmds, (int16_t) (atoix (arg0str, 0) * VOLUME_UNIT));
 			break;
 		}
 		// command:8
@@ -1067,10 +1071,6 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					// ...
 
-					break;
-				}
-				case BKIntrStepTicks: {
-					compiler -> stepTicks = atoix (cmd -> args [0].arg, 0);
 					break;
 				}
 				default: {
