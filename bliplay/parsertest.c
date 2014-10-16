@@ -44,7 +44,7 @@ typedef struct
 static BKTrackWrapper trackWrappers [8];
 
 //static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
-static char const * filename = "/Users/simon/Downloads/simple.blip";
+static char const * filename = "/Users/simon/Downloads/Subversion/bliplay-git/bliplay/test.blip";
 
 static void fill_audio (void * ptr, Uint8 * stream, int len)
 {
@@ -61,8 +61,6 @@ static BKEnum track_tick (BKCallbackInfo * info, BKTrackWrapper * wrapper)
 	BKInterpreterTrackAdvance (& wrapper -> interpreter, & wrapper -> track, & ticks);
 
 	info -> divider = ticks;
-
-	//printf("> %d\n", ticks);
 
 	return 0;
 }
@@ -86,14 +84,6 @@ int main (int argc, char * argv [])
 	compiler.loadPath = strdup ("/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples");
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
-		//printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
-
-		if (cmd.numArgs > 0) {
-			for (BKInt i = 0; i < cmd.numArgs; i ++) {
-				//printf ("  '%s' (%ld)\n", cmd.args[i].arg, cmd.args[i].size);
-			}
-		}
-
 		if (BKCompilerPushCommand (& compiler, & cmd)) {
 			printf("***Failed\n");
 			return 1;
@@ -106,8 +96,6 @@ int main (int argc, char * argv [])
 
 	BKSTParserDispose (& parser);
 	fclose (file);
-
-	printf("\n\n");
 
 	BKInt totalSize = 0;
 
@@ -169,9 +157,10 @@ int main (int argc, char * argv [])
 		BKInterpreterInit (interpreter);
 		BKTrackInit (& wrapper -> track, BK_SQUARE);
 
-		BKCallback callback;
-		callback.func = track_tick;
-		callback.userInfo = wrapper;
+		BKCallback callback = {
+			.func     = (void *) track_tick,
+			.userInfo = wrapper,
+		};
 
 		BKDividerInit (& wrapper -> divider, 24, & callback);
 		BKContextAttachDivider (& ctx, & wrapper -> divider, BK_CLOCK_TYPE_BEAT);
@@ -189,29 +178,6 @@ int main (int argc, char * argv [])
 
 	SDL_PauseAudio (0);
 
-	/*BKInterpreterInit (& interpreter);
-	BKTrackInit (& track, BK_SQUARE);
-
-	BKTrackAttach (& track, & ctx);
-
-	BKTrackSetAttr (& track, BK_VOLUME, BK_MAX_VOLUME);
-
-	BKCallback callback;
-	callback.func = track_tick;
-	callback.userInfo = NULL;
-
-	BKDividerInit (& divider, 24, & callback);
-
-	BKContextAttachDivider (& ctx, & divider, BK_CLOCK_TYPE_BEAT);
-
-	interpreter.instruments = & compiler.instruments;
-	interpreter.waveforms   = & compiler.waveforms;
-	interpreter.samples     = & compiler.samples;
-
-	BKArrayGetItemAtIndexCopy (& compiler.tracks, 3, & cTrack);
-	interpreter.opcode    = cTrack -> globalCmds.data;
-	interpreter.opcodePtr = interpreter.opcode;*/
-
 	while (1) {
 		SDL_Delay (100);
 	}
@@ -221,8 +187,15 @@ int main (int argc, char * argv [])
 	SDL_PauseAudio (1);
 	SDL_CloseAudio ();
 
+	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
+		BKTrackWrapper * wrapper = & trackWrappers [i];
+
+		BKInterpreterDispose (& wrapper -> interpreter);
+		BKTrackDispose (& wrapper -> track);
+		BKDividerDispose (& wrapper -> divider);
+	}
+
 	BKContextDispose (& ctx);
-	//BKTrackDispose (& track);
 
     return 0;
 }

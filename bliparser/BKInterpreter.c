@@ -215,11 +215,13 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 							break;
 						}
 						case BKIntrEventAttack: {
-							for (BKInt i = 0; i < interpreter -> nextNoteIndex; i ++)
+							for (BKInt i = 0; i < interpreter -> nextNoteIndex; i ++) {
 								BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
+							}
 
-							if (interpreter -> flags & BKInterpreterFlagHasArpeggio)
+							if (interpreter -> flags & BKInterpreterFlagHasArpeggio) {
 								BKTrackSetPtr (track, BK_ARPEGGIO, interpreter -> nextArpeggio);
+							}
 
 							break;
 						}
@@ -252,8 +254,9 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 					interpreter -> nextNoteIndex = 0;
 
-					if (tickEvent)
+					if (tickEvent) {
 						BKInterpreterEventSet (interpreter, tickEvent -> event, 0);
+					}
 				}
 				else {
 					break;

@@ -26,13 +26,13 @@
 #include "BKTone.h"
 #include "BKCompiler.h"
 
-#define MAX_GROUPS 255
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
-#define BK_MAX_SEQ_LENGTH 256
-#define BK_MAX_WAVEFORM_LENGTH 64
-#define BK_MAX_PATH 2048
+#define BK_MAX_GROUPS          255
+#define BK_MAX_SEQ_LENGTH      256
+#define BK_MAX_WAVEFORM_LENGTH  64
+#define BK_MAX_PATH           2048
 
 enum BKCompilerFlag
 {
@@ -1262,14 +1262,10 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 				return -1;
 			}
 
-			printf("[%s\n", cmd -> name);
-
 			group = BKArrayGetItemAtIndex (& compiler -> groupStack, compiler -> groupStack.length - 2);
 
 			memcpy (newGroup, group, sizeof (* group));
 			newGroup -> level ++;
-
-			printf("++ trk: %p grp: %p\n", newGroup -> track, newGroup);
 
 			flags = 0;
 			value = 0;
@@ -1288,8 +1284,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= MAX_GROUPS) {
-						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index >= BK_MAX_GROUPS) {
+						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1308,8 +1304,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= MAX_GROUPS) {
-						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index >= BK_MAX_GROUPS) {
+						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1329,8 +1325,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= MAX_GROUPS) {
-						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index >= BK_MAX_GROUPS) {
+						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1382,8 +1378,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= MAX_GROUPS) {
-						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index >= BK_MAX_GROUPS) {
+						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1408,8 +1404,6 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 			break;
 		}
 		case BKSTTokenGrpEnd: {
-			printf("]\n");
-
 			if (compiler -> groupStack.length <= 1) { // needs at minimum 1 item
 				fprintf (stderr, "Unbalanced group on line %d:%d\n", cmd -> lineno, cmd -> colno);
 				return -1;
@@ -1747,5 +1741,8 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	BKArrayEmpty (& compiler -> waveforms, keepData);
 	BKArrayEmpty (& compiler -> samples, keepData);
 
-	compiler -> stepTicks = 24;
+	compiler -> stepTicks         = 24;
+	compiler -> currentInstrument = NULL;
+	compiler -> currentWaveform   = NULL;
+	compiler -> currentSample     = NULL;
 }
