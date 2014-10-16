@@ -53,6 +53,7 @@ struct BKCompiler
 	BKInstrument  * currentInstrument;
 	BKData        * currentWaveform;
 	BKData        * currentSample;
+	char          * loadPath;
 };
 
 /**

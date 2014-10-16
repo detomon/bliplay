@@ -308,13 +308,13 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					interpreter -> flags &= ~BKInterpreterFlagHasArpeggio;
 				}
 
-				arpeggio [0] = value0;
-				memcpy (& arpeggio [1], opcode, value0 * sizeof (BKInt));
-
 				if (interpreter -> flags & BKInterpreterFlagHasAttackEvent) {
-					memcpy (interpreter -> nextArpeggio, arpeggio, (1 + value0) * sizeof (BKInt));
+					interpreter -> nextArpeggio [0] = value0;
+					memcpy (& interpreter -> nextArpeggio [1], opcode, value0 * sizeof (BKInt));
 				}
 				else {
+					arpeggio [0] = value0;
+					memcpy (& arpeggio [1], opcode, value0 * sizeof (BKInt));
 					BKTrackSetPtr (track, BK_ARPEGGIO, arpeggio);
 				}
 

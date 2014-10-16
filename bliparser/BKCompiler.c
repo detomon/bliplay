@@ -22,6 +22,7 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 #include "BKTone.h"
 #include "BKCompiler.h"
 
@@ -30,6 +31,8 @@
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
 #define BK_MAX_SEQ_LENGTH 256
+#define BK_MAX_WAVEFORM_LENGTH 64
+#define BK_MAX_PATH 2048
 
 enum BKCompilerFlag
 {
@@ -49,6 +52,13 @@ enum BKCompilerEnvelopeType
 	BKCompilerEnvelopeTypePitchEnv,
 	BKCompilerEnvelopeTypePanningEnv,
 	BKCompilerEnvelopeTypeDutyCycleEnv,
+};
+
+enum BKCompilerMiscCmds
+{
+	BKCompilerMiscLoad,
+	BKCompilerMiscRaw,
+	BKCompilerMiscPitch,
 };
 
 /**
@@ -170,11 +180,22 @@ static strval envelopeNames [] =
 	{"vnv",  BKCompilerEnvelopeTypeVolumeEnv},
 };
 
+/**
+ * Miscellaneous lookup table
+ */
+static strval miscNames [] =
+{
+	{"load", BKCompilerMiscLoad},
+	{"pt",   BKCompilerMiscPitch},
+	{"raw",  BKCompilerMiscRaw},
+};
+
 #define NUM_WAVEFORM_NAMES (sizeof (waveformNames) / sizeof (strval))
 #define NUM_CMD_NAMES (sizeof (cmdNames) / sizeof (strval))
 #define NUM_EFFECT_NAMES (sizeof (effectNames) / sizeof (strval))
 #define NUM_NOTE_NAMES (sizeof (noteNames) / sizeof (strval))
 #define NUM_ENVELOPE_NAMES (sizeof (envelopeNames) / sizeof (strval))
+#define NUM_MISC_NAMES (sizeof (miscNames) / sizeof (strval))
 
 /**
  * Convert string to signed integer like `atoi`
@@ -315,6 +336,11 @@ BKInt BKCompilerInit (BKCompiler * compiler)
 void BKCompilerDispose (BKCompiler * compiler)
 {
 	BKCompilerReset (compiler, 0);
+
+	if (compiler -> loadPath) {
+		free (compiler -> loadPath);
+	}
+
 	memset (compiler, 0, sizeof (* compiler));
 }
 
@@ -435,6 +461,40 @@ static BKInt BKInstrumentAlloc (BKInstrument ** outInstrument)
 	return 0;
 }
 
+static void BKInstrumentFree (BKInstrument * instrument)
+{
+	if (instrument) {
+		free (instrument);
+	}
+}
+
+static BKInt BKDataAlloc (BKData ** outData)
+{
+	BKData * data;
+
+	data = malloc (sizeof (* data));
+
+	if (data == NULL) {
+		return -1;
+	}
+
+	if (BKDataInit (data) < 0) {
+		free (data);
+		return -1;
+	}
+
+	* outData = data;
+
+	return 0;
+}
+
+static void BKDataFree (BKData * data)
+{
+	if (data) {
+		free (data);
+	}
+}
+
 static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BKInt index)
 {
 	BKInstrument * instrument = NULL;
@@ -457,11 +517,11 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 		}
 	}
 	else {
-		// search instrument at slot
+		// search item at slot
 		BKArrayGetItemAtIndexCopy (& compiler -> instruments, index, & instrument);
 	}
 
-	// create new instrument
+	// create new item
 	if (instrument == NULL) {
 		// fill slots with empty buffers
 		while (compiler -> instruments.length < index) {
@@ -474,14 +534,112 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 			return NULL;
 		}
 
-		// append new instrument
+		// append new item
 		if (BKArrayPush (& compiler -> instruments, & instrument) < 0) {
+			BKInstrumentFree (instrument);
 			return NULL;
 		}
 	}
 
 	return instrument;
+}
 
+static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt index)
+{
+	BKData * data = NULL;
+
+	// search for free slot
+	if (index == -1) {
+		for (BKInt i = 0; i < compiler -> waveforms.length; i ++) {
+			BKArrayGetItemAtIndexCopy (& compiler -> waveforms, i, & data);
+
+			// is empty slot
+			if (data == NULL) {
+				index = i;
+				break;
+			}
+		}
+
+		if (index == -1) {
+			index = compiler -> waveforms.length;
+			data = NULL;
+		}
+	}
+	else {
+		// search item at slot
+		BKArrayGetItemAtIndexCopy (& compiler -> waveforms, index, & data);
+	}
+
+	// create new item
+	if (data == NULL) {
+		// fill slots with empty buffers
+		while (compiler -> waveforms.length < index) {
+			if (BKArrayPushPtr (& compiler -> waveforms) == NULL) {
+				return NULL;
+			}
+		}
+
+		if (BKDataAlloc (& data) < 0) {
+			return NULL;
+		}
+
+		// append new instrument
+		if (BKArrayPush (& compiler -> waveforms, & data) < 0) {
+			BKDataFree (data);
+			return NULL;
+		}
+	}
+
+	return data;
+}
+
+static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
+{
+	BKData * data = NULL;
+
+	// search for free slot
+	if (index == -1) {
+		for (BKInt i = 0; i < compiler -> samples.length; i ++) {
+			BKArrayGetItemAtIndexCopy (& compiler -> samples, i, & data);
+
+			// is empty slot
+			if (data == NULL) {
+				index = i;
+				break;
+			}
+		}
+
+		if (index == -1) {
+			index = compiler -> samples.length;
+			data = NULL;
+		}
+	}
+	else {
+		// search item at slot
+		BKArrayGetItemAtIndexCopy (& compiler -> samples, index, & data);
+	}
+
+	// create new item
+	if (data == NULL) {
+		// fill slots with empty buffers
+		while (compiler -> samples.length < index) {
+			if (BKArrayPushPtr (& compiler -> samples) == NULL) {
+				return NULL;
+			}
+		}
+
+		if (BKDataAlloc (& data) < 0) {
+			return NULL;
+		}
+
+		// append new instrument
+		if (BKArrayPush (& compiler -> samples, & data) < 0) {
+			BKDataFree (data);
+			return NULL;
+		}
+	}
+
+	return data;
 }
 
 static BKInt BKCompilerInstrumentSequenceParse (BKSTCmd const * cmd, BKInt * sequence, BKInt * outRepeatBegin, BKInt * outRepeatLength, BKInt multiplier)
@@ -549,9 +707,40 @@ static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd con
 	BKInt res = 0;
 	BKInstrument * instrument = compiler -> currentInstrument;
 
+	// search for envelope type
 	if (BKCompilerStrvalTableLookup (envelopeNames, NUM_ENVELOPE_NAMES, cmd -> name, & value, NULL) == 0) {
 		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
 		return 0;
+	}
+
+	switch (value) {
+		case BKCompilerEnvelopeTypeVolumeSeq:
+		case BKCompilerEnvelopeTypePitchSeq:
+		case BKCompilerEnvelopeTypePanningSeq:
+		case BKCompilerEnvelopeTypeDutyCycleSeq: {
+			if (cmd -> numArgs < 3) {
+				fprintf (stderr, "Sequence '%s' needs at least 3 values on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				return 0;
+			}
+			break;
+		}
+		case BKCompilerEnvelopeTypeADSR: {
+			if (cmd -> numArgs < 4) {
+				fprintf (stderr, "Sequence '%s' needs 4 values on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				return 0;
+			}
+			break;
+		}
+		case BKCompilerEnvelopeTypeVolumeEnv:
+		case BKCompilerEnvelopeTypePitchEnv:
+		case BKCompilerEnvelopeTypePanningEnv:
+		case BKCompilerEnvelopeTypeDutyCycleEnv: {
+			if (cmd -> numArgs < 4) {
+				fprintf (stderr, "Sequence '%s' needs at least 4 values on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				return 0;
+			}
+			break;
+		}
 	}
 
 	switch (value) {
@@ -605,15 +794,104 @@ static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd con
 	}
 
 	if (res < 0) {
-		fprintf (stderr, "Invalid sequence '%s' (%d)\n", cmd -> name, res);
+		fprintf (stderr, "Invalid sequence '%s' (%d) on line %u:%u\n", cmd -> name, res, cmd -> lineno, cmd -> colno);
 	}
 
 	return res;
 }
 
+static char const * BKCompilerTrimParentPartOfPath (char const * filename)
+{
+	size_t length = strlen (filename);
+
+	do {
+		if (length >= 2 && (memcmp (filename, "./", 2) == 0 || memcmp (filename, ".\\", 2) == 0)) {
+			filename += 2;
+		}
+		if (length >= 3 && (memcmp (filename, "../", 3) == 0 || memcmp (filename, "..\\", 3) == 0)) {
+			filename += 3;
+		}
+		else {
+			break;
+		}
+	}
+	while (* filename);
+
+	return filename;
+}
+
+static BKInt BKCompilerGetFilePath (BKCompiler * compiler, char const * filename, char path [])
+{
+	filename = BKCompilerTrimParentPartOfPath (filename);
+
+	if (compiler -> loadPath == NULL) {
+		if (getcwd (path, BK_MAX_PATH) == NULL) {
+			return -1;
+		}
+
+		compiler -> loadPath = strdup (path);
+	}
+
+	strncpy (path, compiler -> loadPath, BK_MAX_PATH);
+	strncat (path, "/", BK_MAX_PATH);
+	strncat (path, filename, BK_MAX_PATH);
+
+	return 0;
+}
+
 static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const * cmd)
 {
-	printf("-sample\n");
+	BKInt value;
+	char const * filename;
+	char path [BK_MAX_PATH];
+	FILE * file;
+	BKData * sample = compiler -> currentSample;
+
+	// search for command
+	if (BKCompilerStrvalTableLookup (miscNames, NUM_MISC_NAMES, cmd -> name, & value, NULL) == 0) {
+		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+		return 0;
+	}
+
+	switch (value) {
+		case BKCompilerMiscLoad: {
+			if (cmd -> numArgs >= 2) {
+				if (strcmpx (cmd -> args [0].arg, "wav") == 0) {
+					filename = cmd -> args [1].arg;
+
+					if (BKCompilerGetFilePath (compiler, filename, path) < 0) {
+						return -1;
+					}
+
+					file = fopen (path, "rb");
+
+					if (file == NULL) {
+						fprintf (stderr, "File '%s' not found for line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
+						return -1;
+					}
+
+					if (BKDataInitAndLoadWAVE (sample, file) < 0) {
+						fprintf (stderr, "Failed to load WAVE file '%s' for line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
+						return -1;
+					}
+
+					fclose (file);
+				}
+			}
+
+			break;
+		}
+		case BKCompilerMiscPitch: {
+			if (cmd -> numArgs >= 1) {
+				BKDataSetAttr (sample, BK_SAMPLE_PITCH, atoix (cmd -> args [0].arg, 0) * PITCH_UNIT);
+			}
+			break;
+		}
+		case BKCompilerMiscRaw: {
+			break;
+		}
+	}
+
 	return 0;
 }
 
@@ -682,7 +960,7 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 					compiler -> flags |= BKCompilerFlagArpeggio;
 				}
 				// disable arpeggio
-				else {
+				else if (compiler -> flags & BKCompilerFlagArpeggio) {
 					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
 					BKByteBufferAppendInt8 (cmds, 0);
 					compiler -> flags &= ~BKCompilerFlagArpeggio;
@@ -891,7 +1169,39 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 
 static BKInt BKCompilerPushCommandWaveform (BKCompiler * compiler, BKSTCmd const * cmd)
 {
-	printf("-waveform\n");
+	BKInt    value;
+	BKFrame  sequence [BK_MAX_WAVEFORM_LENGTH];
+	BKInt    length = 0;
+	BKData * waveform = compiler -> currentWaveform;
+
+	// search for envelope type
+	if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, NULL) == 0) {
+		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+		return 0;
+	}
+
+	switch (value) {
+		case BKIntrStep: {
+			length = (BKInt) cmd -> numArgs;
+			length = BKMin (length, BK_MAX_WAVEFORM_LENGTH);
+
+			if (length < 2) {
+				fprintf (stderr, "Waveform needs at least 2 values on line %u:%u\n", cmd -> lineno, cmd -> colno);
+				return 0;
+			}
+
+			for (BKInt i = 0; i < length; i ++) {
+				sequence [i] = atoix (cmd -> args [i].arg, 0) * (BK_MAX_VOLUME / 255);
+			}
+
+			if (BKDataInitWithFrames (waveform, sequence, length, 1, 1) != 0) {
+				return -1;
+			}
+
+			break;
+		}
+	}
+
 	return 0;
 }
 
@@ -1015,6 +1325,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 					break;
 				}
 				case BKIntrSampleDef: {
+					BKData * sample;
+
 					index = atoix (cmd -> args [0].arg, -1);
 
 					if (index >= MAX_GROUPS) {
@@ -1023,8 +1335,13 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 						return 0;
 					}
 
-					// ...
+					sample = BKCompilerGetSampleForIndex (compiler, index);
 
+					if (sample == NULL) {
+						return -1;
+					}
+
+					compiler -> currentSample = sample;
 					break;
 				}
 				case BKIntrTrackDef: {
@@ -1061,6 +1378,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 					break;
 				}
 				case BKIntrWaveformDef: {
+					BKData * waveform;
+
 					index = atoix (cmd -> args [0].arg, -1);
 
 					if (index >= MAX_GROUPS) {
@@ -1069,8 +1388,13 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 						return 0;
 					}
 
-					// ...
+					waveform = BKCompilerGetWaveformForIndex (compiler, index);
 
+					if (waveform == NULL) {
+						return -1;
+					}
+
+					compiler -> currentWaveform = waveform;
 					break;
 				}
 				default: {

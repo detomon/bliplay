@@ -28,15 +28,11 @@
 #include "BKSTParser.h"
 #include "BKCompiler.h"
 
-static BKContext ctx;
-static BKTrack   track;
-static BKDivider divider;
-
+static BKContext     ctx;
 static BKSTTokenType token;
 static BKSTParser    parser;
 static BKSTCmd       cmd;
 static BKCompiler    compiler;
-static BKInterpreter interpreter;
 
 typedef struct
 {
@@ -47,8 +43,8 @@ typedef struct
 
 static BKTrackWrapper trackWrappers [8];
 
-static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
-//static char const * filename = "/Users/simon/Downloads/base64.blip";
+//static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
+static char const * filename = "/Users/simon/Downloads/simple.blip";
 
 static void fill_audio (void * ptr, Uint8 * stream, int len)
 {
@@ -86,6 +82,8 @@ int main (int argc, char * argv [])
 
 	BKSTParserInitWithFile (& parser, file);
 	BKCompilerInit (& compiler);
+
+	compiler.loadPath = strdup ("/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples");
 
 	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
 		//printf ("%d %s %ld %d:%d\n", token, cmd.name, cmd.numArgs, cmd.lineno, cmd.colno);
