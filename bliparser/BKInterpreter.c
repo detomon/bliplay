@@ -215,6 +215,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 							break;
 						}
 						case BKIntrEventAttack: {
+							BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
+
 							for (BKInt i = 0; i < interpreter -> nextNoteIndex; i ++) {
 								BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
 							}
@@ -227,11 +229,11 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 						}
 						case BKIntrEventRelease: {
 							BKTrackSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
-							BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
 							break;
 						}
 						case BKIntrEventMute: {
 							BKTrackSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
+							BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
 							break;
 						}
 						/*case BKIntrEventJump: {
@@ -290,6 +292,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					interpreter -> nextNoteIndex ++;
 				}
 				else {
+					BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
 					BKTrackSetAttr (track, BK_NOTE, value0);
 				}
 

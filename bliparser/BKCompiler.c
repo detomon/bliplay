@@ -1447,6 +1447,7 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 		for (BKInt n = 0; n < NUM_CMD_NAMES; n ++) {
 			if (cmdNames [n].value == cmd) {
 				printf (":%s\n", cmdNames [n].name);
+				_found = 1;
 				break;
 			}
 		}
@@ -1477,7 +1478,7 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 				break;
 			}
 			case BKIntrArpeggio: {
-				arg = * (uint8_t *) opcode ++;
+				arg = * (uint8_t *) opcode;
 				cmdSize = 1 + arg * 4;
 				break;
 			}
