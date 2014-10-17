@@ -93,8 +93,8 @@ void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 		free (tokenizer -> readBuf);
 	}
 
-	tokenizer -> prevChars [0] = -1;
-	tokenizer -> prevChars [1] = -1;
+	tokenizer -> prevChars [0] = -BK_INT_MAX;
+	tokenizer -> prevChars [1] = -BK_INT_MAX;
 	memset (tokenizer, 0, sizeof (*tokenizer));
 }
 
@@ -134,9 +134,9 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 	int hasPrevChar = 0;
 	int nextChar = -1;
 
-	if (tokenizer -> prevChars [0] >= 0 && tokenizer -> prevChars [1] == -1) {
+	if (tokenizer -> prevChars [0] >= 0 && tokenizer -> prevChars [1] == -BK_INT_MAX) {
 		nextChar = tokenizer -> prevChars [0];
-		tokenizer -> prevChars [0] = -1;
+		tokenizer -> prevChars [0] = -BK_INT_MAX;
 		hasPrevChar = 1;
 	}
 	else if (tokenizer -> file) {
@@ -169,7 +169,7 @@ static int BKSTTokenizerPrevChar (BKSTTokenizer * tokenizer)
 	if (tokenizer -> prevChars [0] >= 0) {
 		prevChars = tokenizer -> prevChars [0];
 		tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
-		tokenizer -> prevChars [1] = -1;
+		tokenizer -> prevChars [1] = -BK_INT_MAX;
 	}
 
 	return prevChars;
@@ -182,6 +182,10 @@ static int BKSTTokenizerReadComment (BKSTTokenizer * tokenizer)
 
 	do {
 		c = BKSTTokenizerNextChar (tokenizer);
+
+		if (c == -1) {
+			break;
+		}
 
 		switch (c) {
 			case '\n':
@@ -401,8 +405,8 @@ void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, BKSize 
 		dataSize = 0;
 	}
 
-	tokenizer -> prevChars [0] = -1;
-	tokenizer -> prevChars [1] = -1;
+	tokenizer -> prevChars [0] = -BK_INT_MAX;
+	tokenizer -> prevChars [1] = -BK_INT_MAX;
 	tokenizer -> data          = (uint8_t *) data;
 	tokenizer -> dataPtr       = (uint8_t *) data;
 	tokenizer -> dataSize      = dataSize;
