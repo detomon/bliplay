@@ -1442,18 +1442,6 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 		cmd = * (uint8_t *) opcode ++;
 		cmdSize = 0;
 
-
-		BKInt _found = 0;
-		for (BKInt n = 0; n < NUM_CMD_NAMES; n ++) {
-			if (cmdNames [n].value == cmd) {
-				printf (":%s\n", cmdNames [n].name);
-				_found = 1;
-				break;
-			}
-		}
-		if (!_found) printf (":%u\n", cmd);
-
-
 		switch (cmd) {
 			case BKIntrGroupJump: {
 				arg = * (uint32_t *) opcode;
