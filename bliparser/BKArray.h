@@ -94,6 +94,13 @@ extern void * BKArrayGetLastItem (BKArray const * array);
 extern BKInt BKArrayGetLastItemCopy (BKArray const * array, void * outItem);
 
 /**
+ * Set item at index
+ *
+ * Returns -1 if an error occurred
+ */
+extern BKInt BKArraySetItemAtIndex (BKArray const * array, void * item, BKSize index);
+
+/**
  * Append an item at end of array
  *
  * Returns a value other than 0 if an error occured

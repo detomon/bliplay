@@ -163,6 +163,17 @@ BKInt BKArrayGetLastItemCopy (BKArray const * array, void * outItem)
 	return 0;
 }
 
+BKInt BKArraySetItemAtIndex (BKArray const * array, void * item, BKSize index)
+{
+	if (index >= array -> length) {
+		return -1;
+	}
+
+	memcpy (array -> items + index * array -> itemSize, item, array -> itemSize);
+
+	return 0;
+}
+
 BKInt BKArrayPush (BKArray * array, void const * item)
 {
 	if (array -> length >= array -> capacity) {
