@@ -410,7 +410,7 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 		}
 	}
 	else {
-		// search buffer at slot
+		// search item at slot
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, index, & buffer);
 
 		// overwrite existing buffer
@@ -419,10 +419,10 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 		}
 	}
 
-	// create new buffer
+	// create new item
 	if (buffer == NULL) {
 		// fill slots with empty buffers
-		while (track -> cmdGroups.length < index) {
+		while (track -> cmdGroups.length <= index) {
 			if (BKArrayPushPtr (& track -> cmdGroups) == NULL) {
 				return NULL;
 			}
@@ -432,8 +432,8 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 			return NULL;
 		}
 
-		// append new buffer
-		if (BKArrayPush (& track -> cmdGroups, & buffer) < 0) {
+		// set item at index
+		if (BKArraySetItemAtIndex (& track -> cmdGroups, & buffer, index) < 0) {
 			return NULL;
 		}
 	}
@@ -524,7 +524,7 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 	// create new item
 	if (instrument == NULL) {
 		// fill slots with empty buffers
-		while (compiler -> instruments.length < index) {
+		while (compiler -> instruments.length <= index) {
 			if (BKArrayPushPtr (& compiler -> instruments) == NULL) {
 				return NULL;
 			}
@@ -534,8 +534,8 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 			return NULL;
 		}
 
-		// append new item
-		if (BKArrayPush (& compiler -> instruments, & instrument) < 0) {
+		// set item at index
+		if (BKArraySetItemAtIndex (& compiler -> instruments, & instrument, index) < 0) {
 			BKInstrumentFree (instrument);
 			return NULL;
 		}
@@ -573,7 +573,7 @@ static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt inde
 	// create new item
 	if (data == NULL) {
 		// fill slots with empty buffers
-		while (compiler -> waveforms.length < index) {
+		while (compiler -> waveforms.length <= index) {
 			if (BKArrayPushPtr (& compiler -> waveforms) == NULL) {
 				return NULL;
 			}
@@ -583,8 +583,8 @@ static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt inde
 			return NULL;
 		}
 
-		// append new instrument
-		if (BKArrayPush (& compiler -> waveforms, & data) < 0) {
+		// set item at index
+		if (BKArraySetItemAtIndex (& compiler -> waveforms, & data, index) < 0) {
 			BKDataFree (data);
 			return NULL;
 		}
@@ -622,7 +622,7 @@ static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
 	// create new item
 	if (data == NULL) {
 		// fill slots with empty buffers
-		while (compiler -> samples.length < index) {
+		while (compiler -> samples.length <= index) {
 			if (BKArrayPushPtr (& compiler -> samples) == NULL) {
 				return NULL;
 			}
@@ -632,8 +632,8 @@ static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
 			return NULL;
 		}
 
-		// append new instrument
-		if (BKArrayPush (& compiler -> samples, & data) < 0) {
+		// set item at index
+		if (BKArraySetItemAtIndex (& compiler -> samples, & data, index) < 0) {
 			BKDataFree (data);
 			return NULL;
 		}
