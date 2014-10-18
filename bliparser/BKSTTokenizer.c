@@ -26,6 +26,12 @@
 
 #define INIT_BUFFER_SIZE 0x4000
 
+enum BKSTTokenizerFlag
+{
+	BKSTTokenizerFlagHasPrevChar = 1 << 0,
+	BKSTTokenizerFlagResetMask   = BKSTTokenizerFlagHasPrevChar,
+};
+
 /**
  * Base64 conversion table
  *
@@ -93,8 +99,6 @@ void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 		free (tokenizer -> readBuf);
 	}
 
-	tokenizer -> prevChars [0] = -BK_INT_MAX;
-	tokenizer -> prevChars [1] = -BK_INT_MAX;
 	memset (tokenizer, 0, sizeof (*tokenizer));
 }
 
@@ -134,9 +138,9 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 	int hasPrevChar = 0;
 	int nextChar = -1;
 
-	if (tokenizer -> prevChars [0] >= 0 && tokenizer -> prevChars [1] == -BK_INT_MAX) {
+	if (tokenizer -> flags & BKSTTokenizerFlagHasPrevChar) {
 		nextChar = tokenizer -> prevChars [0];
-		tokenizer -> prevChars [0] = -BK_INT_MAX;
+		tokenizer -> flags &= ~BKSTTokenizerFlagHasPrevChar;
 		hasPrevChar = 1;
 	}
 	else if (tokenizer -> file) {
@@ -149,7 +153,7 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 	tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
 	tokenizer -> prevChars [1] = nextChar;
 
-	if (hasPrevChar == 0) {
+	if (!hasPrevChar) {
 		if (nextChar == '\n') {
 			tokenizer -> lineno ++;
 			tokenizer -> colno = 0;
@@ -164,13 +168,17 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 
 static int BKSTTokenizerPrevChar (BKSTTokenizer * tokenizer)
 {
-	int prevChars = -1;
+	int prevChars;
 
-	if (tokenizer -> prevChars [0] >= 0) {
-		prevChars = tokenizer -> prevChars [0];
-		tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
-		tokenizer -> prevChars [1] = -BK_INT_MAX;
+	if (tokenizer -> flags & BKSTTokenizerFlagHasPrevChar) {
+		return -1;
 	}
+
+	prevChars = tokenizer -> prevChars [0];
+
+	tokenizer -> flags |= BKSTTokenizerFlagHasPrevChar;
+	tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
+	tokenizer -> prevChars [1] = -1;
 
 	return prevChars;
 }
@@ -405,8 +413,7 @@ void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, BKSize 
 		dataSize = 0;
 	}
 
-	tokenizer -> prevChars [0] = -BK_INT_MAX;
-	tokenizer -> prevChars [1] = -BK_INT_MAX;
+	tokenizer -> flags        &= ~BKSTTokenizerFlagResetMask;
 	tokenizer -> data          = (uint8_t *) data;
 	tokenizer -> dataPtr       = (uint8_t *) data;
 	tokenizer -> dataSize      = dataSize;

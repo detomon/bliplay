@@ -45,6 +45,7 @@ enum BKSTTokenType
 
 struct BKSTTokenizer
 {
+	BKUInt    flags;
 	uint8_t * data;
 	uint8_t * dataPtr;
 	BKSize    dataSize;
