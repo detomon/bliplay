@@ -29,12 +29,20 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include "BKSDLTrack.h"
-#include "BKWaveFileReader.h"
 #include "BKWaveFileWriter.h"
 
 #ifndef PROGRAM_NAME
 #define PROGRAM_NAME "bliplay"
 #endif
+
+typedef struct
+{
+	BKInterpreter interpreter;
+	BKTrack       track;
+	BKDivider     divider;
+} BKTrackWrapper;
+
+static BKTrackWrapper trackWrappers [8];
 
 enum
 {
@@ -143,12 +151,6 @@ static void printOptionHelp (void)
 	);
 }
 
-static void printInteractiveHelp (void)
-{
-	for (int i = 0; i < NUM_COMMAND_DEFS; i ++)
-		printf ("%-8s %s\n", commands [i].name, commands [i].description);
-}
-
 static void printString (char const * format, va_list args, int level)
 {
 	FILE * stream = stdout;
@@ -231,61 +233,6 @@ static int loadFile (BKSDLContext * ctx, char * const args)
 		printError ("No such file: %s", filename);
 		return -1;
 	}
-
-	return 0;
-}
-
-static int interactiveMode (BKSDLContext * ctx)
-{
-	char line [1024];
-	char name [64];
-	char args [256];
-	int command = -1;
-
-	printNotice ("Entering interactive mode... (\"help\" for help, \"quit\" to quit)\n");
-
-	do {
-		printf ("%s> ", PROGRAM_NAME);
-		fgets (line, sizeof (line), stdin);
-
-		strcpy (name, "");
-		strcpy (args, "");
-
-		if (sscanf (line, "%63s %255[^\n]", name, args) >= 1) {
-			command = getCommand (name);
-
-			switch (command) {
-				case QUIT_COMMAND: {
-					printf ("Bye\n");
-					return 0;
-					break;
-				}
-				case HELP_COMMAND: {
-					printInteractiveHelp ();
-					break;
-				}
-				case LOAD_COMMAND: {
-					SDL_LockAudio ();
-					BKSDLContextUnloadData (ctx);
-					loadFile (ctx, args);
-					SDL_UnlockAudio ();
-					break;
-				}
-				case PAUSE_COMMAND: {
-					SDL_PauseAudio (1);
-					break;
-				}
-				case PLAY_COMMAND: {
-					SDL_PauseAudio (0);
-					break;
-				}
-				default:
-					printError ("Unknown command %s\n", name);
-					break;
-			}
-		}
-	}
-	while (1);
 
 	return 0;
 }
@@ -567,13 +514,7 @@ track:end;";
 		return -1;
 	}
 
-	// interactive mode
-	if (argc == 1 || optind < argc - 1) {
-		interactiveMode (ctx);
-		return 1;
-	}
-	// play file
-	else {
+	if () {
 		SDL_LockAudio ();
 
 		if (BKSDLContextLoadFile (ctx, filename) < 0) {

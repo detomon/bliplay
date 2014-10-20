@@ -6,6 +6,7 @@ libbliparser_a_SOURCES = \
 	BKArray.c \
 	BKByteBuffer.c \
 	BKCompiler.c \
+	BKContextWrapper.c \
 	BKInterpreter.c \
 	BKSTTokenizer.c \
 	BKSTParser.c
@@ -14,6 +15,7 @@ dist_noinst_HEADERS = \
 	BKArray.h \
 	BKByteBuffer.h \
 	BKCompiler.h \
+	BKContextWrapper.h \
 	BKInterpreter.h \
 	BKSTTokenizer.h \
 	BKSTParser.h

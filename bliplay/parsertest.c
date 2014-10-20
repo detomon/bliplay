@@ -22,47 +22,21 @@
  */
 
 #include <stdio.h>
-#include <termios.h>
 #include <unistd.h>
 #include <SDL/SDL.h>
-#include "BKSTParser.h"
-#include "BKCompiler.h"
+#include "BKContextWrapper.h"
 
-static BKContext     ctx;
-static BKSTTokenType token;
-static BKSTParser    parser;
-static BKSTCmd       cmd;
-static BKCompiler    compiler;
-
-typedef struct
-{
-	BKInterpreter interpreter;
-	BKTrack       track;
-	BKDivider     divider;
-} BKTrackWrapper;
-
-static BKTrackWrapper trackWrappers [8];
+BKContextWrapper wrapper;
 
 //static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
-static char const * filename = "/Users/simon/Downloads/Subversion/bliplay-git/bliplay/test.blip";
+static char const * filename = "/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples/hyperion-star-racer.blip";
 
 static void fill_audio (void * ptr, Uint8 * stream, int len)
 {
 	// calculate needed frames for one channel
-	BKUInt numFrames = len / sizeof (BKFrame) / ctx.numChannels;
+	BKUInt numFrames = len / sizeof (BKFrame) / wrapper.ctx.numChannels;
 
-	BKContextGenerate (& ctx, (BKFrame *) stream, numFrames);
-}
-
-static BKEnum track_tick (BKCallbackInfo * info, BKTrackWrapper * wrapper)
-{
-	BKInt ticks;
-
-	BKInterpreterTrackAdvance (& wrapper -> interpreter, & wrapper -> track, & ticks);
-
-	info -> divider = ticks;
-
-	return 0;
+	BKContextGenerate (& wrapper.ctx, (BKFrame *) stream, numFrames);
 }
 
 #ifdef main
@@ -71,6 +45,13 @@ static BKEnum track_tick (BKCallbackInfo * info, BKTrackWrapper * wrapper)
 
 int main (int argc, char * argv [])
 {
+	BKInt const sampleRate  = 44100;
+	BKInt const numChannels = 2;
+
+	if (BKContextWrapperInit (& wrapper, numChannels, sampleRate)) {
+		return 1;
+	}
+
 	FILE * file = fopen (filename, "r");
 
 	if (file == NULL) {
@@ -78,61 +59,11 @@ int main (int argc, char * argv [])
 		return 1;
 	}
 
-	BKSTParserInitWithFile (& parser, file);
-	BKCompilerInit (& compiler);
-
-	compiler.loadPath = strdup ("/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples");
-
-	while ((token = BKSTParserNextCommand (& parser, & cmd))) {
-		if (BKCompilerPushCommand (& compiler, & cmd)) {
-			printf("***Failed\n");
-			return 1;
-		}
+	if (BKContextWrapperLoadDataFromFile (& wrapper, file) < 0) {
+		return -1;
 	}
 
-	if (BKCompilerTerminate (& compiler, 0) < 0) {
-		return 1;
-	}
-
-	BKSTParserDispose (& parser);
 	fclose (file);
-
-	BKInt totalSize = 0;
-
-	BKByteBuffer    * buffer;
-	BKCompilerTrack * cTrack;
-
-	printf("%ld tracks\n", compiler.tracks.length);
-
-	printf("global groups:%ld \n", compiler.globalTrack.cmdGroups.length);
-	printf("global byte code length: %ld\n", compiler.globalTrack.globalCmds.size);
-
-	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
-		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & cTrack);
-
-		printf("track #%d byte code length: %ld\n", i, cTrack -> globalCmds.size);
-
-		totalSize += cTrack -> globalCmds.size;
-
-		for (BKInt j = 0; j < cTrack -> cmdGroups.length; j ++) {
-			BKArrayGetItemAtIndexCopy (& cTrack -> cmdGroups, j, & buffer);
-
-			if (buffer == NULL) {
-				continue;
-			}
-
-			printf("    #%u size: %lu\n", j, buffer -> size);
-
-			totalSize += buffer -> size;
-		}
-	}
-
-	printf ("total byte code: %d\n", totalSize);
-
-	BKInt const sampleRate  = 44100;
-	BKInt const numChannels = 2;
-
-	BKContextInit (& ctx, numChannels, sampleRate);
 
 	SDL_Init (SDL_INIT_AUDIO);
 
@@ -150,52 +81,16 @@ int main (int argc, char * argv [])
 		return 1;
 	}
 
-	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
-		BKTrackWrapper * wrapper     = & trackWrappers [i];
-		BKInterpreter  * interpreter = & wrapper -> interpreter;
-
-		BKInterpreterInit (interpreter);
-		BKTrackInit (& wrapper -> track, BK_SQUARE);
-
-		BKCallback callback = {
-			.func     = (void *) track_tick,
-			.userInfo = wrapper,
-		};
-
-		BKDividerInit (& wrapper -> divider, 24, & callback);
-		BKContextAttachDivider (& ctx, & wrapper -> divider, BK_CLOCK_TYPE_BEAT);
-
-		interpreter -> instruments = & compiler.instruments;
-		interpreter -> waveforms   = & compiler.waveforms;
-		interpreter -> samples     = & compiler.samples;
-
-		BKArrayGetItemAtIndexCopy (& compiler.tracks, i, & cTrack);
-		interpreter -> opcode    = cTrack -> globalCmds.data;
-		interpreter -> opcodePtr = interpreter -> opcode;
-
-		BKTrackAttach (& wrapper -> track, & ctx);
-	}
-
 	SDL_PauseAudio (0);
 
 	while (1) {
 		SDL_Delay (100);
 	}
 
-	BKCompilerDispose (& compiler);
-
 	SDL_PauseAudio (1);
 	SDL_CloseAudio ();
 
-	for (BKInt i = 0; i < compiler.tracks.length; i ++) {
-		BKTrackWrapper * wrapper = & trackWrappers [i];
-
-		BKInterpreterDispose (& wrapper -> interpreter);
-		BKTrackDispose (& wrapper -> track);
-		BKDividerDispose (& wrapper -> divider);
-	}
-
-	BKContextDispose (& ctx);
+	BKContextWrapperDispose (& wrapper);
 
     return 0;
 }
