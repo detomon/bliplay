@@ -61,8 +61,6 @@ stepticks:23
 		a:g3;s:2;r
 		a:a3;s:2;r;s:2
 		a:a3;s:2;r;s:2
-		//a:g3;s:2;//r
-		//a:a3;s:2;//r
 		s:2
 
 		a:g3;s:2;r
@@ -553,17 +551,6 @@ stepticks:23
 	[grp
 		e:pr:24
 
-		//i:7; v:127;e:vs:567; a:g3;v:0;s:16; e:vs; r
-		//i:7; v:127;e:vs:567; a:a3;v:0;s:16; e:vs; r
-		//i:8; v:127;e:vs:567; a:c3;v:0;s:16; e:vs; r
-		//i:7; v:127;e:vs:567; a:g3;v:0;s:12; e:vs; r
-		//i:8; v:127;e:vs:567; a:a#3;v:0;s:4; e:vs; r
-		//i:7; v:127;e:vs:567; a:f3;v:0;s:16; e:vs; r
-		//i:7; v:127;e:vs:567; a:g3;v:0;s:16; e:vs; r
-		//i:8; v:127;e:vs:567; a:a#3;v:0;s:16; e:vs; r
-		//i:7; v:127;e:vs:567; a:d4;v:0;s:8; e:vs; r
-		//i:7; v:127;e:vs:567; a:e4;v:0;s:8; e:vs; r
-		//i;v:255
 
 		e:pr
 	]

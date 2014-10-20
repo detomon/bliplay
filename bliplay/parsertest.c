@@ -29,7 +29,7 @@
 BKContextWrapper wrapper;
 
 //static char const * filename = "/Users/simon/Downloads/test-new-format.blip";
-static char const * filename = "/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples/hyperion-star-racer.blip";
+static char const * filename = "/Users/simon/Downloads/Subversion/bliplay-git/bliplay/examples/killer-squid.blip";
 
 static void fill_audio (void * ptr, Uint8 * stream, int len)
 {
