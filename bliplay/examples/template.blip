@@ -1,69 +1,69 @@
-stepticks:24;
+stepticks:24
 
-track:begin:square;
+[track:square
 
-	grp:begin;
-		dc:1;
-		s:4;
-		e:vb:8:150;
-		a:c2;s:4;r;
-		s:8;
-	grp:end;
+	[grp
+		dc:1
+		s:4
+		e:vb:8:150
+		a:c2;s:4;r
+		s:8
+	]
 
-	g:0;
+	g:0
 
-track:end;
+]
 
-track:begin:square;
+[track:square
 
-	grp:begin;
-		dc:8;
-		a:c2;s:1;r;
-		s:15;
-	grp:end;
+	[grp
+		dc:8
+		a:c2;s:1;r
+		s:15
+	]
 
-	g:0;
+	g:0
 
-track:end;
+]
 
-track:begin:triangle;
+[track:triangle
 
-	grp:begin;
-		a:c1;s:1;r;
-		s:7;
-		a:c2;s:1;r;
-		s:1;
-		a:c1;s:1;r;
-		s:5;
-	grp:end;
+	[grp
+		a:c1;s:1;r
+		s:7
+		a:c2;s:1;r
+		s:1
+		a:c1;s:1;r
+		s:5
+	]
 
-	g:0;
+	g:0
 
-track:end;
+]
 
-track:begin:sawtooth;
+[track:sawtooth
 
-	grp:begin;
-		s:8;
-		e:pr:18;
-		a:f2;s:2;
-		a:g3;s:2;
-		a:c1;s:2;r;
-		s:2;
-	grp:end;
+	[grp
+		s:8
+		e:pr:18
+		a:f2;s:2
+		a:g3;s:2
+		a:c1;s:2;r
+		s:2
+	]
 
-	g:0;
+	g:0
 
-track:end;
+]
 
-track:begin:noise;
+[track:noise
 
-	grp:begin;
-		s:2;
-		a:c6;s:1;r;
-		s:13;
-	grp:end;
+	[grp
+		s:2
+		a:c6;s:1;r
+		s:13
+	]
 
-	g:0;
+	g:0
 
-track:end;
+]

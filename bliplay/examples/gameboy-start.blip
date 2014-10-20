@@ -1,18 +1,18 @@
-stepticks:18;
+stepticks:18
 
-track:begin:square;
+[track:square
 
-	grp:begin;
-		dc:8;
-		e:vs;v:255;
-		a:c5;s:1;
-		a:c6;
-		e:vs:160;v:0;
-		s:31;
-		e:vs;
-	grp:end;
+	[grp
+		dc:8
+		e:vs;v:255
+		a:c5;s:1
+		a:c6
+		e:vs:160;v:0
+		s:31
+		e:vs
+	]
 
-	g:0;
-	z;
+	g:0
+	z
 
-track:end;
+]

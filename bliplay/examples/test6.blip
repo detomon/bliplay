@@ -1,161 +1,161 @@
-stepticks:32;
+stepticks:32
 
-instr:begin;
-	v:0:1:255:192:128:64:48:32;
-	a:0:2:0:1200;
-instr:end;
+[instr
+	v:0:1:255:192:128:64:48:32
+	a:0:2:0:1200
+]
 
-instr:begin;
-	v:6:0:255:192:128:64:48:32;
-	a:6:0:0:-1200:800:1200:267:0;
-instr:end;
+[instr
+	v:6:0:255:192:128:64:48:32
+	a:6:0:0:-1200:800:1200:267:0
+]
 
-track:begin:square;
+[track:square
 
-	grp:begin;
-		e:vs:0;v:255;
-		e:vs:180;v:0;
-		a:c3;s:1;
-		a:e3;s:1;
-		a:g3;s:1;
-		r;
-		s:1;
+	[grp
+		e:vs:0;v:255
+		e:vs:180;v:0
+		a:c3;s:1
+		a:e3;s:1
+		a:g3;s:1
+		r
+		s:1
 
-		a:a3;
-		s:2;
-		r;
-		s:2;
-	grp:end;
+		a:a3
+		s:2
+		r
+		s:2
+	]
 
-	grp:begin;
-		e:vs:0;v:255;
-		e:vs:180;v:0;
-		a:c4;s:8;
-		r;
-	grp:end;
+	[grp
+		e:vs:0;v:255
+		e:vs:180;v:0
+		a:c4;s:8
+		r
+	]
 
-	s:16;
-	s:16;
+	s:16
+	s:16
 
-	dc:8;
-	i:0;
-	g:0;
+	dc:8
+	i:0
+	g:0
 
-	e:vb:10:267;
-	g:0;
-	e:vb:0;
+	e:vb:10:267
+	g:0
+	e:vb:0
 
-	i;
-	g:1;
+	i
+	g:1
 
-	e:vb:10:267;
-	g:1;
-	e:vb:0;
+	e:vb:10:267
+	g:1
+	e:vb:0
 
-track:end;
+]
 
-track:begin:triangle;
+[track:triangle
 
-	grp:begin;
-		a:c2;s:1;
-		r;s:1;
-		a:c2;s:1;
-		r;s:1;
-		a:c2;s:2;
-		a:g2;s:1;
-		a:g1;s:1;
-		r;s:2;
+	[grp
+		a:c2;s:1
+		r;s:1
+		a:c2;s:1
+		r;s:1
+		a:c2;s:2
+		a:g2;s:1
+		a:g1;s:1
+		r;s:2
 
-		a:f1;s:1;
-		r;s:1;
-		a:f1;s:2;
-		r;s:2;
-	grp:end;
+		a:f1;s:1
+		r;s:1
+		a:f1;s:2
+		r;s:2
+	]
 
-	grp:begin;
-		a:c2;s:1;
-		r;s:1;
-		a:c2;s:1;
-		r;s:1;
-		a:c2;s:2;
-		a:g2;s:1;
-		a:g1;s:1;
-		r;s:2;
+	[grp
+		a:c2;s:1
+		r;s:1
+		a:c2;s:1
+		r;s:1
+		a:c2;s:2
+		a:g2;s:1
+		a:g1;s:1
+		r;s:2
 
-		a:f1;s:1;
-		r;s:1;
-		a:a2;s:2;
-		r;s:2;
-	grp:end;
+		a:f1;s:1
+		r;s:1
+		a:a2;s:2
+		r;s:2
+	]
 
-	g:0;
-	g:1;
+	g:0
+	g:1
 
-track:end;
+]
 
-track:begin:sawtooth;
+[track:sawtooth
 
-	grp:begin;
-		a:c1;s:1;
-		r;s:1;
-		a:c1;s:1;
-		r;s:1;
-		a:c1;s:2;
-		a:g1;s:1;
-		a:g0;s:1;
-		r;s:2;
+	[grp
+		a:c1;s:1
+		r;s:1
+		a:c1;s:1
+		r;s:1
+		a:c1;s:2
+		a:g1;s:1
+		a:g0;s:1
+		r;s:2
 
-		a:f0;s:1;
-		r;s:1;
-		a:f0;s:2;
-		r;s:2;
-	grp:end;
+		a:f0;s:1
+		r;s:1
+		a:f0;s:2
+		r;s:2
+	]
 
-	grp:begin;
-		a:c1;s:1;
-		r;s:1;
-		a:c1;s:1;
-		r;s:1;
-		a:c1;s:2;
-		a:g1;s:1;
-		a:g0;s:1;
-		r;s:2;
+	[grp
+		a:c1;s:1
+		r;s:1
+		a:c1;s:1
+		r;s:1
+		a:c1;s:2
+		a:g1;s:1
+		a:g0;s:1
+		r;s:2
 
-		a:f0;s:1;
-		r;s:1;
-		a:a1;s:2;
-		r;s:2;
-	grp:end;
+		a:f0;s:1
+		r;s:1
+		a:a1;s:2
+		r;s:2
+	]
 
-	g:0;
-	g:1;
+	g:0
+	g:1
 
-track:end;
+]
 
-track:begin:noise;
+[track:noise
 
-	grp:begin;
-		i:1;
-		s:2;
-		a:c7;s:1;r;
-		s:1;
-	grp:end;
+	[grp
+		i:1
+		s:2
+		a:c7;s:1;r
+		s:1
+	]
 
-	grp:begin;
-		i:1;
-		a:c7;s:1;r;
-		s:1;
-		a:c7;s:1;r;
-		a:c7;s:1;r;
-	grp:end;
+	[grp
+		i:1
+		a:c7;s:1;r
+		s:1
+		a:c7;s:1;r
+		a:c7;s:1;r
+	]
 
-	g:0;
-	g:0;
-	g:0;
-	g:0;
-	g:0;
-	g:0;
-	g:0;
-	g:1;
+	g:0
+	g:0
+	g:0
+	g:0
+	g:0
+	g:0
+	g:0
+	g:1
 
-track:end;
+]

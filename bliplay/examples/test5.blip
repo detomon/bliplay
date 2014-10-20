@@ -1,102 +1,102 @@
-stepticks:14;
+stepticks:14
 
-instr:begin;
-	v:5:0:255:220:210:180:0;
-	a:5:0:-800:1200:-1200:0;
-instr:end;
+[instr
+	v:5:0:255:220:210:180:0
+	a:5:0:-800:1200:-1200:0
+]
 
-track:begin:square;
+[track:square
 
-grp:begin;
-	s:1;
-grp:end;
+[grp
+	s:1
+]
 
-g:0;
+g:0
 
-track:end;
+]
 
-track:begin:triangle;
+[track:triangle
 
-grp:begin;
-	a:f#0;s:3;r;
-	s:3;
-	a:f#0;s:2;r;
-	s:4;
-	a:c#0;s:2;r;
-	s:2;
-	a:f#0;s:3;r;
-	s:3;
-	a:f#0;s:2;r;
-	s:4;
-	a:c#0;s:2;r;
-	s:2;
+[grp
+	a:f#0;s:3;r
+	s:3
+	a:f#0;s:2;r
+	s:4
+	a:c#0;s:2;r
+	s:2
+	a:f#0;s:3;r
+	s:3
+	a:f#0;s:2;r
+	s:4
+	a:c#0;s:2;r
+	s:2
 
-	a:a0;s:3;r;
-	s:3;
-	a:a0;s:2;r;
-	s:4;
-	a:a0;s:2;r;
-	s:2;
+	a:a0;s:3;r
+	s:3
+	a:a0;s:2;r
+	s:4
+	a:a0;s:2;r
+	s:2
 
-	a:b0;s:3;r;
-	s:3;
-	a:b0;s:2;r;
-	s:2;
-	a:c#0;s:5;r;
-	s:1;
-grp:end;
+	a:b0;s:3;r
+	s:3
+	a:b0;s:2;r
+	s:2
+	a:c#0;s:5;r
+	s:1
+]
 
-g:0;
+g:0
 
-track:end;
+]
 
-track:begin:noise;
+[track:noise
 
-grp:begin;
-	s:2;a:c#6;s:3;r;
-	s:3;s:8;
-grp:end;
+[grp
+	s:2;a:c#6;s:3;r
+	s:3;s:8
+]
 
-i:0;
-g:0;
+i:0
+g:0
 
-track:end;
+]
 
-track:begin:sawtooth;
+[track:sawtooth
 
-grp:begin;
-	a:f#1;s:3;r;
-	s:3;
-	a:f#1;s:2;r;
-	s:4;
-	a:c#2;s:2;r;
-	s:2;
-	a:f#1;s:3;r;
-	s:3;
-	a:f#1;s:2;r;
-	s:4;
-	a:c#2;s:2;r;
-	s:2;
+[grp
+	a:f#1;s:3;r
+	s:3
+	a:f#1;s:2;r
+	s:4
+	a:c#2;s:2;r
+	s:2
+	a:f#1;s:3;r
+	s:3
+	a:f#1;s:2;r
+	s:4
+	a:c#2;s:2;r
+	s:2
 
-	a:a1;s:3;r;
-	s:3;
-	a:a1;s:2;r;
-	s:4;
-	a:a1;s:2;r;
-	s:2;
+	a:a1;s:3;r
+	s:3
+	a:a1;s:2;r
+	s:4
+	a:a1;s:2;r
+	s:2
 
-	a:b1;s:3;r;
-	s:3;
-	a:b1;s:2;r;
-	s:2;
-	a:c#2;s:1;r;
-	s:1;
-	a:c#2;s:1;r;
-	s:1;
-	a:c#2;s:1;r;
-	s:1;
-grp:end;
+	a:b1;s:3;r
+	s:3
+	a:b1;s:2;r
+	s:2
+	a:c#2;s:1;r
+	s:1
+	a:c#2;s:1;r
+	s:1
+	a:c#2;s:1;r
+	s:1
+]
 
-g:0;
+g:0
 
-track:end;
+]
