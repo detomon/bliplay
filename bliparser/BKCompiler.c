@@ -866,12 +866,12 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 					file = fopen (path, "rb");
 
 					if (file == NULL) {
-						fprintf (stderr, "File '%s' not found for line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
+						fprintf (stderr, "File '%s' not found on line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
 						return -1;
 					}
 
 					if (BKDataInitAndLoadWAVE (sample, file) < 0) {
-						fprintf (stderr, "Failed to load WAVE file '%s' for line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
+						fprintf (stderr, "Failed to load WAVE file '%s' on line %u:%u\n", filename, cmd -> lineno, cmd -> colno);
 						return -1;
 					}
 
