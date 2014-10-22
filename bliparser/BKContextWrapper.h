@@ -35,6 +35,7 @@ struct BKContextWrapper
 	BKArray    waveforms;
 	BKArray    samples;
 	BKArray    tracks;
+	BKInt      stepTicks;
 };
 
 struct BKTrackWrapper

@@ -197,6 +197,8 @@ static BKInt BKContextWrapperMakeTracks (BKContextWrapper * wrapper)
 		}
 	}
 
+	wrapper -> stepTicks = wrapper -> compiler.stepTicks;
+
 	BKCompilerDispose (& wrapper -> compiler);
 
 	return 0;
