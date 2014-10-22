@@ -92,7 +92,6 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 	BKTrackWrapper * track;
 
 	BKContextDispose (& wrapper -> ctx);
-	BKCompilerDispose (& wrapper -> compiler);
 
 	for (BKInt i = 0; i < wrapper -> instruments.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& wrapper -> instruments, i, & instrument);
@@ -122,7 +121,7 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 	}
 
 	for (BKInt i = 0; i < wrapper -> tracks.length; i ++) {
-		BKArrayGetItemAtIndexCopy (& wrapper -> tracks, i, & track);
+		track = BKArrayGetItemAtIndex (& wrapper -> tracks, i);
 		BKTrackWrapperDispose (track);
 	}
 

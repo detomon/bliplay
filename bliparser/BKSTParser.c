@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include "BKSTParser.h"
 
-#define INIT_BUFFER_SIZE 0x4000
+#define INIT_BUFFER_SIZE 0x1000
 
 static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 {
@@ -38,6 +38,7 @@ static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 		return -1;
 	}
 
+	memset (parser -> argBuf, 0, parser -> argBufCapacity);
 	parser -> argBufPtr = parser -> argBuf;
 
 	return 0;
