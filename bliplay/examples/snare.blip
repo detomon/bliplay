@@ -255,8 +255,6 @@ stepticks:22
 
 	g:2
 
-	xb
-
 	g:0
 	g:0
 	g:0
@@ -287,8 +285,6 @@ stepticks:22
 
 	g:5
 	s:32
-
-	x
 
 ]
 
@@ -468,8 +464,6 @@ stepticks:22
 
 	s:64
 
-	xb
-
 	g:0
 	g:0
 	g:0
@@ -500,8 +494,6 @@ stepticks:22
 
 	g:3
 	s:32
-
-	x
 
 ]
 
@@ -733,8 +725,6 @@ stepticks:22
 
 	g:1
 
-	xb
-
 	g:2
 	g:2
 	g:2
@@ -771,8 +761,6 @@ stepticks:22
 
 	g:4
 	s:32
-
-	x
 
 ]
 
@@ -1192,8 +1180,6 @@ stepticks:22
 
 	s:64
 
-	xb
-
 	i:20
 	w:0;v:212
 
@@ -1234,8 +1220,6 @@ stepticks:22
 
 	s:64
 	s:32
-
-	x
 
 ]
 
@@ -1361,8 +1345,6 @@ stepticks:22
 
 	s:64
 
-	xb
-
 	pt:1200;i:10;v:192;dc:8
 	g:42
 	g:41
@@ -1394,8 +1376,6 @@ stepticks:22
 	g:45
 
 	s:64
-
-	x
 
 ]
 
@@ -1479,8 +1459,6 @@ stepticks:22
 
 	s:64
 
-	xb
-
 	s:64
 	s:64
 	s:64
@@ -1512,7 +1490,5 @@ stepticks:22
 	g:45
 
 	g:46
-
-	x
 
 ]
