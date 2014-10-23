@@ -60,6 +60,7 @@ static FILE           * outputFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
 static int              waitUSecs = 50000;
+static char             seekTimeString [64];
 
 struct option const options [] = {
 	{"fast-forward", required_argument, NULL, 'f'},
@@ -352,7 +353,10 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 
 static void print_time (BKContextWrapper * ctx)
 {
-	char const * status;
+	char const * chars [8] = {
+		"▖", "▗", "▘", "▝",
+		"▟", "▙", "▛", "▜",
+	};
 
 	if (flags & FLAG_PRINT_NO_TIME) {
 		return;
@@ -365,24 +369,37 @@ static void print_time (BKContextWrapper * ctx)
 	int secs = hsecs % 60;
 	int mins = hsecs / 60;
 
-	switch ((frames / 25) % 4) {
-		case 0: status = "▘"; break;
-		case 1: status = "▝"; break;
-		case 2: status = "▗"; break;
-		case 3: status = "▖"; break;
-	}
+	char const * c1 = chars [(frames & 0x380) >> 7];
+	char const * c2 = chars [(frames & 0x070) >> 4];
 
-	printf ("\r\033[32m%s  %d:%02d.%02d\033[0m", status, mins, secs, frac);
+	printf ("\r\033[32m%s%s  %d:%02d.%02d\033[0m", c1, c2, mins, secs, frac);
 
 	fflush (stdout);
 }
 
+static BKInt count_slots (BKArray * array)
+{
+	void * ptr;
+	BKInt count = 0;
+
+	for (BKInt i = 0; i < array -> length; i ++) {
+		BKArrayGetItemAtIndexCopy (array, i, & ptr);
+
+		if (ptr) {
+			count ++;
+		}
+	}
+
+	return count;
+}
+
 static void print_info (BKContextWrapper * ctx)
 {
-	if (ctx -> tracks.length) {
-		print_message ("Number of tracks: %d\n", ctx -> tracks.length);
-		print_message ("Stepticks: %d\n", ctx -> stepTicks);
-	}
+	print_message ("          Tracks: %d\n", ctx -> tracks.length);
+	print_message ("     Instruments: %d\n", count_slots (& ctx -> instruments));
+	print_message ("Custom waveforms: %d\n", count_slots (& ctx -> waveforms));
+	print_message ("         Samples: %d\n", count_slots (& ctx -> samples));
+	print_message ("      Step ticks: %d\n", ctx -> stepTicks);
 }
 
 static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
@@ -391,7 +408,6 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	int    longoptind = 1;
 	BKUInt sampleRate = 44100;
 	BKUInt speed      = 0;
-	char seekTimeString [64];
 	FILE * file;
 
 	char const * error = NULL;
@@ -562,7 +578,6 @@ static BKInt runloop (BKContextWrapper * ctx)
 	nfds = STDIN_FILENO + 1;
 
 	set_noecho (1);
-	print_info (ctx);
 	print_notice ("Press [q] to quit\n");
 
 	SDL_PauseAudio (0);
@@ -613,6 +628,13 @@ int main (int argc, char * argv [])
 {
 	if (handle_options (& ctx, argc, argv) < 0) {
 		return 1;
+	}
+
+	print_info (& ctx);
+
+	if (flags & FLAG_HAS_SEEK_TIME) {
+		print_notice ("Fast forward to %s\n", seekTimeString);
+		seek_context (& ctx, seekTime);
 	}
 
 	if (flags & FLAG_NO_SOUND) {
