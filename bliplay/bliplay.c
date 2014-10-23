@@ -45,10 +45,9 @@ enum
 enum
 {
 	FLAG_INTERACTIVE   = 1 << 0,
-	FLAG_PLAY          = 1 << 1,
-	FLAG_HAS_SEEK_TIME = 1 << 2,
-	FLAG_PRINT_NO_TIME = 1 << 3,
-	FLAG_NO_SOUND      = 1 << 4,
+	FLAG_HAS_SEEK_TIME = 1 << 1,
+	FLAG_PRINT_NO_TIME = 1 << 2,
+	FLAG_NO_SOUND      = 1 << 3,
 };
 
 static BKInt            flags;
@@ -60,7 +59,7 @@ static char const     * outputFilename;
 static FILE           * outputFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
-static int              waitDelay = 50;
+static int              waitUSecs = 50000;
 
 struct option const options [] = {
 	{"fast-forward", required_argument, NULL, 'f'},
@@ -68,12 +67,11 @@ struct option const options [] = {
 	{"no-sound",     no_argument,       NULL, 'm'},
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
-	{"play",         no_argument,       NULL, 'p'},
 	{"samplerate",   required_argument, NULL, 'r'},
 	{NULL,           0,                 NULL, 0},
 };
 
-static int set_nocanon (int nocanon)
+static int set_noecho (int nocanon)
 {
 	struct termios oldtc, newtc;
 
@@ -82,9 +80,9 @@ static int set_nocanon (int nocanon)
 	newtc = oldtc;
 
 	if (nocanon) {
-		newtc.c_lflag &= ~(ICANON);
+		newtc.c_lflag &= ~(ECHO);
 	} else {
-		newtc.c_lflag |= (ICANON);
+		newtc.c_lflag |= (ECHO);
 	}
 
 	tcsetattr (STDIN_FILENO, TCSANOW, & newtc);
@@ -138,12 +136,10 @@ static void print_help (void)
 {
 	printf (
 		"usage: %1$s [options] file\n"
-		"       %1$s [-p | --play]\n"
-		"             play immediately\n"
 		"       %1$s [-n | --no-time]\n"
 		"             do not print play time\n"
 		"       %1$s [-m | --no-sound]\n"
-		"             do not output sound; implicitly sets -p\n"
+		"             do not output sound\n"
 		"       %1$s [-o | --output file[.raw|.wav]]\n"
 		"             write audio data to file\n"
 		"       %1$s [-f | --fast-forward value]\n"
@@ -156,9 +152,8 @@ static void print_help (void)
 	);
 }
 
-static void print_color_string (char const * format, va_list args, int level)
+static void set_color (FILE * stream, int level)
 {
-	FILE * stream = stdout;
 	char const * color = "0";
 
 	switch (level) {
@@ -170,15 +165,28 @@ static void print_color_string (char const * format, va_list args, int level)
 			break;
 		}
 		case 2: {
-			stream = stderr;
 			color = "31";
 			break;
 		}
 	}
 
 	fprintf (stream, "\033[%sm", color);
+}
+
+static void print_color_string (char const * format, va_list args, int level)
+{
+	FILE * stream = stdout;
+
+	switch (level) {
+		case 2: {
+			stream = stderr;
+			break;
+		}
+	}
+
+	set_color (stream, level);
 	vfprintf (stream, format, args);
-	fprintf (stream, "\033[%sm", "0");
+	set_color (stream, 0);
 	fflush (stream);
 }
 
@@ -344,21 +352,37 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 
 static void print_time (BKContextWrapper * ctx)
 {
+	char const * status;
+
 	if (flags & FLAG_PRINT_NO_TIME) {
 		return;
 	}
 
 	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
 	int frac   = frames % 100;
+	int hsecs  = frames / 100;
 
-	frames /= 100;
+	int secs = hsecs % 60;
+	int mins = hsecs / 60;
 
-	int secs = frames % 60;
-	int mins = frames / 60;
+	switch ((frames / 25) % 4) {
+		case 0: status = "▘"; break;
+		case 1: status = "▝"; break;
+		case 2: status = "▗"; break;
+		case 3: status = "▖"; break;
+	}
 
-	printf ("\r: %3d:%02d.%02d", mins, secs, frac);
+	printf ("\r\033[32m%s  %d:%02d.%02d\033[0m", status, mins, secs, frac);
 
 	fflush (stdout);
+}
+
+static void print_info (BKContextWrapper * ctx)
+{
+	if (ctx -> tracks.length) {
+		print_message ("Number of tracks: %d\n", ctx -> tracks.length);
+		print_message ("Stepticks: %d\n", ctx -> stepTicks);
+	}
 }
 
 static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
@@ -381,10 +405,6 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				exit (0);
 				break;
 			}
-			case 'p': {
-				flags |= FLAG_PLAY;
-				break;
-			}
 			case 'o': {
 				outputFilename = optarg;
 				break;
@@ -403,7 +423,7 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 			case 'm': {
-				flags |= FLAG_NO_SOUND | FLAG_PLAY;
+				flags |= FLAG_NO_SOUND;
 				break;
 			}
 			default: {
@@ -470,10 +490,15 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		return -1;
 	}
 
+	set_color (stderr, 2);
+
 	if (BKContextWrapperLoadDataFromFile (ctx, file) < 0) {
 		print_error ("Failed to load file: %s\n", filename);
+		set_color (stderr, 0);
 		return -1;
 	}
+
+	set_color (stderr, 0);
 
 	fclose (file);
 
@@ -503,6 +528,83 @@ static void cleanup ()
 	SDL_CloseAudio ();
 }
 
+static BKInt write_output (BKContextWrapper * ctx)
+{
+	BKInt numFrames = 512;
+	BKInt numChannels = ctx -> ctx.numChannels;
+	BKFrame * frames = malloc (numFrames * numChannels * sizeof (BKFrame));
+
+	if (frames == NULL) {
+		return -1;
+	}
+
+	while (check_tracks_running (ctx)) {
+		BKContextGenerate (& ctx -> ctx, frames, numFrames);
+		output_chunk (frames, numFrames * numChannels);
+	}
+
+	free (frames);
+
+	return 0;
+}
+
+static BKInt runloop (BKContextWrapper * ctx)
+{
+	int c;
+	int res;
+	int nfds;
+	int flag = 1;
+	fd_set fds, fdsc;
+	struct timeval timeout;
+
+	FD_ZERO (& fds);
+	FD_SET (STDIN_FILENO, & fds);
+	nfds = STDIN_FILENO + 1;
+
+	set_noecho (1);
+	print_info (ctx);
+	print_notice ("Press [q] to quit\n");
+
+	SDL_PauseAudio (0);
+
+	do {
+		FD_COPY (& fds, & fdsc);
+		timeout.tv_sec  = 0;
+		timeout.tv_usec = waitUSecs;
+
+		res = select (nfds, & fdsc, NULL, NULL, & timeout);
+
+		if (res < 0) {
+			return -1;
+		}
+		else if (res > 0) {
+			c = getchar_nocanon (0);
+
+			switch (c) {
+				case 'q': {
+					flag = 0;
+					break;
+				}
+			}
+		}
+
+		print_time (ctx);
+
+		if (check_tracks_running (ctx) == 0) {
+			break;
+		}
+	}
+	while (flag);
+
+	SDL_PauseAudio (1);
+
+	set_noecho (0);
+
+	printf ("\n");
+
+	return 0;
+}
+
 #ifdef main
 #undef main
 #endif
@@ -514,28 +616,14 @@ int main (int argc, char * argv [])
 	}
 
 	if (flags & FLAG_NO_SOUND) {
-		BKInt numFrames = 512;
-		BKInt numChannels = ctx.ctx.numChannels;
-		BKFrame * frames = malloc (numFrames * numChannels * sizeof (BKFrame));
-
-		while (check_tracks_running (& ctx)) {
-			BKContextGenerate (& ctx.ctx, frames, numFrames);
-			output_chunk (frames, numFrames * numChannels);
+		if (write_output (& ctx) < 0) {
+			return 1;
 		}
-
-		free (frames);
 	}
 	else {
-		SDL_PauseAudio (0);
-
-		while (check_tracks_running (& ctx)) {
-			print_time (& ctx);
-			SDL_Delay (waitDelay);
+		if (runloop (& ctx) < 0) {
+			return -1;
 		}
-
-		SDL_PauseAudio (1);
-
-		printf ("\n");
 	}
 
 	cleanup ();
