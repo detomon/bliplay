@@ -81,9 +81,9 @@ static int set_noecho (int nocanon)
 	newtc = oldtc;
 
 	if (nocanon) {
-		newtc.c_lflag &= ~(ECHO);
+		newtc.c_lflag &= ~(ICANON | ECHO);
 	} else {
-		newtc.c_lflag |= (ECHO);
+		newtc.c_lflag |= (ICANON | ECHO);
 	}
 
 	tcsetattr (STDIN_FILENO, TCSANOW, & newtc);
