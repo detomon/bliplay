@@ -34,6 +34,10 @@
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
 
+#ifndef FD_COPY
+#define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
+#endif
+
 #define ANALYSE_FRAMES_COUNT 512
 
 #ifndef PROGRAM_NAME
