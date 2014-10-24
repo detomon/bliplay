@@ -122,14 +122,16 @@ static int string_ends_with (char const * str, char const * tail)
 	char const * sc, * tc;
 	BKSize sl, tl;
 
-	if (str == NULL || tail == NULL)
+	if (str == NULL || tail == NULL) {
 		return 0;
+	}
 
 	sl = strlen (str);
 	tl = strlen (tail);
 
-	if (sl == 0 || tl == 0 || tl > sl)
+	if (sl == 0 || tl == 0 || tl > sl) {
 		return 0;
+	}
 
 	sc = & str [sl - 1];
 	tc = & tail [tl - 1];
