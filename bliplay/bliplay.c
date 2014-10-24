@@ -22,14 +22,19 @@
  */
 
 #include <getopt.h>
+#include <math.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 #include <SDL/SDL.h>
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
+
+#define ANALYSE_FRAMES_COUNT 512
 
 #ifndef PROGRAM_NAME
 #define PROGRAM_NAME "bliplay"
@@ -219,7 +224,7 @@ static void print_error (char const * format, ...)
 	va_end (args);
 }
 
-static void output_chunk (BKFrame const * frames, BKInt numFrames)
+static void output_chunk (BKFrame const frames [], BKInt numFrames)
 {
 	switch (outputType) {
 		case OUTPUT_TYPE_RAW: {
@@ -354,13 +359,9 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 static void print_time (BKContextWrapper * ctx)
 {
 	char const * chars [8] = {
-		"▖", "▗", "▘", "▝",
+		"▘", "▝", "▗", "▖",
 		"▟", "▙", "▛", "▜",
 	};
-
-	if (flags & FLAG_PRINT_NO_TIME) {
-		return;
-	}
 
 	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
 	int frac   = frames % 100;
@@ -369,11 +370,12 @@ static void print_time (BKContextWrapper * ctx)
 	int secs = hsecs % 60;
 	int mins = hsecs / 60;
 
-	char const * c1 = chars [(frames & 0x380) >> 7];
-	char const * c2 = chars [(frames & 0x070) >> 4];
+	char const * c1 = chars [(frames & 0xE000) >> 13];
+	char const * c2 = chars [(frames & 0x1C00) >> 10];
+	char const * c3 = chars [(frames & 0x380) >> 7];
+	char const * c4 = chars [(frames & 0x70) >> 4];
 
-	printf ("\r\033[32m%s%s  %d:%02d.%02d\033[0m", c1, c2, mins, secs, frac);
-
+	printf ("\r\033[32m%s%s%s%s  %d:%02d.%02d\033[0m", c1, c2, c3, c4, mins, secs, frac);
 	fflush (stdout);
 }
 
@@ -499,6 +501,18 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 
+	struct stat st;
+
+	if (stat (filename, & st) < 0) {
+		print_error ("No such file: %s\n", filename);
+		return -1;
+	}
+
+	if (S_ISDIR (st.st_mode)) {
+		print_error ("Is directory: %s\n", filename);
+		return -1;
+	}
+
 	file = fopen (filename, "rb");
 
 	if (file == NULL) {
@@ -508,7 +522,7 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	set_color (stderr, 2);
 
-	if (BKContextWrapperLoadDataFromFile (ctx, file) < 0) {
+	if (BKContextWrapperLoadFile (ctx, file, NULL) < 0) {
 		print_error ("Failed to load file: %s\n", filename);
 		set_color (stderr, 0);
 		return -1;

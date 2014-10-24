@@ -21,6 +21,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <unistd.h>
+#include <fcntl.h>
 #include "BKContextWrapper.h"
 
 static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
@@ -203,7 +205,7 @@ static BKInt BKContextWrapperMakeTracks (BKContextWrapper * wrapper)
 	return 0;
 }
 
-BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, size_t size)
+BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, size_t size, char const * loadPath)
 {
 	BKSTParser parser;
 
@@ -218,6 +220,10 @@ BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, s
 
 	BKSTParserDispose (& parser);
 
+	if (loadPath) {
+		wrapper -> compiler.loadPath = strdup (loadPath);
+	}
+
 	if (BKContextWrapperMakeTracks (wrapper) < 0) {
 		return -1;
 	}
@@ -225,7 +231,7 @@ BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, s
 	return 0;
 }
 
-BKInt BKContextWrapperLoadDataFromFile (BKContextWrapper * wrapper, FILE * file)
+BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char const * loadPath)
 {
 	BKSTParser parser;
 
@@ -239,6 +245,10 @@ BKInt BKContextWrapperLoadDataFromFile (BKContextWrapper * wrapper, FILE * file)
 	}
 
 	BKSTParserDispose (& parser);
+
+	if (loadPath) {
+		wrapper -> compiler.loadPath = strdup (loadPath);
+	}
 
 	if (BKContextWrapperMakeTracks (wrapper) < 0) {
 		return -1;

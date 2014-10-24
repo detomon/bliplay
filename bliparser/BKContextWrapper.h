@@ -59,9 +59,9 @@ extern void BKContextWrapperDispose (BKContextWrapper * wrapper);
 /**
  * Load data to compile
  */
-extern BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, size_t size);
+extern BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, size_t size, char const * loadPath);
 
 /**
  * Load data to compile from file
  */
-extern BKInt BKContextWrapperLoadDataFromFile (BKContextWrapper * wrapper, FILE * file);
+extern BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char const * loadPath);
