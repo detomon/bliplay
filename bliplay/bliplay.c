@@ -473,9 +473,7 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	if (outputFilename) {
-		char const * mode = "wb+";
-
-		outputFile = fopen (outputFilename, mode);
+		outputFile = fopen (outputFilename, "wb+");
 
 		if (outputFile == NULL) {
 			print_error ("Couldn't open file for output: %s\n", outputFilename);
