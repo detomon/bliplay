@@ -410,7 +410,7 @@ static void print_info (BKContextWrapper * ctx)
 	print_message ("      Step ticks: %d\n", ctx -> stepTicks);
 }
 
-static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
+static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 {
 	int    opt;
 	int    longoptind = 1;
@@ -482,7 +482,10 @@ static int handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 		if (string_ends_with (outputFilename, ".wav")) {
 			outputType = OUTPUT_TYPE_WAVE;
-			BKWaveFileWriterInit (& waveWriter, outputFile, numChannels, sampleRate);
+
+			if (BKWaveFileWriterInit (& waveWriter, outputFile, numChannels, sampleRate) < 0) {
+				return -1;
+			}
 		}
 		else if (string_ends_with (outputFilename, ".raw")) {
 			outputType = OUTPUT_TYPE_RAW;
