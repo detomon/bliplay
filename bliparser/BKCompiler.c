@@ -263,19 +263,28 @@ static BKInt BKCompilerTrackAlloc (BKCompilerTrack ** outTrack)
 	return 0;
 }
 
-static void BKCompilerTrackDispose (BKCompilerTrack * track)
+static void BKCompilerTrackReset (BKCompilerTrack * track, BKInt keepData)
 {
-	BKUInt flags;
 	BKByteBuffer * buffer;
 
-	if (track == NULL) {
-		return;
-	}
+	BKArrayEmpty (& track ->  cmdGroups, keepData);
+	BKByteBufferEmpty (& track ->  globalCmds, keepData);
 
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & buffer);
 		BKByteBufferDispose (buffer);
 	}
+}
+
+static void BKCompilerTrackDispose (BKCompilerTrack * track)
+{
+	BKUInt flags;
+
+	if (track == NULL) {
+		return;
+	}
+
+	BKCompilerTrackReset (track, 0);
 
 	BKArrayDispose (& track -> cmdGroups);
 	BKByteBufferDispose (& track -> globalCmds);
@@ -283,7 +292,7 @@ static void BKCompilerTrackDispose (BKCompilerTrack * track)
 	flags = track -> flags;
 	memset (track, 0, sizeof (* track));
 
-	if (flags) {
+	if (flags & BKCompilerFlagAllocated) {
 		free (track);
 	}
 }
@@ -1692,10 +1701,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	BKInstrument    * instrument;
 	BKData          * data;
 
-	if (BKArrayGetItemAtIndexCopy (& compiler -> tracks, 0, & track) == 0) {
-		BKArrayEmpty (& track -> cmdGroups, keepData);
-		BKByteBufferEmpty (& track -> globalCmds, keepData);
-	}
+	BKCompilerTrackReset (& compiler -> globalTrack, keepData);
 
 	for (BKInt i = 0; i < compiler -> tracks.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler -> tracks, i, & track);

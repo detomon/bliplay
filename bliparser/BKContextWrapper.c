@@ -142,7 +142,7 @@ static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTr
 		return -1;
 	}
 
-	if (BKTrackWrapperInit (track)) {
+	if (BKTrackWrapperInit (track) < 0) {
 		return -1;
 	}
 
@@ -186,7 +186,7 @@ static BKInt BKContextWrapperMakeTracks (BKContextWrapper * wrapper)
 		for (BKInt i = 0; i < wrapper -> compiler.tracks.length; i ++) {
 			BKArrayGetItemAtIndexCopy (& wrapper -> compiler.tracks, i, & compilerTrack);
 
-			if (BKContextWrapperMakeTrack (wrapper, compilerTrack)) {
+			if (BKContextWrapperMakeTrack (wrapper, compilerTrack) < 0) {
 				return -1;
 			}
 		}

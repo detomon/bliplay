@@ -93,6 +93,8 @@ BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
 
 void BKByteBufferDispose (BKByteBuffer * buffer)
 {
+	BKUInt flags;
+
 	if (buffer == NULL) {
 		return;
 	}
@@ -101,9 +103,14 @@ void BKByteBufferDispose (BKByteBuffer * buffer)
 		free (buffer -> data);
 	}
 
+	if (buffer -> flags & BKByteBufferFlagAllocated) {
+		free (buffer);
+	}
+
+	flags = buffer -> flags;
 	memset (buffer, 0, sizeof (* buffer));
 
-	if (buffer -> flags & BKByteBufferFlagAllocated) {
+	if (flags & BKByteBufferFlagAllocated) {
 		free (buffer);
 	}
 }

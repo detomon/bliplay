@@ -97,6 +97,8 @@ BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
 
 void BKArrayDispose (BKArray * array)
 {
+	BKUInt flags;
+
 	if (array == NULL) {
 		return;
 	}
@@ -105,9 +107,10 @@ void BKArrayDispose (BKArray * array)
 		free (array -> items);
 	}
 
+	flags = array -> flags;
 	memset (array, 0, sizeof (* array));
 
-	if (array -> flags & BKArrayFlagAllocated) {
+	if (flags & BKArrayFlagAllocated) {
 		free (array);
 	}
 }
