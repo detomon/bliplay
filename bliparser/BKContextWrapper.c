@@ -221,7 +221,9 @@ BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, s
 	BKSTParserDispose (& parser);
 
 	if (loadPath) {
-		wrapper -> compiler.loadPath = strdup (loadPath);
+		if (BKStringAppendChars (& wrapper -> compiler.loadPath, loadPath) < 0) {
+			return -1;
+		}
 	}
 
 	if (BKContextWrapperMakeTracks (wrapper) < 0) {
@@ -247,7 +249,9 @@ BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char co
 	BKSTParserDispose (& parser);
 
 	if (loadPath) {
-		wrapper -> compiler.loadPath = strdup (loadPath);
+		if (BKStringAppendChars (& wrapper -> compiler.loadPath, loadPath) < 0) {
+			return -1;
+		}
 	}
 
 	if (BKContextWrapperMakeTracks (wrapper) < 0) {

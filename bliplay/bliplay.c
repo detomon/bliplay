@@ -33,6 +33,7 @@
 #include <SDL/SDL.h>
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
+#include "BKString.h"
 
 #ifndef FD_COPY
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
@@ -509,28 +510,40 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	struct stat st;
+	BKString path;
 
-	if (stat (filename, & st) < 0) {
-		print_error ("No such file: %s\n", filename);
+	if (BKStringInit (& path, filename, -1) < 0) {
+		return -1;
+	}
+
+	if (stat (path.chars, & st) < 0) {
+		print_error ("No such file: %s\n", path.chars);
 		return -1;
 	}
 
 	if (S_ISDIR (st.st_mode)) {
-		print_error ("Is directory: %s\n", filename);
+		if (BKStringAppendChars (& path, "/DATA.blip") < 0) {
+			return -1;
+		}
+	}
+
+	file = fopen (path.chars, "rb");
+
+	if (file == NULL) {
+		print_error ("No such file: %s\n", path.chars);
 		return -1;
 	}
 
-	file = fopen (filename, "rb");
+	BKString * loadPath = & ctx -> compiler.loadPath;
 
-	if (file == NULL) {
-		print_error ("No such file: %s\n", filename);
+	if (BKStringGetDirname (& loadPath, & path) < 0) {
 		return -1;
 	}
 
 	set_color (stderr, 2);
 
 	if (BKContextWrapperLoadFile (ctx, file, NULL) < 0) {
-		print_error ("Failed to load file: %s\n", filename);
+		print_error ("Failed to load file: %s\n", path.chars);
 		set_color (stderr, 0);
 		return -1;
 	}

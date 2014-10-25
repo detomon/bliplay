@@ -24,10 +24,11 @@
 #ifndef _BK_COMPILER2_H_
 #define _BK_COMPILER2_H_
 
-#include "BKSTParser.h"
-#include "BKInterpreter.h"
 #include "BKArray.h"
 #include "BKByteBuffer.h"
+#include "BKInterpreter.h"
+#include "BKSTParser.h"
+#include "BKString.h"
 
 typedef struct BKCompiler     BKCompiler;
 typedef struct BKCompilerTrack BKCompilerTrack;
@@ -53,7 +54,7 @@ struct BKCompiler
 	BKInstrument  * currentInstrument;
 	BKData        * currentWaveform;
 	BKData        * currentSample;
-	char          * loadPath;
+	BKString        loadPath;
 };
 
 /**
@@ -87,6 +88,8 @@ extern BKInt BKCompilerTerminate (BKCompiler * compiler, BKEnum options);
 
 /**
  * Reset compiler for compiling new data
+ *
+ * The `loadPath` is not changed
  */
 extern void BKCompilerReset (BKCompiler * compiler, BKInt keepData);
 
