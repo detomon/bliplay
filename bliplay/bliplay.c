@@ -45,14 +45,14 @@
 #define PROGRAM_NAME "bliplay"
 #endif
 
-enum
+enum OUTPUT_TYPE
 {
 	OUTPUT_TYPE_NONE,
 	OUTPUT_TYPE_RAW,
 	OUTPUT_TYPE_WAVE,
 };
 
-enum
+enum FLAG
 {
 	FLAG_INTERACTIVE   = 1 << 0,
 	FLAG_HAS_SEEK_TIME = 1 << 1,
@@ -92,7 +92,8 @@ static int set_noecho (int nocanon)
 
 	if (nocanon) {
 		newtc.c_lflag &= ~(ICANON | ECHO);
-	} else {
+	}
+	else {
 		newtc.c_lflag |= (ICANON | ECHO);
 	}
 
@@ -138,8 +139,9 @@ static int string_ends_with (char const * str, char const * tail)
 	tc = & tail [tl - 1];
 
 	for (; tc > tail; tc --, sc --) {
-		if (* tc != * sc)
+		if (* tc != * sc) {
 			return 0;
+		}
 	}
 
 	return 1;
@@ -365,7 +367,7 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 
 static void print_time (BKContextWrapper * ctx)
 {
-	char const * chars [8] = {
+	static char const * chars [8] = {
 		"▘", "▝", "▗", "▖",
 		"▟", "▙", "▛", "▜",
 	};
@@ -510,7 +512,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		outputFile = fopen (outputFilename, "wb+");
 
 		if (outputFile == NULL) {
-			print_error ("Couldn't open file for output: %s\n", outputFilename);
+			print_error ("Could not open output file: %s\n", outputFilename);
 			return -1;
 		}
 
@@ -531,13 +533,13 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	if (BKContextWrapperInit (ctx, numChannels, sampleRate) < 0) {
-		print_error ("Couldn't initialize BKContext\n");
+		print_error ("Could not initialize context\n");
 		return -1;
 	}
 
 	if ((flags & FLAG_NO_SOUND) == 0) {
 		if (init_sdl (ctx, & error) < 0) {
-			print_error ("Couldn't initialize SDL: %s\n", error);
+			print_error ("Could not initialize SDL: %s\n", error);
 			return -1;
 		}
 	}
@@ -596,7 +598,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	return 0;
 }
 
-static void cleanup ()
+static void cleanup (void)
 {
 	if (outputFile) {
 		if (outputType == OUTPUT_TYPE_WAVE) {
@@ -687,6 +689,7 @@ static BKInt runloop (BKContextWrapper * ctx)
 	return 0;
 }
 
+// undef SDL main
 #ifdef main
 #undef main
 #endif
