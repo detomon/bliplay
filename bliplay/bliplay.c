@@ -84,10 +84,11 @@ struct option const options [] =
 {
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"help",         no_argument,       NULL, 'h'},
+	{"info",         required_argument, NULL, 'i'},
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
-	{"info",         required_argument, NULL, 'i'},
+	{"version",      no_argument,       NULL, 'v'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -156,8 +157,14 @@ static int string_ends_with (char const * str, char const * tail)
 	return 1;
 }
 
+static void print_version (void)
+{
+	printf ("%s version %s using BlipKit library v%s\n", PROGRAM_NAME, BK_BLIPLAY_VERSION, BK_VERSION);
+}
+
 static void print_help (void)
 {
+	print_version ();
 	printf (
 		"usage: %1$s [options] file\n"
 		"  %2$s-f, --fast-forward time%3$s\n"
@@ -484,14 +491,15 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:v", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
 				strncpy (seekTimeString, optarg, 64);
 				break;
 			}
-			case 'h': {
+			case 'h':
+			case 'v': {
 				print_help ();
 				exit (0);
 				break;
@@ -539,8 +547,8 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	if (filename == NULL) {
-		print_error ("No input file given\n");
 		print_help ();
+		print_error ("No input file given\n");
 		return -1;
 	}
 
