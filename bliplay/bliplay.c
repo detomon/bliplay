@@ -54,16 +54,17 @@ enum OUTPUT_TYPE
 
 enum FLAG
 {
-	FLAG_INTERACTIVE   = 1 << 0,
-	FLAG_HAS_SEEK_TIME = 1 << 1,
-	FLAG_PRINT_NO_TIME = 1 << 2,
-	FLAG_NO_SOUND      = 1 << 3,
-	FLAG_INFO          = 1 << 4,
+	FLAG_HAS_SEEK_TIME  = 1 << 0,
+	FLAG_PRINT_NO_TIME  = 1 << 1,
+	FLAG_NO_SOUND       = 1 << 2,
+	FLAG_INFO           = 1 << 3,
+	FLAG_INFO_EXPLICITE = 1 << 4,
 };
 
 static BKInt            istty;
-static BKInt            flags;
+static BKInt            flags = FLAG_INFO;
 static BKContextWrapper ctx;
+static BKUInt           sampleRate = 44100;
 static BKTime           seekTime;
 static BKInt            numChannels = 2;
 static char const     * filename;
@@ -83,7 +84,6 @@ struct option const options [] =
 {
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"help",         no_argument,       NULL, 'h'},
-	{"no-sound",     no_argument,       NULL, 'm'},
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
@@ -168,15 +168,15 @@ static void print_help (void)
 		"  %2$s-h, --help%3$s\n"
 		"      Print this screen and exit\n"
 		"  %2$s-i, --info%3$s\n"
-		"      Print info about input file and exit\n"
+		"      Print info about input file\n"
+		"      Exits when not using with %2$s-o%3$s\n"
 		"  %2$s-n, --no-time%3$s\n"
 		"      Do not print play time\n"
-		"  %2$s-m, --no-sound%3$s\n"
-		"      Do not play sound (useful when using %2$s-o%3$s)\n"
 		"  %2$s-o, --output file.[wav|raw]%3$s\n"
 		"      Write audio data to file\n"
 		"      WAVE format: PCM 16 bit, stereo\n"
 		"      RAW format: headerless native signed 16 bit, stereo\n"
+		"      Does not print file info. Use %2$s-i%3$s to print info explictly.\n"
 		"  %2$s-r, --samplerate value%3$s\n"
 		"      Set sample rate of output (default: 44100)\n"
 		"      Range: 16000 - 96000\n",
@@ -477,7 +477,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 {
 	int    opt;
 	int    longoptind = 1;
-	BKUInt sampleRate = 44100;
 	BKUInt speed      = 0;
 	FILE * file;
 
@@ -485,7 +484,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:himno:pr:", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
@@ -498,19 +497,16 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 			case 'i': {
-				flags |= FLAG_INFO;
+				flags |= FLAG_INFO_EXPLICITE;
 				break;
 			}
 			case 'n': {
 				flags |= FLAG_PRINT_NO_TIME;
 				break;
 			}
-			case 'm': {
-				flags |= FLAG_NO_SOUND;
-				break;
-			}
 			case 'o': {
 				outputFilename = optarg;
+				flags = (flags & ~FLAG_INFO) | FLAG_NO_SOUND;
 				break;
 			}
 			case 'r': {
@@ -524,6 +520,14 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 		}
+	}
+
+	if (flags & FLAG_NO_SOUND) {
+		flags &= ~FLAG_INFO;
+	}
+
+	if (flags & FLAG_INFO_EXPLICITE) {
+		flags |= FLAG_INFO;
 	}
 
 	if (optind <= argc) {
@@ -741,9 +745,11 @@ int main (int argc, char * argv [])
 		return 1;
 	}
 
-	print_info (& ctx);
-
 	if (flags & FLAG_INFO) {
+		print_info (& ctx);
+	}
+
+	if (flags & FLAG_INFO_EXPLICITE) {
 		return 0;
 	}
 
