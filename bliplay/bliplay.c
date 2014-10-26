@@ -60,6 +60,7 @@ enum FLAG
 	FLAG_NO_SOUND      = 1 << 3,
 };
 
+static BKInt            istty;
 static BKInt            flags;
 static BKContextWrapper ctx;
 static BKTime           seekTime;
@@ -72,7 +73,13 @@ static BKWaveFileWriter waveWriter;
 static int              waitUSecs = 50000;
 static char             seekTimeString [64];
 
-struct option const options [] = {
+static char const * colorNormal = "";
+static char const * colorYellow = "";
+static char const * colorRed    = "";
+static char const * colorGreen  = "";
+
+struct option const options [] =
+{
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"help",         no_argument,       NULL, 'h'},
 	{"no-sound",     no_argument,       NULL, 'm'},
@@ -169,23 +176,29 @@ static void print_help (void)
 
 static void set_color (FILE * stream, int level)
 {
-	char const * color = "0";
+	char const * color;
+
+	if (!istty) {
+		return;
+	}
 
 	switch (level) {
+		default:
 		case 0: {
+			color = colorNormal;
 			break;
 		}
 		case 1: {
-			color = "33";
+			color = colorYellow;
 			break;
 		}
 		case 2: {
-			color = "31";
+			color = colorRed;
 			break;
 		}
 	}
 
-	fprintf (stream, "\033[%sm", color);
+	fprintf (stream, "%s", color);
 }
 
 static void print_color_string (char const * format, va_list args, int level)
@@ -384,7 +397,7 @@ static void print_time (BKContextWrapper * ctx)
 	char const * c3 = chars [(frames & 0x380) >> 7];
 	char const * c4 = chars [(frames & 0x70) >> 4];
 
-	printf ("\r\033[32m%s%s%s%s  %d:%02d.%02d\033[0m", c1, c2, c3, c4, mins, secs, frac);
+	printf ("\r%s%s%s%s%s  %d:%02d.%02d%s", colorGreen, c1, c2, c3, c4, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
 
@@ -696,6 +709,15 @@ static BKInt runloop (BKContextWrapper * ctx)
 
 int main (int argc, char * argv [])
 {
+	istty = isatty (STDOUT_FILENO);
+
+	if (istty) {
+		colorRed    = "\033[31m";
+		colorYellow = "\033[33m";
+		colorGreen  = "\033[32m";
+		colorNormal = "\033[0m";
+	}
+
 	if (handle_options (& ctx, argc, argv) < 0) {
 		return 1;
 	}
