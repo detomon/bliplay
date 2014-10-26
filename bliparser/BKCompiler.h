@@ -38,6 +38,7 @@ struct BKCompilerTrack
 	BKUInt       flags;
 	BKArray      cmdGroups;
 	BKByteBuffer globalCmds;
+	BKEnum       waveform;
 };
 
 struct BKCompiler

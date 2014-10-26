@@ -402,13 +402,46 @@ static BKInt count_slots (BKArray * array)
 	return count;
 }
 
+static void print_track_info (BKContextWrapper * ctx)
+{
+	BKEnum waveform;
+	BKTrackWrapper * track;
+	char const * waveformName;
+
+	for (BKInt i = 0; i < ctx -> tracks.length; i ++) {
+		track = BKArrayGetItemAtIndex (& ctx -> tracks, i);
+		waveform = track -> waveform;
+
+		// custom waveform
+		if (waveform & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
+			print_message ("              #%d: custom %d\n", i, waveform &= ~BK_INTR_CUSTOM_WAVEFORM_FLAG);
+		}
+		// default waveform
+		else {
+			switch (waveform) {
+				case BK_SQUARE:   waveformName = "square";   break;
+				case BK_TRIANGLE: waveformName = "triangle"; break;
+				case BK_NOISE:    waveformName = "noise";    break;
+				case BK_SAWTOOTH: waveformName = "sawtooth"; break;
+				case BK_SINE:     waveformName = "sine";     break;
+				default:          waveformName = "unknown";  break;
+			}
+
+			print_message ("              #%d: %s\n", i, waveformName);
+		}
+	}
+}
+
 static void print_info (BKContextWrapper * ctx)
 {
-	print_message ("          Tracks: %d\n", ctx -> tracks.length);
-	print_message ("     Instruments: %d\n", count_slots (& ctx -> instruments));
-	print_message ("Custom waveforms: %d\n", count_slots (& ctx -> waveforms));
-	print_message ("         Samples: %d\n", count_slots (& ctx -> samples));
-	print_message ("      Step ticks: %d\n", ctx -> stepTicks);
+	print_message ("      step ticks: %d\n", ctx -> stepTicks);
+	print_message ("     instruments: %d\n", count_slots (& ctx -> instruments));
+	print_message ("custom waveforms: %d\n", count_slots (& ctx -> waveforms));
+	print_message ("         samples: %d\n", count_slots (& ctx -> samples));
+	print_message ("          tracks: %d\n", ctx -> tracks.length);
+	print_track_info (ctx);
+	print_message ("     sample rate: %d\n", ctx -> ctx.sampleRate);
+	print_message ("        channels: %d\n\n", ctx -> ctx.numChannels);
 }
 
 static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])

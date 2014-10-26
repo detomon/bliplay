@@ -1145,7 +1145,7 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 				BKByteBufferAppendInt8 (cmds, instr);
 
 				if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, arg0str, & values [0], NULL) == 0) {
-					values [0] = atoix (arg0str, 0) | BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+					values [0] = atoix (arg0str, 0) | BK_INTR_CUSTOM_WAVEFORM_FLAG;
 				}
 
 				BKByteBufferAppendInt16 (cmds, values [0]);
@@ -1403,7 +1403,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 						// use custom waveform
 						if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, args [0], & waveform, NULL) == 0) {
-							waveform = atoix (args [0], 0) | BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+							waveform = atoix (args [0], 0) | BK_INTR_CUSTOM_WAVEFORM_FLAG;
 						}
 					}
 
@@ -1414,6 +1414,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 					// set stepticks
 					BKByteBufferAppendInt8 (& track -> globalCmds, BKIntrStepTicks);
 					BKByteBufferAppendInt16 (& track -> globalCmds, compiler -> stepTicks);
+
+					track -> waveform = waveform;
 
 					break;
 				}

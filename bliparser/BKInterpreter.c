@@ -429,8 +429,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
 
-				if (value0 & BK_INTR_CUSTOM_WAVEFOMR_FLAG) {
-					value0 &= ~BK_INTR_CUSTOM_WAVEFOMR_FLAG;
+				if (value0 & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
+					value0 &= ~BK_INTR_CUSTOM_WAVEFORM_FLAG;
 
 					if (value0 < interpreter -> waveforms -> length) {
 						waveform = ((BKData **) interpreter -> waveforms -> items)[value0];

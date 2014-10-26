@@ -28,7 +28,7 @@
 #include "BKTrack.h"
 #include "BKArray.h"
 
-#define BK_INTR_CUSTOM_WAVEFOMR_FLAG (1 << 15)
+#define BK_INTR_CUSTOM_WAVEFORM_FLAG (1 << 15)
 #define BK_INTR_STACK_SIZE 16
 #define BK_INTR_JUMP_STACK_SIZE 16
 #define BK_INTR_MAX_EVENTS 8
