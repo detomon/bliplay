@@ -1,16 +1,26 @@
+Changes in bliplay 2.0:
+  Release date: 2014-10-26
+
+* Updated blip file format
+* Rewritten parser and compiler
+* Rewritten bliplay program
+
 Changes in bliplay 0.5:
+  Release date: 2014-08-26
 
 * Added --no-sound flag
 * Added --no-time flag
 * Exit prgram if tracks have stoppen
 
 Changes in bliplay 0.4:
+  Release date: 2014-08-22
 
 * Added bundled file format
 * Added pitch option to attack command
 * Fixed stuff
 
 Changes in bliplay 0.3:
+  Release date: 2014-04-22
 
 * Added sample repeat command "dn"
 * Added envelope sequence commands
@@ -19,14 +29,17 @@ Changes in bliplay 0.3:
 * Renamed sample picth command to "pt" to match notation command name
 
 Changes in bliplay 0.2:
+  Release date: 2014-03-29
 
 * Implemented repeat mark command
 
 Changes in bliplay 0.1.2:
+  Release date: 2014-03-13
 
 * Rewritten some code
 
 Changes in bliplay 0.1.1:
+  Release date: 2014-02-02
 
 * Fix portamento when setting attack ticks
 
