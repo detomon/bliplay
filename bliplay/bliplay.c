@@ -58,6 +58,7 @@ enum FLAG
 	FLAG_HAS_SEEK_TIME = 1 << 1,
 	FLAG_PRINT_NO_TIME = 1 << 2,
 	FLAG_NO_SOUND      = 1 << 3,
+	FLAG_INFO          = 1 << 4,
 };
 
 static BKInt            istty;
@@ -86,6 +87,7 @@ struct option const options [] =
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
+	{"info",         required_argument, NULL, 'i'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -158,19 +160,27 @@ static void print_help (void)
 {
 	printf (
 		"usage: %1$s [options] file\n"
-		"       %1$s [-n | --no-time]\n"
-		"             do not print play time\n"
-		"       %1$s [-m | --no-sound]\n"
-		"             do not output sound\n"
-		"       %1$s [-o | --output file[.raw|.wav]]\n"
-		"             write audio data to file\n"
-		"       %1$s [-f | --fast-forward value]\n"
-		"             format: value[f (frames) | b (beats) | t (ticks) | s (seconds)] (e.g. 12.4s, 24b, 760t, 45600f)\n"
-		"       %1$s [-r | --samplerate value]\n"
-		"             range: 22100 - 96000\n"
-		"       %1$s [-h | --help]\n"
-		"             print this screen\n",
-		PROGRAM_NAME
+		"  %2$s-f, --fast-forward time%3$s\n"
+		"      Fast forward to time\n"
+		"      Time format: number[s|b|t|f]\n"
+		"      s: seconds, b: beats, t: ticks, f: frames\n"
+		"      e.g., 12.4s, 24b, 760t, 45600f\n"
+		"  %2$s-h, --help%3$s\n"
+		"      Print this screen and exit\n"
+		"  %2$s-i, --info%3$s\n"
+		"      Print info about input file and exit\n"
+		"  %2$s-n, --no-time%3$s\n"
+		"      Do not print play time\n"
+		"  %2$s-m, --no-sound%3$s\n"
+		"      Do not play sound (useful when using %2$s-o%3$s)\n"
+		"  %2$s-o, --output file.[wav|raw]%3$s\n"
+		"      Write audio data to file\n"
+		"      WAVE format: PCM 16 bit, stereo\n"
+		"      RAW format: headerless native signed 16 bit, stereo\n"
+		"  %2$s-r, --samplerate value%3$s\n"
+		"      Set sample rate of output (default: 44100)\n"
+		"      Range: 16000 - 96000\n",
+		PROGRAM_NAME, colorYellow, colorNormal
 	);
 }
 
@@ -385,6 +395,10 @@ static void print_time (BKContextWrapper * ctx)
 		"▟", "▙", "▛", "▜",
 	};
 
+	if (flags & FLAG_PRINT_NO_TIME) {
+		return;
+	}
+
 	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
 	int frac   = frames % 100;
 	int hsecs  = frames / 100;
@@ -471,24 +485,20 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:hmno:pr:", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "f:himno:pr:", options, & longoptind)) != -1) {
 		switch (opt) {
+			case 'f': {
+				flags |= FLAG_HAS_SEEK_TIME;
+				strncpy (seekTimeString, optarg, 64);
+				break;
+			}
 			case 'h': {
 				print_help ();
 				exit (0);
 				break;
 			}
-			case 'o': {
-				outputFilename = optarg;
-				break;
-			}
-			case 'r': {
-				sampleRate = atoi (optarg);
-				break;
-			}
-			case 'f': {
-				flags |= FLAG_HAS_SEEK_TIME;
-				strncpy (seekTimeString, optarg, 64);
+			case 'i': {
+				flags |= FLAG_INFO;
 				break;
 			}
 			case 'n': {
@@ -497,6 +507,14 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 			case 'm': {
 				flags |= FLAG_NO_SOUND;
+				break;
+			}
+			case 'o': {
+				outputFilename = optarg;
+				break;
+			}
+			case 'r': {
+				sampleRate = atoi (optarg);
 				break;
 			}
 			default: {
@@ -518,6 +536,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	if (filename == NULL) {
 		print_error ("No input file given\n");
+		print_help ();
 		return -1;
 	}
 
@@ -724,8 +743,12 @@ int main (int argc, char * argv [])
 
 	print_info (& ctx);
 
+	if (flags & FLAG_INFO) {
+		return 0;
+	}
+
 	if (flags & FLAG_HAS_SEEK_TIME) {
-		print_notice ("Fast forward to %s\n", seekTimeString);
+		print_notice ("=> Fast forward to %s\n", seekTimeString);
 		seek_context (& ctx, seekTime);
 	}
 
