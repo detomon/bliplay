@@ -480,33 +480,6 @@ static void BKInstrumentFree (BKInstrument * instrument)
 	}
 }
 
-static BKInt BKDataAlloc (BKData ** outData)
-{
-	BKData * data;
-
-	data = malloc (sizeof (* data));
-
-	if (data == NULL) {
-		return -1;
-	}
-
-	if (BKDataInit (data) < 0) {
-		free (data);
-		return -1;
-	}
-
-	* outData = data;
-
-	return 0;
-}
-
-static void BKDataFree (BKData * data)
-{
-	if (data) {
-		free (data);
-	}
-}
-
 static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BKInt index)
 {
 	BKInstrument * instrument = NULL;
@@ -597,7 +570,7 @@ static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt inde
 
 		// set item at index
 		if (BKArraySetItemAtIndex (& compiler -> waveforms, & data, index) < 0) {
-			BKDataFree (data);
+			BKDataDispose (data);
 			return NULL;
 		}
 	}
@@ -646,7 +619,7 @@ static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
 
 		// set item at index
 		if (BKArraySetItemAtIndex (& compiler -> samples, & data, index) < 0) {
-			BKDataFree (data);
+			BKDataDispose (data);
 			return NULL;
 		}
 	}
@@ -1238,7 +1211,7 @@ static BKInt BKCompilerPushCommandWaveform (BKCompiler * compiler, BKSTCmd const
 				sequence [i] = atoix (cmd -> args [i].arg, 0) * (BK_MAX_VOLUME / 255);
 			}
 
-			if (BKDataInitWithFrames (waveform, sequence, length, 1, 1) != 0) {
+			if (BKDataSetFrames (waveform, sequence, length, 1, 1) < 0) {
 				return -1;
 			}
 
@@ -1767,7 +1740,6 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 
 		if (data) {
 			BKDataDispose (data);
-			free (data);
 		}
 	}
 
@@ -1776,7 +1748,6 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 
 		if (data) {
 			BKDataDispose (data);
-			free (data);
 		}
 	}
 

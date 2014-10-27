@@ -109,7 +109,6 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 
 		if (data) {
 			BKDataDispose (data);
-			free (data);
 		}
 	}
 
@@ -118,7 +117,6 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 
 		if (data) {
 			BKDataDispose (data);
-			free (data);
 		}
 	}
 
