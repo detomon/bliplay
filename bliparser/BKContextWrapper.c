@@ -64,6 +64,7 @@ static void BKTrackWrapperDispose (BKTrackWrapper * track)
 	BKInterpreterDispose (& track -> interpreter);
 	BKTrackDispose (& track -> track);
 	BKDividerDispose (& track -> divider);
+	BKDispose (& track -> opcode);
 
 	memset (track, 0, sizeof (*track));
 }
@@ -125,7 +126,7 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 		BKTrackWrapperDispose (track);
 	}
 
-	BKArrayDispose (& wrapper -> tracks);
+	BKDispose (& wrapper -> tracks);
 
 	memset (wrapper, 0, sizeof (*wrapper));
 }

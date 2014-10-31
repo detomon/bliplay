@@ -25,10 +25,7 @@
 
 #define MIN_CAPACITY 256
 
-enum BKByteBufferFlag
-{
-	BKByteBufferFlagAllocated = 1 << 0,
-};
+extern BKClass BKByteBufferClass;
 
 static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 {
@@ -50,10 +47,8 @@ static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 	return 0;
 }
 
-BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
+BKInt BKByteBufferInitGeneral (BKByteBuffer * buffer, BKSize initCapacity)
 {
-	memset (buffer, 0, sizeof (* buffer));
-
 	buffer -> capacity = initCapacity;
 
 	if (buffer -> capacity) {
@@ -67,51 +62,38 @@ BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 	return 0;
 }
 
-BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
+BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 {
-	BKInt res;
-	BKByteBuffer * buffer = malloc (sizeof (* buffer));
-
-	* outBuffer = NULL;
-
-	if (buffer == NULL) {
+	if (BKObjectInit (buffer, & BKByteBufferClass, sizeof (*buffer)) < 0) {
 		return -1;
 	}
 
-	res = BKByteBufferInit (buffer, initCapacity);
-
-	if (res != 0) {
-		free (buffer);
-		return res;
+	if (BKByteBufferInitGeneral (buffer, initCapacity) < 0) {
+		BKDispose (buffer);
+		return -1;
 	}
-
-	buffer -> flags |= BKByteBufferFlagAllocated;
-	* outBuffer = buffer;
 
 	return 0;
 }
 
-void BKByteBufferDispose (BKByteBuffer * buffer)
+BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
 {
-	BKUInt flags;
-
-	if (buffer == NULL) {
-		return;
+	if (BKObjectAlloc ((void **) outBuffer, & BKByteBufferClass, 0) < 0) {
+		return -1;
 	}
 
+	if (BKByteBufferInitGeneral (*outBuffer, initCapacity) < 0) {
+		BKDispose (*outBuffer);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void BKByteBufferDispose (BKByteBuffer * buffer)
+{
 	if (buffer -> data) {
 		free (buffer -> data);
-	}
-
-	if (buffer -> flags & BKByteBufferFlagAllocated) {
-		free (buffer);
-	}
-
-	flags = buffer -> flags;
-	memset (buffer, 0, sizeof (* buffer));
-
-	if (flags & BKByteBufferFlagAllocated) {
-		free (buffer);
 	}
 }
 
@@ -195,3 +177,9 @@ void BKByteBufferEmpty (BKByteBuffer * buffer, BKInt keepData)
 
 	buffer -> size = 0;
 }
+
+BKClass BKByteBufferClass =
+{
+	.instanceSize = sizeof (BKByteBuffer),
+	.dispose      = (BKDisposeFunc) BKByteBufferDispose,
+};

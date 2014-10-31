@@ -26,10 +26,7 @@
 
 #define MIN_CAPACITY 4
 
-enum BKArrayFlag
-{
-	BKArrayFlagAllocated = 1 << 0,
-};
+extern BKClass BKArrayClass;
 
 static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 {
@@ -53,10 +50,8 @@ static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 	return 0;
 }
 
-BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
+static BKInt BKArrayInitGeneral (BKArray * array, BKSize itemSize, BKSize initCapacity)
 {
-	memset (array, 0, sizeof (* array));
-
 	array -> itemSize = BKMax (1, itemSize);
 	array -> capacity = initCapacity;
 
@@ -71,47 +66,39 @@ BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 	return 0;
 }
 
-BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
+BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 {
-	BKInt res;
-	BKArray * array = malloc (sizeof (* array));
-
-	* outArray = NULL;
-
-	if (array == NULL) {
+	if (BKObjectInit (array, & BKArrayClass, sizeof (*array)) < 0) {
 		return -1;
 	}
 
-	res = BKArrayInit (array, itemSize, initCapacity);
-
-	if (res != 0) {
-		free (array);
-		return res;
+	if (BKArrayInitGeneral (array, itemSize, initCapacity) < 0) {
+		BKDispose (array);
+		return -1;
 	}
-
-	array -> flags |= BKArrayFlagAllocated;
-	* outArray = array;
 
 	return 0;
 }
 
-void BKArrayDispose (BKArray * array)
+BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
 {
-	BKUInt flags;
-
-	if (array == NULL) {
-		return;
+	if (BKObjectAlloc ((void **) outArray, & BKArrayClass, 0) < 0) {
+		return -1;
 	}
 
+	if (BKArrayInitGeneral (*outArray, itemSize, initCapacity) < 0) {
+		BKDispose (*outArray);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void BKArrayDispose (BKArray * array)
+{
 	if (array -> items) {
 		free (array -> items);
-	}
-
-	flags = array -> flags;
-	memset (array, 0, sizeof (* array));
-
-	if (flags & BKArrayFlagAllocated) {
-		free (array);
+		array -> items = NULL;
 	}
 }
 
@@ -249,3 +236,9 @@ void BKArrayEmpty (BKArray * array, BKInt keepData)
 
 	array -> length = 0;
 }
+
+BKClass BKArrayClass =
+{
+	.instanceSize = sizeof (BKArray),
+	.dispose      = (BKDisposeFunc) BKArrayDispose,
+};

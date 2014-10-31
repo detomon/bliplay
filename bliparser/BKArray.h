@@ -24,17 +24,17 @@
 #ifndef _BK_ARRAY_H_
 #define _BK_ARRAY_H_
 
-#include "BKBase.h"
+#include "BKObject.h"
 
 typedef struct BKArray BKArray;
 
 struct BKArray
 {
-	BKUInt flags;
-	BKSize length;
-	BKSize capacity;
-	BKSize itemSize;
-	void * items;
+	BKObject object;
+	BKSize   length;
+	BKSize   capacity;
+	BKSize   itemSize;
+	void   * items;
 };
 
 /**
@@ -54,11 +54,6 @@ extern BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
  * is reserved
  */
 extern BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity);
-
-/**
- * Dispose array
- */
-extern void BKArrayDispose (BKArray * array);
 
 /**
  * Get number of items

@@ -272,7 +272,7 @@ static void BKCompilerTrackReset (BKCompilerTrack * track, BKInt keepData)
 
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & buffer);
-		BKByteBufferDispose (buffer);
+		BKDispose (buffer);
 	}
 }
 
@@ -286,8 +286,8 @@ static void BKCompilerTrackDispose (BKCompilerTrack * track)
 
 	BKCompilerTrackReset (track, 0);
 
-	BKArrayDispose (& track -> cmdGroups);
-	BKByteBufferDispose (& track -> globalCmds);
+	BKDispose (& track -> cmdGroups);
+	BKDispose (& track -> globalCmds);
 
 	flags = track -> flags;
 	memset (track, 0, sizeof (* track));
@@ -1622,7 +1622,7 @@ static BKInt BKCompilerTrackLink (BKCompilerTrack * track)
 		BKByteBufferEmpty (group, 0);
 	}
 
-	BKArrayDispose (& groupOffsets);
+	BKDispose (& groupOffsets);
 
 	return 0;
 }

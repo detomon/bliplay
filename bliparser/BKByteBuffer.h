@@ -24,16 +24,16 @@
 #ifndef _BK_BYTE_BUFFER_H_
 #define _BK_BYTE_BUFFER_H_
 
-#include "BKBase.h"
+#include "BKObject.h"
 
 typedef struct BKByteBuffer BKByteBuffer;
 
 struct BKByteBuffer
 {
-	BKUInt flags;
-	BKSize size;
-	BKSize capacity;
-	void * data;
+	BKObject object;
+	BKSize   size;
+	BKSize   capacity;
+	void   * data;
 };
 
 /**
@@ -51,11 +51,6 @@ extern BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity);
  * is reserved
  */
 extern BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity);
-
-/**
- * Dispose buffer
- */
-extern void BKByteBufferDispose (BKByteBuffer * buffer);
 
 /**
  * Get number of bytes
