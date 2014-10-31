@@ -32,6 +32,8 @@ enum {
 	BKIntrEventJump    = 1 << 4,
 };
 
+extern BKClass BKInterpreterClass;
+
 static BKTickEvent * BKInterpreterEventGet (BKInterpreter * interpreter, BKInt eventsMaks)
 {
 	BKTickEvent * tickEvent;
@@ -52,7 +54,7 @@ static void BKInterpreterEventsUnset (BKInterpreter * interpreter, BKInt eventMa
 	BKTickEvent * tickEvent;
 
 	if (eventMask & BKIntrEventAttack) {
-		interpreter -> flags &= ~BKInterpreterFlagHasAttackEvent;
+		interpreter -> object.flags &= ~BKInterpreterFlagHasAttackEvent;
 		interpreter -> nextNoteIndex = 0;
 	}
 
@@ -94,7 +96,7 @@ static BKInt BKInterpreterEventSet (BKInterpreter * interpreter, BKInt event, BK
 
 	switch (event) {
 		case BKIntrEventAttack: {
-			interpreter -> flags |= BKInterpreterFlagHasAttackEvent;
+			interpreter -> object.flags |= BKInterpreterFlagHasAttackEvent;
 			break;
 		}
 		case BKIntrEventStep: {
@@ -154,7 +156,9 @@ static void BKInterpreterEventsAdvance (BKInterpreter * interpreter, BKInt ticks
 
 BKInt BKInterpreterInit (BKInterpreter * interpreter)
 {
-	memset (interpreter, 0, sizeof (BKInterpreter));
+	if (BKObjectInit (interpreter, & BKInterpreterClass, sizeof (*interpreter))) {
+		return -1;
+	}
 
 	interpreter -> stackPtr = interpreter -> stack;
 	interpreter -> stackEnd = (void *) interpreter -> stack + sizeof (interpreter -> stack);
@@ -221,7 +225,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 								BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
 							}
 
-							if (interpreter -> flags & BKInterpreterFlagHasArpeggio) {
+							if (interpreter -> object.flags & BKInterpreterFlagHasArpeggio) {
 								BKTrackSetPtr (track, BK_ARPEGGIO, interpreter -> nextArpeggio);
 							}
 
@@ -285,7 +289,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			case BKIntrAttack: {
 				value0 = BKInterpreterOpcodeReadInt32 ((void *) & opcode);
 
-				if (interpreter -> flags & BKInterpreterFlagHasAttackEvent) {
+				if (interpreter -> object.flags & BKInterpreterFlagHasAttackEvent) {
 					// overwrite last note value when more than 2
 					interpreter -> nextNoteIndex = BKMin (interpreter -> nextNoteIndex, 1);
 					interpreter -> nextNotes [interpreter -> nextNoteIndex] = value0;
@@ -309,12 +313,12 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				value0 = BKInterpreterOpcodeReadInt8 ((void *) & opcode);
 
 				if (value0) {
-					interpreter -> flags |= BKInterpreterFlagHasArpeggio;
+					interpreter -> object.flags |= BKInterpreterFlagHasArpeggio;
 				} else {
-					interpreter -> flags &= ~BKInterpreterFlagHasArpeggio;
+					interpreter -> object.flags &= ~BKInterpreterFlagHasArpeggio;
 				}
 
-				if (interpreter -> flags & BKInterpreterFlagHasAttackEvent) {
+				if (interpreter -> object.flags & BKInterpreterFlagHasAttackEvent) {
 					interpreter -> nextArpeggio [0] = value0;
 					memcpy (& interpreter -> nextArpeggio [1], opcode, value0 * sizeof (BKInt));
 				}
@@ -531,7 +535,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				// jump to repeat mark
 				if (value0 == -1) {
 					value0 = interpreter -> repeatStartAddr;
-					interpreter -> flags |= BKInterpreterFlagHasRepeated;
+					interpreter -> object.flags |= BKInterpreterFlagHasRepeated;
 				}
 
 				opcode = & interpreter -> opcode [value0];
@@ -539,7 +543,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrEnd: {
 				BKInterpreterEventSet (interpreter, BKIntrEventStep, BK_INT_MAX);
-				interpreter -> flags |= BKInterpreterFlagHasStopped;
+				interpreter -> object.flags |= BKInterpreterFlagHasStopped;
 				opcode --; // Repeat command forever
 				run = 0;
 				result = 0;
@@ -563,14 +567,13 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 	return result;
 }
 
-void BKInterpreterDispose (BKInterpreter * interpreter)
+static void BKInterpreterDispose (BKInterpreter * interpreter)
 {
-	memset (interpreter, 0, sizeof (BKInterpreter));
 }
 
 void BKInterpreterReset (BKInterpreter * interpreter)
 {
-	interpreter -> flags           = 0;
+	interpreter -> object.flags   &= ~BKObjectFlagUsableMask;
 	interpreter -> numSteps        = 0;
 	interpreter -> opcodePtr       = interpreter -> opcode;
 	interpreter -> stackPtr        = interpreter -> stack;
@@ -581,3 +584,9 @@ void BKInterpreterReset (BKInterpreter * interpreter)
 	interpreter -> nextNoteIndex   = 0;
 	interpreter -> repeatStartAddr = 0;
 }
+
+BKClass BKInterpreterClass =
+{
+	.instanceSize = sizeof (BKInterpreter),
+	.dispose      = (BKDisposeFunc) BKInterpreterDispose,
+};

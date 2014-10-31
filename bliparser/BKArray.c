@@ -50,7 +50,7 @@ static BKInt BKArrayGrow (BKArray * array, BKSize minCapacity)
 	return 0;
 }
 
-static BKInt BKArrayInitGeneral (BKArray * array, BKSize itemSize, BKSize initCapacity)
+static BKInt BKArrayInitGeneric (BKArray * array, BKSize itemSize, BKSize initCapacity)
 {
 	array -> itemSize = BKMax (1, itemSize);
 	array -> capacity = initCapacity;
@@ -72,7 +72,7 @@ BKInt BKArrayInit (BKArray * array, BKSize itemSize, BKSize initCapacity)
 		return -1;
 	}
 
-	if (BKArrayInitGeneral (array, itemSize, initCapacity) < 0) {
+	if (BKArrayInitGeneric (array, itemSize, initCapacity) < 0) {
 		BKDispose (array);
 		return -1;
 	}
@@ -86,7 +86,7 @@ BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapacity)
 		return -1;
 	}
 
-	if (BKArrayInitGeneral (*outArray, itemSize, initCapacity) < 0) {
+	if (BKArrayInitGeneric (*outArray, itemSize, initCapacity) < 0) {
 		BKDispose (*outArray);
 		return -1;
 	}

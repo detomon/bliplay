@@ -47,7 +47,7 @@ static BKInt BKByteBufferGrow (BKByteBuffer * buffer, BKSize minCapacity)
 	return 0;
 }
 
-BKInt BKByteBufferInitGeneral (BKByteBuffer * buffer, BKSize initCapacity)
+BKInt BKByteBufferInitGeneric (BKByteBuffer * buffer, BKSize initCapacity)
 {
 	buffer -> capacity = initCapacity;
 
@@ -68,7 +68,7 @@ BKInt BKByteBufferInit (BKByteBuffer * buffer, BKSize initCapacity)
 		return -1;
 	}
 
-	if (BKByteBufferInitGeneral (buffer, initCapacity) < 0) {
+	if (BKByteBufferInitGeneric (buffer, initCapacity) < 0) {
 		BKDispose (buffer);
 		return -1;
 	}
@@ -82,7 +82,7 @@ BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKSize initCapacity)
 		return -1;
 	}
 
-	if (BKByteBufferInitGeneral (*outBuffer, initCapacity) < 0) {
+	if (BKByteBufferInitGeneric (*outBuffer, initCapacity) < 0) {
 		BKDispose (*outBuffer);
 		return -1;
 	}

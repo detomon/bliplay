@@ -24,7 +24,7 @@
 #ifndef _BK_INTERPRETER_H_
 #define _BK_INTERPRETER_H_
 
-#include "BKBase.h"
+#include "BKObject.h"
 #include "BKTrack.h"
 #include "BKArray.h"
 
@@ -100,7 +100,7 @@ struct BKLongJump
 
 struct BKInterpreter
 {
-	BKUInt          flags;
+	BKObject        object;
 	void          * opcode;
 	void          * opcodePtr;
 	BKInt           repeatStartAddr;
@@ -134,11 +134,6 @@ extern BKInt BKInterpreterInit (BKInterpreter * interpreter);
  * `outTicks` is set to number of ticks to next event
  */
 extern BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, BKInt * outTicks);
-
-/**
- * Dispose interpreter
- */
-extern void BKInterpreterDispose (BKInterpreter * interpreter);
 
 /**
  * Reset interpreter

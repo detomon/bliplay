@@ -24,7 +24,7 @@
 #ifndef _BKST_PARSER_H_
 #define _BKST_PARSER_H_
 
-#include "BKBase.h"
+#include "BKObject.h"
 #include "BKSTTokenizer.h"
 
 typedef struct BKSTParser BKSTParser;
@@ -38,6 +38,7 @@ enum
 
 struct BKSTParser
 {
+	BKObject      object;
 	BKSTTokenizer tokenizer;
 	BKSTArg     * argBuf;
 	BKSTArg     * argBufPtr;
@@ -71,11 +72,6 @@ extern BKInt BKSTParserInit (BKSTParser * parser, char const * data, BKSize data
  * Initialize parser object with file
  */
 extern BKInt BKSTParserInitWithFile (BKSTParser * parser, FILE * file);
-
-/**
- * Dispose parser object
- */
-extern void BKSTParserDispose (BKSTParser * parser);
 
 /**
  * Read next command and arguments

@@ -25,6 +25,9 @@
 #include <fcntl.h>
 #include "BKContextWrapper.h"
 
+extern BKClass BKContextWrapperClass;
+extern BKClass BKTrackWrapperClass;
+
 static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
 {
 	BKInt ticks;
@@ -37,13 +40,17 @@ static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
 
 static BKInt BKTrackWrapperInit (BKTrackWrapper * track)
 {
-	memset (track, 0, sizeof (*track));
+	if (BKObjectInit (track, & BKTrackWrapperClass, sizeof (*track)) < 0) {
+		return -1;
+	}
 
 	if (BKInterpreterInit (& track -> interpreter) < 0) {
+		BKDispose (track);
 		return -1;
 	}
 
 	if (BKTrackInit (& track -> track, BK_SQUARE) < 0) {
+		BKDispose (track);
 		return -1;
 	}
 
@@ -53,6 +60,7 @@ static BKInt BKTrackWrapperInit (BKTrackWrapper * track)
 	};
 
 	if (BKDividerInit (& track -> divider, 1, & callback) < 0) {
+		BKDispose (track);
 		return -1;
 	}
 
@@ -61,34 +69,37 @@ static BKInt BKTrackWrapperInit (BKTrackWrapper * track)
 
 static void BKTrackWrapperDispose (BKTrackWrapper * track)
 {
-	BKInterpreterDispose (& track -> interpreter);
+	BKDispose (& track -> interpreter);
 	BKTrackDispose (& track -> track);
 	BKDividerDispose (& track -> divider);
 	BKDispose (& track -> opcode);
-
-	memset (track, 0, sizeof (*track));
 }
 
 BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate)
 {
-	memset (wrapper, 0, sizeof (*wrapper));
+	if (BKObjectInit (wrapper, & BKContextWrapperClass, sizeof (*wrapper)) < 0) {
+		return -1;
+	}
 
 	if (BKContextInit (& wrapper -> ctx, numChannels, sampleRate) < 0) {
+		BKDispose (wrapper);
 		return -1;
 	}
 
 	if (BKCompilerInit (& wrapper -> compiler) < 0) {
+		BKDispose (wrapper);
 		return -1;
 	}
 
 	if (BKArrayInit (& wrapper -> tracks, sizeof (BKTrackWrapper), 0) < 0) {
+		BKDispose (wrapper);
 		return -1;
 	}
 
 	return 0;
 }
 
-void BKContextWrapperDispose (BKContextWrapper * wrapper)
+static void BKContextWrapperDispose (BKContextWrapper * wrapper)
 {
 	BKInstrument * instrument;
 	BKData * data;
@@ -107,28 +118,20 @@ void BKContextWrapperDispose (BKContextWrapper * wrapper)
 
 	for (BKInt i = 0; i < wrapper -> waveforms.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& wrapper -> waveforms, i, & data);
-
-		if (data) {
-			BKDataDispose (data);
-		}
+		BKDispose (data);
 	}
 
 	for (BKInt i = 0; i < wrapper -> samples.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& wrapper -> samples, i, & data);
-
-		if (data) {
-			BKDataDispose (data);
-		}
+		BKDispose (data);
 	}
 
 	for (BKInt i = 0; i < wrapper -> tracks.length; i ++) {
 		track = BKArrayGetItemAtIndex (& wrapper -> tracks, i);
-		BKTrackWrapperDispose (track);
+		BKDispose (track);
 	}
 
 	BKDispose (& wrapper -> tracks);
-
-	memset (wrapper, 0, sizeof (*wrapper));
 }
 
 static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTrack * compilerTrack)
@@ -200,7 +203,7 @@ static BKInt BKContextWrapperMakeTracks (BKContextWrapper * wrapper)
 
 	wrapper -> stepTicks = wrapper -> compiler.stepTicks;
 
-	BKCompilerDispose (& wrapper -> compiler);
+	BKDispose (& wrapper -> compiler);
 
 	return 0;
 }
@@ -214,11 +217,11 @@ BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, s
 	}
 
 	if (BKCompilerCompile (& wrapper -> compiler, & parser, 0) < 0) {
-		BKSTParserDispose (& parser);
+		BKDispose (& parser);
 		return -1;
 	}
 
-	BKSTParserDispose (& parser);
+	BKDispose (& parser);
 
 	if (loadPath) {
 		if (BKStringAppendChars (& wrapper -> compiler.loadPath, loadPath) < 0) {
@@ -242,11 +245,11 @@ BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char co
 	}
 
 	if (BKCompilerCompile (& wrapper -> compiler, & parser, 0) < 0) {
-		BKSTParserDispose (& parser);
+		BKDispose (& parser);
 		return -1;
 	}
 
-	BKSTParserDispose (& parser);
+	BKDispose (& parser);
 
 	if (loadPath) {
 		if (BKStringAppendChars (& wrapper -> compiler.loadPath, loadPath) < 0) {
@@ -260,3 +263,15 @@ BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char co
 
 	return 0;
 }
+
+BKClass BKContextWrapperClass =
+{
+	.instanceSize = sizeof (BKContextWrapper),
+	.dispose      = (BKDisposeFunc) BKContextWrapperDispose,
+};
+
+BKClass BKTrackWrapperClass =
+{
+	.instanceSize = sizeof (BKTrackWrapper),
+	.dispose      = (BKDisposeFunc) BKTrackWrapperDispose,
+};

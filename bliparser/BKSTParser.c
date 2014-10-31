@@ -26,15 +26,19 @@
 
 #define INIT_BUFFER_SIZE 0x1000
 
+extern BKClass BKSTParserClass;
+
 static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 {
-	memset (parser, 0, sizeof (*parser));
+	if (BKObjectInit (parser, & BKSTParserClass, sizeof (*parser)) < 0) {
+		return -1;
+	}
 
 	parser -> argBufCapacity = INIT_BUFFER_SIZE;
 	parser -> argBuf = malloc (parser -> argBufCapacity);
 
 	if (parser -> argBuf == NULL) {
-		BKSTParserDispose (parser);
+		BKDispose (parser);
 		return -1;
 	}
 
@@ -47,12 +51,12 @@ static BKInt BKSTParserInitGeneric (BKSTParser * parser)
 BKInt BKSTParserInit (BKSTParser * parser, char const * data, BKSize dataSize)
 {
 	if (BKSTParserInitGeneric (parser) < 0) {
-		BKSTParserDispose (parser);
+		BKDispose (parser);
 		return -1;
 	}
 
 	if (BKSTTokenizerInit (& parser -> tokenizer, data, dataSize)) {
-		BKSTParserDispose (parser);
+		BKDispose (parser);
 		return -1;
 	}
 
@@ -64,12 +68,12 @@ BKInt BKSTParserInit (BKSTParser * parser, char const * data, BKSize dataSize)
 BKInt BKSTParserInitWithFile (BKSTParser * parser, FILE * file)
 {
 	if (BKSTParserInitGeneric (parser) < 0) {
-		BKSTParserDispose (parser);
+		BKDispose (parser);
 		return -1;
 	}
 
 	if (BKSTTokenizerInitWithFile (& parser -> tokenizer, file)) {
-		BKSTParserDispose (parser);
+		BKDispose (parser);
 		return -1;
 	}
 
@@ -78,13 +82,11 @@ BKInt BKSTParserInitWithFile (BKSTParser * parser, FILE * file)
 	return 0;
 }
 
-void BKSTParserDispose (BKSTParser * parser)
+static void BKSTParserDispose (BKSTParser * parser)
 {
 	if (parser -> argBuf) {
 		free (parser -> argBuf);
 	}
-
-	memset (parser, 0, sizeof (*parser));
 }
 
 static BKInt BKSTParserArgBufferGrow (BKSTParser * parser)
@@ -224,3 +226,9 @@ void BKSTParserSetFile (BKSTParser * parser, FILE * file)
 	BKSTParserSetData (parser, NULL, 0);
 	BKSTTokenizerSetFile (& parser -> tokenizer, file);
 }
+
+BKClass BKSTParserClass =
+{
+	.instanceSize = sizeof (BKSTParser),
+	.dispose      = (BKDisposeFunc) BKSTParserDispose,
+};

@@ -31,6 +31,8 @@ enum BKStringFlag
 	BKStringFlagAllocated = 1 << 0,
 };
 
+extern BKClass BKStringClass;
+
 static BKSize BKStrlen (char const * chars)
 {
 	return chars ? strlen (chars) : 0;
@@ -81,10 +83,8 @@ static BKInt BKStringAppendCharsWithLength (BKString * string, char const * char
 	return 0;
 }
 
-BKInt BKStringInit (BKString * string, char const * chars, BKSize length)
+BKInt BKStringInitGeneric (BKString * string, char const * chars, BKSize length)
 {
-	memset (string, 0, sizeof (* string));
-
 	if (chars) {
 		if (length < 0) {
 			length = BKStrlen (chars);
@@ -98,45 +98,39 @@ BKInt BKStringInit (BKString * string, char const * chars, BKSize length)
 	return 0;
 }
 
-BKInt BKStringAlloc (BKString ** outString, char const * chars, BKSize length)
+BKInt BKStringInit (BKString * string, char const * chars, BKSize length)
 {
-	BKInt res;
-	BKString * string = malloc (sizeof (* string));
-
-	* outString = NULL;
-
-	if (string == NULL) {
+	if (BKObjectInit (string, & BKStringClass, sizeof (*string)) < 0) {
 		return -1;
 	}
 
-	res = BKStringInit (string, chars, length);
-
-	if (res != 0) {
-		free (string);
-		return res;
+	if (BKStringInitGeneric (string, chars, length) < 0) {
+		BKDispose (string);
+		return -1;
 	}
-
-	string -> flags |= BKStringFlagAllocated;
-	* outString = string;
 
 	return 0;
 }
 
-void BKStringDispose (BKString * string)
+BKInt BKStringAlloc (BKString ** outString, char const * chars, BKSize length)
 {
-	if (string == NULL) {
-		return;
+	if (BKObjectAlloc ((void **) outString, & BKStringClass, 0) < 0) {
+		return -1;
 	}
 
+	if (BKStringInitGeneric (*outString, chars, length) < 0) {
+		BKDispose (*outString);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void BKStringDispose (BKString * string)
+{
 	if (string -> chars) {
 		free (string -> chars);
 	}
-
-	if (string -> flags & BKStringFlagAllocated) {
-		free (string);
-	}
-
-	memset (string, 0, sizeof (* string));
 }
 
 BKSize BKStringGetLength (BKString const * string)
@@ -442,3 +436,9 @@ BKInt BKStringGetDirname (BKString ** outDirname, BKString const * path)
 
 	return 0;
 }
+
+BKClass BKStringClass =
+{
+	.instanceSize = sizeof (BKString),
+	.dispose      = (BKDisposeFunc) BKStringDispose,
+};

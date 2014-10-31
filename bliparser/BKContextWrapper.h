@@ -29,6 +29,7 @@ typedef struct BKTrackWrapper   BKTrackWrapper;
 
 struct BKContextWrapper
 {
+	BKObject   object;
 	BKContext  ctx;
 	BKCompiler compiler;
 	BKArray    instruments;
@@ -40,6 +41,7 @@ struct BKContextWrapper
 
 struct BKTrackWrapper
 {
+	BKObject      object;
 	BKInterpreter interpreter;
 	BKTrack       track;
 	BKDivider     divider;
@@ -51,11 +53,6 @@ struct BKTrackWrapper
  * Initialize context wrapper
  */
 extern BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate);
-
-/**
- * Dispose context wrapper
- */
-extern void BKContextWrapperDispose (BKContextWrapper * wrapper);
 
 /**
  * Load data to compile

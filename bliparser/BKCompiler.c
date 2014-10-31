@@ -197,6 +197,8 @@ static strval miscNames [] =
 #define NUM_ENVELOPE_NAMES (sizeof (envelopeNames) / sizeof (strval))
 #define NUM_MISC_NAMES (sizeof (miscNames) / sizeof (strval))
 
+extern BKClass BKCompilerClass;
+
 /**
  * Convert string to signed integer like `atoi`
  * Returns alternative value if string is NULL
@@ -305,40 +307,42 @@ static void BKCompilerTrackClear (BKCompilerTrack * track, BKInt keepData)
 
 BKInt BKCompilerInit (BKCompiler * compiler)
 {
-	memset (compiler, 0, sizeof (* compiler));
+	if (BKObjectInit (compiler, & BKCompilerClass, sizeof (*compiler))) {
+		return -1;
+	}
 
 	if (BKArrayInit (& compiler -> groupStack, sizeof (BKCompilerGroup), 8) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> tracks, sizeof (BKCompilerTrack *), 8) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKCompilerTrackInit (& compiler -> globalTrack) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> instruments, sizeof (BKInstrument *), 4) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> waveforms, sizeof (BKData *), 4) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKArrayInit (& compiler -> samples, sizeof (BKData *), 4) < 0) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
 	if (BKStringInit (& compiler -> loadPath, NULL, 0)) {
-		BKCompilerDispose (compiler);
+		BKDispose (compiler);
 		return -1;
 	}
 
@@ -347,13 +351,10 @@ BKInt BKCompilerInit (BKCompiler * compiler)
 	return 0;
 }
 
-void BKCompilerDispose (BKCompiler * compiler)
+static void BKCompilerDispose (BKCompiler * compiler)
 {
 	BKCompilerReset (compiler, 0);
-
-	BKStringDispose (& compiler -> loadPath);
-
-	memset (compiler, 0, sizeof (* compiler));
+	BKDispose (& compiler -> loadPath);
 }
 
 static BKInt BKCompilerStrvalTableLookup (strval table [], BKSize size, char const * name, BKInt * outValue, BKUInt * outFlags)
@@ -831,23 +832,23 @@ static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filename)
 	}
 
 	if (BKStringAppendChars (& path, "/") < 0) {
-		BKStringDispose (& path);
+		BKDispose (& path);
 		return -1;
 	}
 
 
 	if (BKStringAppend (& path, filename) < 0) {
-		BKStringDispose (& path);
+		BKDispose (& path);
 		return -1;
 	}
 
 
 	if (BKStringReplaceInRange (filename, & path, 0, filename -> length) < 0) {
-		BKStringDispose (& path);
+		BKDispose (& path);
 		return -1;
 	}
 
-	BKStringDispose (& path);
+	BKDispose (& path);
 
 	return 0;
 }
@@ -881,17 +882,17 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 
 					if (file == NULL) {
 						fprintf (stderr, "File '%s' not found on line %u:%u\n", filename.chars, cmd -> lineno, cmd -> colno);
-						BKStringDispose (& filename);
+						BKDispose (& filename);
 						return -1;
 					}
 
 					if (BKDataInitAndLoadWAVE (sample, file) < 0) {
 						fprintf (stderr, "Failed to load WAVE file '%s' on line %u:%u\n", filename.chars, cmd -> lineno, cmd -> colno);
-						BKStringDispose (& filename);
+						BKDispose (& filename);
 						return -1;
 					}
 
-					BKStringDispose (& filename);
+					BKDispose (& filename);
 					fclose (file);
 				}
 			}
@@ -974,13 +975,13 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 						BKByteBufferAppendInt32 (cmds, values [1] - values [0]);
 					}
 
-					compiler -> flags |= BKCompilerFlagArpeggio;
+					compiler -> object.flags |= BKCompilerFlagArpeggio;
 				}
 				// disable arpeggio
-				else if (compiler -> flags & BKCompilerFlagArpeggio) {
+				else if (compiler -> object.flags & BKCompilerFlagArpeggio) {
 					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
 					BKByteBufferAppendInt8 (cmds, 0);
-					compiler -> flags &= ~BKCompilerFlagArpeggio;
+					compiler -> object.flags &= ~BKCompilerFlagArpeggio;
 				}
 			}
 
@@ -993,11 +994,11 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 		case BKIntrRelease:
 		case BKIntrMute: {
 			// disable arpeggio
-			if (compiler -> flags & BKCompilerFlagArpeggio) {
+			if (compiler -> object.flags & BKCompilerFlagArpeggio) {
 				if (instr == BKIntrMute) {
 					BKByteBufferAppendInt8 (cmds, BKIntrArpeggio);
 					BKByteBufferAppendInt8 (cmds, 0);
-					compiler -> flags &= ~BKCompilerFlagArpeggio;
+					compiler -> object.flags &= ~BKCompilerFlagArpeggio;
 				}
 			}
 
@@ -1760,3 +1761,9 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	compiler -> currentWaveform   = NULL;
 	compiler -> currentSample     = NULL;
 }
+
+BKClass BKCompilerClass =
+{
+	.instanceSize = sizeof (BKCompiler),
+	.dispose      = (BKDisposeFunc) BKCompilerDispose,
+};

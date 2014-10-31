@@ -43,7 +43,7 @@ struct BKCompilerTrack
 
 struct BKCompiler
 {
-	BKUInt          flags;
+	BKObject        object;
 	BKArray         groupStack;
 	BKArray         tracks;
 	BKCompilerTrack globalTrack;
@@ -62,11 +62,6 @@ struct BKCompiler
  * Initialize compiler
  */
 extern BKInt BKCompilerInit (BKCompiler * compiler);
-
-/**
- * Dispose compiler
- */
-extern void BKCompilerDispose (BKCompiler * compiler);
 
 /**
  * Push command

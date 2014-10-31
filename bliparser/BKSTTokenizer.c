@@ -26,6 +26,8 @@
 
 #define INIT_BUFFER_SIZE 0x4000
 
+extern BKClass BKSTTokenizerClass;
+
 enum BKSTTokenizerFlag
 {
 	BKSTTokenizerFlagHasPrevChar = 1 << 0,
@@ -63,13 +65,15 @@ static char const base64Chars [256] =
 
 BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, BKSize dataSize)
 {
-	memset (tokenizer, 0, sizeof (*tokenizer));
+	if (BKObjectInit (tokenizer, & BKSTTokenizerClass, sizeof (*tokenizer)) < 0) {
+		return -1;
+	}
 
 	tokenizer -> readBufCapacity = INIT_BUFFER_SIZE;
 	tokenizer -> readBuf = malloc (tokenizer -> readBufCapacity);
 
 	if (tokenizer -> readBuf == NULL) {
-		BKSTTokenizerDispose (tokenizer);
+		BKDispose (tokenizer);
 		return -1;
 	}
 
@@ -80,11 +84,11 @@ BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, BKSize da
 
 BKInt BKSTTokenizerInitWithFile (BKSTTokenizer * tokenizer, FILE * file)
 {
-	if (BKSTTokenizerInit (tokenizer, NULL, 0) < 0) {
+	if (file == NULL) {
 		return -1;
 	}
 
-	if (file == NULL) {
+	if (BKSTTokenizerInit (tokenizer, NULL, 0) < 0) {
 		return -1;
 	}
 
@@ -98,8 +102,6 @@ void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 	if (tokenizer -> readBuf) {
 		free (tokenizer -> readBuf);
 	}
-
-	memset (tokenizer, 0, sizeof (*tokenizer));
 }
 
 static BKInt BKSTTokenizerReadBufferGrow (BKSTTokenizer * tokenizer)
@@ -138,9 +140,9 @@ static int BKSTTokenizerNextChar (BKSTTokenizer * tokenizer)
 	int hasPrevChar = 0;
 	int nextChar = -1;
 
-	if (tokenizer -> flags & BKSTTokenizerFlagHasPrevChar) {
+	if (tokenizer -> object.flags & BKSTTokenizerFlagHasPrevChar) {
 		nextChar = tokenizer -> prevChars [0];
-		tokenizer -> flags &= ~BKSTTokenizerFlagHasPrevChar;
+		tokenizer -> object.flags &= ~BKSTTokenizerFlagHasPrevChar;
 		hasPrevChar = 1;
 	}
 	else if (tokenizer -> file) {
@@ -170,13 +172,13 @@ static int BKSTTokenizerPrevChar (BKSTTokenizer * tokenizer)
 {
 	int prevChars;
 
-	if (tokenizer -> flags & BKSTTokenizerFlagHasPrevChar) {
+	if (tokenizer -> object.flags & BKSTTokenizerFlagHasPrevChar) {
 		return -1;
 	}
 
 	prevChars = tokenizer -> prevChars [0];
 
-	tokenizer -> flags |= BKSTTokenizerFlagHasPrevChar;
+	tokenizer -> object.flags |= BKSTTokenizerFlagHasPrevChar;
 	tokenizer -> prevChars [0] = tokenizer -> prevChars [1];
 	tokenizer -> prevChars [1] = -1;
 
@@ -413,7 +415,7 @@ void BKSTTokenizerSetData (BKSTTokenizer * tokenizer, char const * data, BKSize 
 		dataSize = 0;
 	}
 
-	tokenizer -> flags        &= ~BKSTTokenizerFlagResetMask;
+	tokenizer -> object.flags &= ~BKSTTokenizerFlagResetMask;
 	tokenizer -> data          = (uint8_t *) data;
 	tokenizer -> dataPtr       = (uint8_t *) data;
 	tokenizer -> dataSize      = dataSize;
@@ -427,3 +429,9 @@ void BKSTTokenizerSetFile (BKSTTokenizer * tokenizer, FILE * file)
 	BKSTTokenizerSetData (tokenizer, NULL, 0);
 	tokenizer -> file = file;
 }
+
+BKClass BKSTTokenizerClass =
+{
+	.instanceSize = sizeof (BKSTTokenizer),
+	.dispose      = (BKDisposeFunc) BKSTTokenizerDispose,
+};

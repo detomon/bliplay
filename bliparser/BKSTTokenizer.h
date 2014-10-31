@@ -25,7 +25,7 @@
 #define _BKST_TOKENIZER_H_
 
 #include <stdio.h>
-#include "BKBase.h"
+#include "BKObject.h"
 
 typedef enum   BKSTTokenType BKSTTokenType;
 typedef struct BKSTTokenizer BKSTTokenizer;
@@ -45,7 +45,7 @@ enum BKSTTokenType
 
 struct BKSTTokenizer
 {
-	BKUInt    flags;
+	BKObject  object;
 	uint8_t * data;
 	uint8_t * dataPtr;
 	BKSize    dataSize;
@@ -74,13 +74,10 @@ extern BKInt BKSTTokenizerInit (BKSTTokenizer * tokenizer, char const * data, BK
 
 /**
  * Initialize tokenizer object with file
+ *
+ * The file is not closed when disposing with `BKDispose`
  */
 extern BKInt BKSTTokenizerInitWithFile (BKSTTokenizer * tokenizer, FILE * file);
-
-/**
- * Dispose tokenizer object
- */
-extern void BKSTTokenizerDispose (BKSTTokenizer * tokenizer);
 
 /**
  * Read next token

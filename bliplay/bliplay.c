@@ -329,12 +329,12 @@ static BKInt check_tracks_running (BKContextWrapper * ctx)
 
 		// exit if tracks have repeated
 		if (flags & FLAG_NO_SOUND) {
-			if (track -> interpreter.flags & (BKInterpreterFlagHasStopped | BKInterpreterFlagHasRepeated)) {
+			if (track -> interpreter.object.flags & (BKInterpreterFlagHasStopped | BKInterpreterFlagHasRepeated)) {
 				numActive --;
 			}
 		}
 		// exit if tracks have stopped
-		else if (track -> interpreter.flags & BKInterpreterFlagHasStopped) {
+		else if (track -> interpreter.object.flags & BKInterpreterFlagHasStopped) {
 			numActive --;
 		}
 	}
@@ -649,13 +649,13 @@ static void cleanup (void)
 	if (outputFile) {
 		if (outputType == OUTPUT_TYPE_WAVE) {
 			BKWaveFileWriterTerminate (& waveWriter);
-			BKWaveFileWriterDispose (& waveWriter);
+			BKDispose (& waveWriter);
 		}
 
 		fclose (outputFile);
 	}
 
-	BKContextWrapperDispose (& ctx);
+	BKDispose (& ctx);
 	SDL_CloseAudio ();
 }
 

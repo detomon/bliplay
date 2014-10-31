@@ -24,16 +24,16 @@
 #ifndef _BK_STRING_H_
 #define _BK_STRING_H_
 
-#include "BKBase.h"
+#include "BKObject.h"
 
 typedef struct BKString BKString;
 
 struct BKString
 {
-	BKUInt flags;
-	BKSize length;
-	BKSize capacity;
-	char * chars;
+	BKObject object;
+	BKSize   length;
+	BKSize   capacity;
+	char   * chars;
 };
 
 /**
@@ -53,11 +53,6 @@ extern BKInt BKStringInit (BKString * string, char const * chars, BKSize length)
  * `strlen` and `chars` *must* be NUL-terminated.
  */
 extern BKInt BKStringAlloc (BKString ** outString, char const * chars, BKSize length);
-
-/**
- * Dispose string
- */
-extern void BKStringDispose (BKString * string);
 
 /**
  * Get length of string
