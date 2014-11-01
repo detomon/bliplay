@@ -1053,6 +1053,11 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 		// command:8
 		// value[4]:32
 		case BKIntrEffect: {
+			if (arg0str == NULL) {
+				fprintf (stderr, "Effect command '%s' has no type on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
+				break;
+			}
+
 			if (BKCompilerStrvalTableLookup (effectNames, NUM_EFFECT_NAMES, arg0str, & values [0], NULL)) {
 				args [0] = atoix (cmd -> args [1].arg, 0);
 				args [1] = atoix (cmd -> args [2].arg, 0);
