@@ -70,7 +70,7 @@ static BKInt BKTrackWrapperInit (BKTrackWrapper * track)
 static void BKTrackWrapperDispose (BKTrackWrapper * track)
 {
 	BKDispose (& track -> interpreter);
-	BKTrackDispose (& track -> track);
+	BKDispose (& track -> track);
 	BKDividerDispose (& track -> divider);
 	BKDispose (& track -> opcode);
 }
@@ -105,7 +105,7 @@ static void BKContextWrapperDispose (BKContextWrapper * wrapper)
 	BKData * data;
 	BKTrackWrapper * track;
 
-	BKContextDispose (& wrapper -> ctx);
+	BKDispose (& wrapper -> ctx);
 
 	for (BKInt i = 0; i < wrapper -> instruments.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& wrapper -> instruments, i, & instrument);

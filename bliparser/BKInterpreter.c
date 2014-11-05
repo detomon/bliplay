@@ -219,25 +219,25 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 							break;
 						}
 						case BKIntrEventAttack: {
-							BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
+							BKSetPtr (track, BK_ARPEGGIO, NULL, 0);
 
 							for (BKInt i = 0; i < interpreter -> nextNoteIndex; i ++) {
-								BKTrackSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
+								BKSetAttr (track, BK_NOTE, interpreter -> nextNotes [i]);
 							}
 
 							if (interpreter -> object.flags & BKInterpreterFlagHasArpeggio) {
-								BKTrackSetPtr (track, BK_ARPEGGIO, interpreter -> nextArpeggio);
+								BKSetPtr (track, BK_ARPEGGIO, interpreter -> nextArpeggio, sizeof (interpreter -> nextArpeggio));
 							}
 
 							break;
 						}
 						case BKIntrEventRelease: {
-							BKTrackSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
+							BKSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
 							break;
 						}
 						case BKIntrEventMute: {
-							BKTrackSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
-							BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
+							BKSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
+							BKSetPtr (track, BK_ARPEGGIO, NULL, 0);
 							break;
 						}
 						/*case BKIntrEventJump: {
@@ -296,8 +296,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					interpreter -> nextNoteIndex ++;
 				}
 				else {
-					BKTrackSetPtr (track, BK_ARPEGGIO, NULL);
-					BKTrackSetAttr (track, BK_NOTE, value0);
+					BKSetPtr (track, BK_ARPEGGIO, NULL, 0);
+					BKSetAttr (track, BK_NOTE, value0);
 				}
 
 				break;
@@ -325,7 +325,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				else {
 					arpeggio [0] = value0;
 					memcpy (& arpeggio [1], opcode, value0 * sizeof (BKInt));
-					BKTrackSetPtr (track, BK_ARPEGGIO, arpeggio);
+					BKSetPtr (track, BK_ARPEGGIO, arpeggio, sizeof (arpeggio));
 				}
 
 				opcode += 4 * value0;
@@ -333,12 +333,12 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrArpeggioSpeed: {
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_ARPEGGIO_DIVIDER, value0);
+				BKSetAttr (track, BK_ARPEGGIO_DIVIDER, value0);
 				break;
 			}
 			case BKIntrRelease: {
 				BKInterpreterEventSet (interpreter, BKIntrEventRelease | BKIntrEventMute, 0);
-				BKTrackSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
+				BKSetAttr (track, BK_NOTE, BK_NOTE_RELEASE);
 				interpreter -> nextNoteIndex = 0;
 				break;
 			}
@@ -350,7 +350,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrMute: {
 				BKInterpreterEventSet (interpreter, BKIntrEventRelease | BKIntrEventMute, 0);
-				BKTrackSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
+				BKSetAttr (track, BK_NOTE, BK_NOTE_MUTE);
 				interpreter -> nextNoteIndex = 0;
 				break;
 			}
@@ -362,22 +362,22 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrVolume: {
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_VOLUME, value0);
+				BKSetAttr (track, BK_VOLUME, value0);
 				break;
 			}
 			case BKIntrMasterVolume: {
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_MASTER_VOLUME, value0);
+				BKSetAttr (track, BK_MASTER_VOLUME, value0);
 				break;
 			}
 			case BKIntrPanning: {
 				value0 = (int16_t) BKInterpreterOpcodeReadInt16 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_PANNING, value0);
+				BKSetAttr (track, BK_PANNING, value0);
 				break;
 			}
 			case BKIntrPitch: {
 				value0 = BKInterpreterOpcodeReadInt32 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_PITCH, value0);
+				BKSetAttr (track, BK_PITCH, value0);
 				break;
 			}
 			case BKIntrTicks: {
@@ -405,12 +405,12 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrDutyCycle: {
 				value0 = BKInterpreterOpcodeReadInt8 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_DUTY_CYCLE, value0);
+				BKSetAttr (track, BK_DUTY_CYCLE, value0);
 				break;
 			}
 			case BKIntrPhaseWrap: {
 				value0 = BKInterpreterOpcodeReadInt32 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_PHASE_WRAP, value0);
+				BKSetAttr (track, BK_PHASE_WRAP, value0);
 				break;
 			}
 			case BKIntrInstrument: {
@@ -424,7 +424,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					}
 				}
 
-				BKTrackSetPtr (track, BK_INSTRUMENT, instr);
+				BKSetPtr (track, BK_INSTRUMENT, instr, sizeof (void *));
 				break;
 			}
 			case BKIntrWaveform: {
@@ -447,10 +447,10 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				}
 
 				if (value0 == BK_CUSTOM) {
-					BKTrackSetPtr (track, BK_WAVEFORM, waveform);
+					BKSetPtr (track, BK_WAVEFORM, waveform, sizeof (void *));
 				}
 				else {
-					BKTrackSetAttr (track, BK_WAVEFORM, value0);
+					BKSetAttr (track, BK_WAVEFORM, value0);
 				}
 
 				switch (value0) {
@@ -468,7 +468,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					}
 				}
 
-				BKTrackSetAttr (track, BK_MASTER_VOLUME, masterVolume);
+				BKSetAttr (track, BK_MASTER_VOLUME, masterVolume);
 
 				break;
 			}
@@ -483,16 +483,16 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					}
 				}
 
-				BKTrackSetPtr (track, BK_SAMPLE, sample);
+				BKSetPtr (track, BK_SAMPLE, sample, sizeof (void *));
 				break;
 			}
 			case BKIntrSampleRepeat: {
 				value0 = BKInterpreterOpcodeReadInt8 ((void *) & opcode);
-				BKTrackSetAttr (track, BK_SAMPLE_REPEAT, value0);
+				BKSetAttr (track, BK_SAMPLE_REPEAT, value0);
 				break;
 			}
 			case BKIntrSampleRange: {
-				BKTrackSetPtr (track, BK_SAMPLE_RANGE, opcode);
+				BKSetPtr (track, BK_SAMPLE_RANGE, opcode, sizeof (BKInt [2]));
 				opcode += 4 * 2;
 				break;
 			}
