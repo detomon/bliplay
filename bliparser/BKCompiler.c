@@ -454,33 +454,6 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 	return buffer;
 }
 
-static BKInt BKInstrumentAlloc (BKInstrument ** outInstrument)
-{
-	BKInstrument * instrument;
-
-	instrument = malloc (sizeof (* instrument));
-
-	if (instrument == NULL) {
-		return -1;
-	}
-
-	if (BKInstrumentInit (instrument) < 0) {
-		free (instrument);
-		return -1;
-	}
-
-	* outInstrument = instrument;
-
-	return 0;
-}
-
-static void BKInstrumentFree (BKInstrument * instrument)
-{
-	if (instrument) {
-		free (instrument);
-	}
-}
-
 static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BKInt index)
 {
 	BKInstrument * instrument = NULL;
@@ -522,7 +495,7 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 
 		// set item at index
 		if (BKArraySetItemAtIndex (& compiler -> instruments, & instrument, index) < 0) {
-			BKInstrumentFree (instrument);
+			BKDispose (instrument);
 			return NULL;
 		}
 	}
@@ -571,7 +544,7 @@ static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt inde
 
 		// set item at index
 		if (BKArraySetItemAtIndex (& compiler -> waveforms, & data, index) < 0) {
-			BKDataDispose (data);
+			BKDispose (data);
 			return NULL;
 		}
 	}
@@ -620,7 +593,7 @@ static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
 
 		// set item at index
 		if (BKArraySetItemAtIndex (& compiler -> samples, & data, index) < 0) {
-			BKDataDispose (data);
+			BKDispose (data);
 			return NULL;
 		}
 	}
@@ -886,7 +859,7 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 						return -1;
 					}
 
-					if (BKDataInitAndLoadWAVE (sample, file) < 0) {
+					if (BKDataLoadWAVE (sample, file) < 0) {
 						fprintf (stderr, "Failed to load WAVE file '%s' on line %u:%u\n", filename.chars, cmd -> lineno, cmd -> colno);
 						BKDispose (& filename);
 						return -1;
@@ -901,7 +874,7 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 		}
 		case BKCompilerMiscPitch: {
 			if (cmd -> numArgs >= 1) {
-				BKDataSetAttr (sample, BK_SAMPLE_PITCH, atoix (cmd -> args [0].arg, 0) * PITCH_UNIT);
+				BKSetAttr (sample, BK_SAMPLE_PITCH, atoix (cmd -> args [0].arg, 0) * PITCH_UNIT);
 			}
 			break;
 		}
@@ -1736,8 +1709,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 		BKArrayGetItemAtIndexCopy (& compiler -> instruments, i, & instrument);
 
 		if (instrument) {
-			BKInstrumentDispose (instrument);
-			free (instrument);
+			BKDispose (instrument);
 		}
 	}
 
@@ -1745,7 +1717,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 		BKArrayGetItemAtIndexCopy (& compiler -> waveforms, i, & data);
 
 		if (data) {
-			BKDataDispose (data);
+			BKDispose (data);
 		}
 	}
 
@@ -1753,7 +1725,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 		BKArrayGetItemAtIndexCopy (& compiler -> samples, i, & data);
 
 		if (data) {
-			BKDataDispose (data);
+			BKDispose (data);
 		}
 	}
 
