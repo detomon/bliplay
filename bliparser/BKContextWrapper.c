@@ -71,7 +71,7 @@ static void BKTrackWrapperDispose (BKTrackWrapper * track)
 {
 	BKDispose (& track -> interpreter);
 	BKDispose (& track -> track);
-	BKDividerDispose (& track -> divider);
+	BKDispose (& track -> divider);
 	BKDispose (& track -> opcode);
 }
 
@@ -111,8 +111,7 @@ static void BKContextWrapperDispose (BKContextWrapper * wrapper)
 		BKArrayGetItemAtIndexCopy (& wrapper -> instruments, i, & instrument);
 
 		if (instrument) {
-			BKInstrumentDispose (instrument);
-			free (instrument);
+			BKDispose (instrument);
 		}
 	}
 
