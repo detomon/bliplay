@@ -244,7 +244,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 							BKInterpreterEventSet (interpreter, ~0, 0);
 
 							interpreter -> jumpStackPtr --;
-							interpreter -> opcodePtr = & interpreter -> opcode [interpreter -> jumpStackPtr -> opcodeAddr];
+							interpreter -> opcodePtr = interpreter -> opcode + interpreter -> jumpStackPtr -> opcodeAddr;
 							interpreter -> stackPtr  = interpreter -> jumpStackPtr -> stackPtr;
 
 							opcode = interpreter -> opcodePtr;
@@ -499,7 +499,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			case BKIntrReturn: {
 				if (interpreter -> stackPtr > interpreter -> stack) {
 					value0 = * (-- interpreter -> stackPtr);
-					opcode = & interpreter -> opcode [value0];
+					opcode = interpreter -> opcode + value0;
 				}
 				break;
 			}
@@ -538,7 +538,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					interpreter -> object.flags |= BKInterpreterFlagHasRepeated;
 				}
 
-				opcode = & interpreter -> opcode [value0];
+				opcode = interpreter -> opcode + value0;
 				break;
 			}
 			case BKIntrEnd: {
