@@ -422,7 +422,7 @@ static void print_time (BKContextWrapper * ctx)
 	char const * c3 = chars [(frames & 0x380) >> 7];
 	char const * c4 = chars [(frames & 0x70) >> 4];
 
-	printf ("\r%s%s%s%s%s  %d:%02d.%02d%s", colorGreen, c1, c2, c3, c4, mins, secs, frac, colorNormal);
+	printf ("%s%s%s%s%s  %d:%02d.%02d%s\r", colorGreen, c1, c2, c3, c4, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
 
