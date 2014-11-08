@@ -35,7 +35,7 @@
 #include "BKWaveFileWriter.h"
 #include "BKString.h"
 
-#define BK_BLIPLAY_VERSION "2.0"
+#define BK_BLIPLAY_VERSION "2.1"
 
 #ifndef FD_COPY
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
@@ -161,7 +161,7 @@ static int string_ends_with (char const * str, char const * tail)
 
 static void print_version (void)
 {
-	printf ("%s version %s using BlipKit library v%s\n", PROGRAM_NAME, BK_BLIPLAY_VERSION, BK_VERSION);
+	printf ("%s v%s using BlipKit library v%s\n", PROGRAM_NAME, BK_BLIPLAY_VERSION, BK_VERSION);
 }
 
 static void print_help (void)
