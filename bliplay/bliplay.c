@@ -41,8 +41,6 @@
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
 #endif
 
-#define ANALYSE_FRAMES_COUNT 512
-
 #ifndef PROGRAM_NAME
 #define PROGRAM_NAME "bliplay"
 #endif
@@ -61,6 +59,7 @@ enum FLAG
 	FLAG_NO_SOUND       = 1 << 2,
 	FLAG_INFO           = 1 << 3,
 	FLAG_INFO_EXPLICITE = 1 << 4,
+	FLAG_YES            = 1 << 5,
 };
 
 static BKInt            istty;
@@ -91,6 +90,7 @@ struct option const options [] =
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
 	{"version",      no_argument,       NULL, 'v'},
+	{"yes",          no_argument,       NULL, 'y'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -188,7 +188,9 @@ static void print_help (void)
 		"      Does not print file info. Use %2$s-i%3$s to print info explictly.\n"
 		"  %2$s-r, --samplerate value%3$s\n"
 		"      Set sample rate of output (default: 44100)\n"
-		"      Range: 16000 - 96000\n",
+		"      Range: 16000 - 96000\n"
+		"  %2$s-y, --yes%3$s\n"
+		"      Overwrite output file without asking\n",
 		PROGRAM_NAME, colorYellow, colorNormal
 	);
 }
@@ -482,18 +484,35 @@ static void print_info (BKContextWrapper * ctx)
 	print_message ("        channels: %d\n\n", ctx -> ctx.numChannels);
 }
 
+static BKInt should_overwrite_output (char const * filename)
+{
+	char line [8];
+
+	print_notice ("Output file already exists. Overwrite? [Y/n] ");
+
+	strcpy (line, "");
+	fgets (line, sizeof (line), stdin);
+
+	if (strcmp (line, "Y\n") == 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
 static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 {
 	int    opt;
 	int    longoptind = 1;
 	BKUInt speed      = 0;
-	FILE * file;
-
+	FILE * inputFile;
+	struct stat st;
+	BKString path, * loadPath;
 	char const * error = NULL;
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:v", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:vy", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
@@ -521,6 +540,10 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 			case 'r': {
 				sampleRate = atoi (optarg);
+				break;
+			}
+			case 'y': {
+				flags |= FLAG_YES;
 				break;
 			}
 			default: {
@@ -555,6 +578,33 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	if (outputFilename) {
+		// output file already exists
+		if (stat (outputFilename, & st) == 0) {
+			if (!S_ISREG (st.st_mode)) {
+				print_error ("Output file already exists and is not a file: %s\n", outputFilename);
+				return -1;
+			}
+
+			// ask if file should be overwritten
+			if (!(flags & FLAG_YES)) {
+				if (!should_overwrite_output (outputFilename)) {
+					print_error ("Not overwriting\n");
+					return -1;
+				}
+			}
+		}
+
+		if (string_ends_with (outputFilename, ".wav")) {
+			outputType = OUTPUT_TYPE_WAVE;
+		}
+		else if (string_ends_with (outputFilename, ".raw")) {
+			outputType = OUTPUT_TYPE_RAW;
+		}
+		else {
+			print_error ("Only .wav and .raw is supported for output\n");
+			return -1;
+		}
+
 		outputFile = fopen (outputFilename, "wb+");
 
 		if (outputFile == NULL) {
@@ -562,19 +612,10 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			return -1;
 		}
 
-		if (string_ends_with (outputFilename, ".wav")) {
-			outputType = OUTPUT_TYPE_WAVE;
-
+		if (outputType == OUTPUT_TYPE_WAVE) {
 			if (BKWaveFileWriterInit (& waveWriter, outputFile, numChannels, sampleRate) < 0) {
 				return -1;
 			}
-		}
-		else if (string_ends_with (outputFilename, ".raw")) {
-			outputType = OUTPUT_TYPE_RAW;
-		}
-		else {
-			print_error ("Only .raw and .wav is supported for output\n");
-			return -1;
 		}
 	}
 
@@ -589,9 +630,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			return -1;
 		}
 	}
-
-	struct stat st;
-	BKString path;
 
 	if (BKStringInit (& path, filename, -1) < 0) {
 		return -1;
@@ -608,14 +646,14 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 
-	file = fopen (path.chars, "rb");
+	inputFile = fopen (path.chars, "rb");
 
-	if (file == NULL) {
+	if (inputFile == NULL) {
 		print_error ("No such file: %s\n", path.chars);
 		return -1;
 	}
 
-	BKString * loadPath = & ctx -> compiler.loadPath;
+	loadPath = & ctx -> compiler.loadPath;
 
 	if (BKStringGetDirname (& loadPath, & path) < 0) {
 		return -1;
@@ -623,15 +661,16 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	set_color (stderr, 2);
 
-	if (BKContextWrapperLoadFile (ctx, file, NULL) < 0) {
+	if (BKContextWrapperLoadFile (ctx, inputFile, NULL) < 0) {
 		print_error ("Failed to load file: %s\n", path.chars);
 		set_color (stderr, 0);
+		fclose (inputFile);
 		return -1;
 	}
 
 	set_color (stderr, 0);
 
-	fclose (file);
+	fclose (inputFile);
 
 	if (flags & FLAG_HAS_SEEK_TIME) {
 		speed = ctx -> stepTicks;
