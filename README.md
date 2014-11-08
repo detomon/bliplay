@@ -1,7 +1,7 @@
 bliplay
 =======
 
-This program was build to play CSV like sound files to test the BlipKit library.
+This program was build to play sound files to test the BlipKit library.
 Some example files are located in `examples`.
 
 1. Install SDL
@@ -40,4 +40,4 @@ Then execute `make` to build the program in the `bliplay` directory:
 
 Files can be played like this:
 
-	bliplay$ ./bliplay -p examples/wysiwyg.blip
+	bliplay$ ./bliplay examples/hyperion-star-racer.blip
