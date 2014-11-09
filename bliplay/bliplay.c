@@ -493,7 +493,7 @@ static BKInt should_overwrite_output (char const * filename)
 	strcpy (line, "");
 	fgets (line, sizeof (line), stdin);
 
-	if (strcmp (line, "Y\n") == 0) {
+	if (line [0] == 'Y') {
 		return 1;
 	}
 
