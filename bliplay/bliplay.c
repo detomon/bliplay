@@ -161,7 +161,7 @@ static int string_ends_with (char const * str, char const * tail)
 
 static void print_version (void)
 {
-	printf ("%s v%s using BlipKit library v%s\n", PROGRAM_NAME, BK_BLIPLAY_VERSION, BK_VERSION);
+	printf ("%s v%s using BlipKit v%s\n", PROGRAM_NAME, BK_BLIPLAY_VERSION, BK_VERSION);
 }
 
 static void print_help (void)
