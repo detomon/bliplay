@@ -73,7 +73,7 @@ static char const     * outputFilename;
 static FILE           * outputFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
-static int              waitUSecs = 50000;
+static int              updateUSecs = 91200;
 static char             seekTimeString [64];
 
 static char const * colorNormal = "";
@@ -401,15 +401,6 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 
 static void print_time (BKContextWrapper * ctx)
 {
-	static char const * chars [8] = {
-		"▘", "▝", "▗", "▖",
-		"▟", "▙", "▛", "▜",
-	};
-
-	if (flags & FLAG_PRINT_NO_TIME) {
-		return;
-	}
-
 	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
 	int frac   = frames % 100;
 	int hsecs  = frames / 100;
@@ -417,12 +408,7 @@ static void print_time (BKContextWrapper * ctx)
 	int secs = hsecs % 60;
 	int mins = hsecs / 60;
 
-	char const * c1 = chars [(frames & 0xE000) >> 13];
-	char const * c2 = chars [(frames & 0x1C00) >> 10];
-	char const * c3 = chars [(frames & 0x380) >> 7];
-	char const * c4 = chars [(frames & 0x70) >> 4];
-
-	printf ("%s%s%s%s%s  %d:%02d.%02d%s\r", colorGreen, c1, c2, c3, c4, mins, secs, frac, colorNormal);
+	printf ("%s%4d:%02d.%02d%s\r", colorGreen, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
 
@@ -739,7 +725,7 @@ static BKInt runloop (BKContextWrapper * ctx)
 	do {
 		FD_COPY (& fds, & fdsc);
 		timeout.tv_sec  = 0;
-		timeout.tv_usec = waitUSecs;
+		timeout.tv_usec = updateUSecs;
 
 		res = select (nfds, & fdsc, NULL, NULL, & timeout);
 
@@ -757,7 +743,9 @@ static BKInt runloop (BKContextWrapper * ctx)
 			}
 		}
 
-		print_time (ctx);
+		if (!(flags & FLAG_PRINT_NO_TIME)) {
+			print_time (ctx);
+		}
 
 		if (check_tracks_running (ctx) == 0) {
 			break;
