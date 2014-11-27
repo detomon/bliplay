@@ -1,6 +1,7 @@
 AM_CFLAGS = @BK_STD_CFLAGS@ -I$(srcdir)/../BlipKit/src -I$(srcdir)/../bliparser -L$(srcdir)/../BlipKit/src
 
-bin_PROGRAMS = bliplay graph
+bin_PROGRAMS = bliplay
+EXTRA_PROGRAMS = graph
 
 bliplay_SOURCES = \
 	bliplay.c

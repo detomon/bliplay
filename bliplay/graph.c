@@ -79,36 +79,48 @@ static void fill_audio (BKContext * ctx, Uint8 * stream, int len)
 		}
 	}
 
+	BKInt divFactor = 4;
 	BKComplexComp compFrames [numFrames];
 
-	for (int i = 0; i < numFrames; i += 2) {
+	for (int i = 0; i < numFrames * 2; i += 2) {
 		compFrames [i / 2] = frames [i] + frames [i + 1];
 		compFrames [i / 2] /= BK_MAX_VOLUME * 2;
 	}
 
-	BKFFTSamplesLoad (fft, compFrames, numFrames * 2, 0);
+	BKFFTSamplesLoad (fft, compFrames, numFrames, 0);
 	BKFFTTransform (fft, BK_FFT_TRANS_NORMALIZE | BK_FFT_TRANS_POLAR);
 
 	BKComplexComp max = 0;
 
-	for (int i = 0; i < numFrames; i ++) {
-		max = BKMax (fft -> output [i].re, max);
+	for (int i = 1; i < numFrames; i += divFactor) {
+		BKComplexComp v = 0;
+
+		for (int j = i; j < i + divFactor; j ++) {
+			v += fft -> output [j].re;
+		}
+
+		compFrames [i / divFactor] = v / divFactor;
 	}
 
-	if (max != 0) {
-		for (int i = 0; i < numFrames; i ++) {
-			fft -> output [i].re /= max;
-		}
+	max = 0;
+
+	for (int i = 1; i < numFrames / divFactor; i ++) {
+		max = BKMax (compFrames [i], max);
 	}
-	else {
+
+	if (max == 0) {
 		max = 1;
 	}
 
-	for (int i = 8; i < 256; i += 8) {
+	for (int i = 1; i < numFrames / divFactor; i ++) {
+		compFrames [i] /= max;
+	}
+
+	for (int i = 1; i < numFrames / divFactor / 2; i ++) {
 		int j = 0;
-		int in = i / 8;
+		int in = i;
 		char buffer [33];
-		BKComplexComp x = fft -> output [i].re;
+		BKComplexComp x = compFrames [i];
 
 		x *= 32;
 
@@ -135,7 +147,7 @@ int main (int argc, char const * argv [])
 	BKContextInit (& ctx, 2, 44100);
 
 	BKTrackInit (& track, BK_SAWTOOTH);
-	BKTrackInit (& track2, BK_SQUARE);
+	BKTrackInit (& track2, BK_SINE);
 
 	FILE * file = fopen ("/Users/simon/Dropbox/Musik/talk-less.blip/Insane Things.wav", "r");
 	BKDataInit (& data);
@@ -148,14 +160,15 @@ int main (int argc, char const * argv [])
 	BKSetAttr (& track, BK_MASTER_VOLUME, 0.3 * BK_MAX_VOLUME);
 	BKSetAttr (& track, BK_VOLUME, BK_MAX_VOLUME);
 	BKSetPtr (& track, BK_SAMPLE, & data, sizeof (& data));
+	BKSetAttr (& track, BK_SAMPLE_REPEAT, BK_REPEAT);
 	BKSetAttr (& track, BK_NOTE, BK_C_4 * BK_FINT20_UNIT);
 
-	BKSetAttr (& track2, BK_MASTER_VOLUME, 0.1 * BK_MAX_VOLUME);
+	BKSetAttr (& track2, BK_MASTER_VOLUME, 0.3 * BK_MAX_VOLUME);
 	BKSetAttr (& track2, BK_VOLUME, BK_MAX_VOLUME);
 	BKSetAttr (& track2, BK_EFFECT_PORTAMENTO, 720);
 	BKSetAttr (& track2, BK_DUTY_CYCLE, 8);
-	BKSetAttr (& track2, BK_NOTE, BK_G_SH_5 * BK_FINT20_UNIT);
-	//BKSetAttr (& track2, BK_NOTE, BK_C_6 * BK_FINT20_UNIT);
+	BKSetAttr (& track2, BK_NOTE, BK_C_0 * BK_FINT20_UNIT);
+	BKSetAttr (& track2, BK_NOTE, BK_C_8 * BK_FINT20_UNIT);
 
 	BKFFTAlloc (& fft, 512);
 
