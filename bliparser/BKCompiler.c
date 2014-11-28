@@ -744,6 +744,7 @@ static BKInt BKCompilerPushCommandInstrument (BKCompiler * compiler, BKSTCmd con
 		case BKCompilerEnvelopeTypePanningEnv: {
 			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, (BK_MAX_VOLUME / 255));
 			res = BKInstrumentSetEnvelope (instrument, BK_SEQUENCE_PANNING, phases, sequenceLength, repeatBegin, repeatLength);
+			break;
 		}
 		case BKCompilerEnvelopeTypeDutyCycleEnv: {
 			sequenceLength = BKCompilerInstrumentEnvelopeParse (cmd, phases, & repeatBegin, & repeatLength, 1);
