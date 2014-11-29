@@ -88,9 +88,27 @@ static void fill_audio (BKContext * ctx, Uint8 * stream, int len)
 	}
 
 	BKFFTSamplesLoad (fft, compFrames, numFrames, 0);
-	BKFFTTransform (fft, BK_FFT_TRANS_NORMALIZE | BK_FFT_TRANS_POLAR);
+	//BKFFTTransform (fft, BK_FFT_TRANS_NORMALIZE | BK_FFT_TRANS_POLAR);
 
-	BKComplexComp max = 0;
+	BKFFTTransform (fft, 0);
+
+	for (int i = 1; i < numFrames / 2 - 1; i ++) {
+		fft -> output [i] = fft -> output [i + 1];
+	}
+	for (int i = numFrames - 1; i > numFrames / 2; i --) {
+		fft -> output [i] = fft -> output [i - 1];
+	}
+	fft -> output [numFrames / 2].re = 0;
+	fft -> output [numFrames / 2].im = 0;
+
+	BKFFTTransform (fft, BK_FFT_TRANS_INVERT);
+
+	for (int i = 0; i < numFrames; i ++) {
+		frames [i * 2]     = fft -> input [i] * BK_MAX_VOLUME;
+		frames [i * 2 + 1] = fft -> input [i] * BK_MAX_VOLUME;
+	}
+
+	/*BKComplexComp max = 0;
 
 	for (int i = 1; i < numFrames; i += divFactor) {
 		BKComplexComp v = 0;
@@ -133,11 +151,11 @@ static void fill_audio (BKContext * ctx, Uint8 * stream, int len)
 
 		buffer [32] = '\0';
 		mvprintw (in, 0, "%s", buffer);
-	}
+	}*/
 
 	refresh();
 
-	memset (stream, 0, len);
+	//memset (stream, 0, len);
 }
 
 int main (int argc, char const * argv [])
