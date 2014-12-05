@@ -32,7 +32,7 @@ AC_ARG_ENABLE([player],
   [with_player=${enableval}],
   [with_player=yes])
 
-if test "x${with_sdl}" = xyes; then
+if test "x${with_player}" = xyes; then
   AC_DEFINE(BK_USE_PLAYER, 1, [Define to 1 if configure had option --enable-player])
 else
   AC_DEFINE(BK_USE_PLAYER, 0, [Define to 1 if configure had option --enable-player])
@@ -82,8 +82,11 @@ case $host_os in
     ;;
 esac
 
-if test "x${with_sdl}" = xyes; then
+if test "x${with_player}" = xyes; then
   echo "using SDL linking flags: $SDL_CFLAGS"
+  AC_SUBST(SDL_CFLAGS)
+else
+  SDL_CFLAGS=""
   AC_SUBST(SDL_CFLAGS)
 fi
 
