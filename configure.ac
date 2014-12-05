@@ -3,6 +3,10 @@
 
 AC_PREREQ([2.69])
 AC_INIT([bliplay],[2.1],[simon@monoxid.net],[bliplay],[])
+
+AC_CONFIG_SRCDIR([bliplay/bliplay.c])
+AC_CONFIG_HEADER([config.h])
+
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.
@@ -22,6 +26,17 @@ AC_CHECK_LIB([blipkit], [BKContextInit])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h termios.h unistd.h])
+
+AC_ARG_ENABLE([player],
+  [  --disable-player        do not link against SDL library; only enable file output],
+  [with_player=${enableval}],
+  [with_player=yes])
+
+if test "x${with_sdl}" = xyes; then
+  AC_DEFINE(BK_USE_PLAYER, 1, [Define to 1 if configure had option --enable-player])
+else
+  AC_DEFINE(BK_USE_PLAYER, 0, [Define to 1 if configure had option --enable-player])
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
@@ -67,8 +82,9 @@ case $host_os in
     ;;
 esac
 
-echo "using SDL linking flags: $SDL_CFLAGS"
-
-AC_SUBST(SDL_CFLAGS)
+if test "x${with_sdl}" = xyes; then
+  echo "using SDL linking flags: $SDL_CFLAGS"
+  AC_SUBST(SDL_CFLAGS)
+fi
 
 AC_OUTPUT

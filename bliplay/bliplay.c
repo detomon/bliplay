@@ -21,6 +21,16 @@
  * IN THE SOFTWARE.
  */
 
+#define __USE_POSIX
+
+#ifdef HAVE_CONFIG_H
+#	include "config.h"
+#endif
+
+#if !BK_USE_PLAYER
+#define BK_USE_PLAYER 1
+#endif
+
 #include <getopt.h>
 #include <math.h>
 #include <stdarg.h>
@@ -30,7 +40,9 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#include <SDL/SDL.h>
+#if BK_USE_PLAYER
+#	include <SDL/SDL.h>
+#endif
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
 #include "BKString.h"
@@ -73,8 +85,11 @@ static char const     * outputFilename;
 static FILE           * outputFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
-static int              updateUSecs = 91200;
 static char             seekTimeString [64];
+
+#if BK_USE_PLAYER
+static int              updateUSecs = 91200;
+#endif
 
 static char const * colorNormal = "";
 static char const * colorYellow = "";
@@ -94,6 +109,7 @@ struct option const options [] =
 	{NULL,           0,                 NULL, 0},
 };
 
+#if BK_USE_PLAYER
 static int set_noecho (int nocanon)
 {
 	struct termios oldtc, newtc;
@@ -130,6 +146,7 @@ static int getchar_nocanon (unsigned tcflags)
 
 	return c;
 }
+#endif
 
 static int string_ends_with (char const * str, char const * tail)
 {
@@ -281,6 +298,7 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 	}
 }
 
+#if BK_USE_PLAYER
 static void fill_audio (BKContextWrapper * ctx, Uint8 * stream, int len)
 {
 	BKUInt numChannels = ctx -> ctx.numChannels;
@@ -289,6 +307,7 @@ static void fill_audio (BKContextWrapper * ctx, Uint8 * stream, int len)
 	BKContextGenerate (& ctx -> ctx, (BKFrame *) stream, numFrames);
 	output_chunk ((BKFrame *) stream, numFrames * numChannels);
 }
+#endif
 
 static BKInt push_frames (BKFrame inFrames [], BKUInt size, void * info)
 {
@@ -300,6 +319,7 @@ static void seek_context (BKContextWrapper * ctx, BKTime time)
 	BKContextGenerateToTime (& ctx -> ctx, time, push_frames, NULL);
 }
 
+#if BK_USE_PLAYER
 static BKInt init_sdl (BKContextWrapper * ctx, char const ** error)
 {
 	SDL_Init (SDL_INIT_AUDIO);
@@ -320,6 +340,7 @@ static BKInt init_sdl (BKContextWrapper * ctx, char const ** error)
 
 	return 0;
 }
+#endif
 
 static BKInt check_tracks_running (BKContextWrapper * ctx)
 {
@@ -494,7 +515,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	FILE * inputFile;
 	struct stat st;
 	BKString path, * loadPath;
-	char const * error = NULL;
 
 	opterr = 0;
 
@@ -604,18 +624,28 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 		}
 	}
+#if !BK_USE_PLAYER
+	else {
+		print_error ("SDL support disabled. Output file must be given\n");
+		return -1;
+	}
+#endif
 
 	if (BKContextWrapperInit (ctx, numChannels, sampleRate) < 0) {
 		print_error ("Could not initialize context\n");
 		return -1;
 	}
 
+#if BK_USE_PLAYER
 	if ((flags & FLAG_NO_SOUND) == 0) {
+		char const * error = NULL;
+
 		if (init_sdl (ctx, & error) < 0) {
 			print_error ("Could not initialize SDL: %s\n", error);
 			return -1;
 		}
 	}
+#endif
 
 	if (BKStringInit (& path, filename, -1) < 0) {
 		return -1;
@@ -681,7 +711,9 @@ static void cleanup (void)
 	}
 
 	BKDispose (& ctx);
+#if BK_USE_PLAYER
 	SDL_CloseAudio ();
+#endif
 }
 
 static BKInt write_output (BKContextWrapper * ctx)
@@ -706,6 +738,7 @@ static BKInt write_output (BKContextWrapper * ctx)
 
 static BKInt runloop (BKContextWrapper * ctx)
 {
+#if BK_USE_PLAYER
 	int c;
 	int res;
 	int nfds;
@@ -753,11 +786,21 @@ static BKInt runloop (BKContextWrapper * ctx)
 	}
 	while (flag);
 
-	SDL_PauseAudio (1);
-
 	set_noecho (0);
 
 	printf ("\n");
+#else
+	do {
+		if (check_tracks_running (ctx) == 0) {
+			break;
+		}
+	}
+	while (1);
+#endif
+
+#if BK_USE_PLAYER
+	SDL_PauseAudio (1);
+#endif
 
 	return 0;
 }
