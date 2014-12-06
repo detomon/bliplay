@@ -303,7 +303,9 @@ BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * out
 		c = BKSTTokenizerNextChar (tokenizer);
 
 		if (c == -1) {
-			token = BKSTTokenEnd;
+			if (token == BKSTTokenNone) {
+				token = BKSTTokenEnd;
+			}
 			break;
 		}
 

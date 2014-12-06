@@ -151,6 +151,9 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 
 		switch (type) {
 			case BKSTTokenEnd: {
+				if (parser -> argBufPtr > parser -> argBuf) {
+					type = BKSTTokenValue;
+				}
 				flag = 0;
 				break;
 			}
