@@ -357,6 +357,8 @@ BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * out
 
 				do {
 					switch (c) {
+						case '[':
+						case ']':
 						case ':':
 						case ';':
 						case '\n':
@@ -365,7 +367,7 @@ BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * out
 							flag = 0;
 							break;
 						}
-						case '\0': {
+						case -1: {
 							flag = 0;
 							break;
 						}
@@ -373,8 +375,9 @@ BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * out
 							if (c == '\\') {
 								c = BKSTTokenizerNextChar (tokenizer);
 
-								if (c == '\0') {
-									continue;
+								if (c == -1) {
+									flag = 0;
+									break;
 								}
 							}
 
