@@ -1434,7 +1434,7 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 	void * opcode    = group -> data;
 	void * opcodeEnd = group -> data + group -> size;
 	uint8_t cmd;
-	BKInt arg, idx;
+	BKInt arg, offset;
 	BKInt cmdSize;
 
 	while (opcode < opcodeEnd) {
@@ -1449,10 +1449,14 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 					opcode --;
 					cmdSize = 4;
 
-					BKArrayGetItemAtIndexCopy (groupOffsets, arg, & idx);
+					BKArrayGetItemAtIndexCopy (groupOffsets, arg, & offset);
+
+					if (offset == -1) {
+						fprintf (stderr, "Undefined group number %d (%ld)\n", arg, groupOffsets -> length);
+					}
 
 					(* (uint8_t *) opcode ++) = BKIntrCall;
-					(* (uint32_t *) opcode)   = idx;
+					(* (uint32_t *) opcode)   = offset;
 				}
 				else {
 					fprintf (stderr, "Undefined group number %d (%ld)\n", arg, groupOffsets -> length);
@@ -1554,7 +1558,7 @@ static BKInt BKCompilerTrackLink (BKCompilerTrack * track)
 {
 	BKArray groupOffsets;
 	BKByteBuffer * group;
-	BKInt codeOffset;
+	BKInt codeOffset, offset;
 
 	if (BKArrayInit (& groupOffsets, sizeof (BKInt), track -> cmdGroups.length) < 0) {
 		return -1;
@@ -1564,8 +1568,13 @@ static BKInt BKCompilerTrackLink (BKCompilerTrack * track)
 
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & group);
+		offset = codeOffset;
 
-		if (BKArrayPush (& groupOffsets, & codeOffset) < 0) {
+		if (group == NULL) {
+			offset = -1;
+		}
+
+		if (BKArrayPush (& groupOffsets, & offset) < 0) {
 			return -1;
 		}
 
@@ -1702,7 +1711,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	group = BKArrayPushPtr (& compiler -> groupStack);
 	group -> track = & compiler -> globalTrack;
 	group -> cmdBuffer = & group -> track -> globalCmds;
-	group -> groupType = BKIntrGroupDef;
+	group -> groupType = BKIntrTrackDef;
 
 	compiler -> ignoreGroupLevel = -1;
 
