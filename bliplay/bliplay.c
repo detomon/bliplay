@@ -67,18 +67,19 @@ enum OUTPUT_TYPE
 enum FLAG
 {
 	FLAG_HAS_SEEK_TIME  = 1 << 0,
-	FLAG_PRINT_NO_TIME  = 1 << 1,
-	FLAG_NO_SOUND       = 1 << 2,
-	FLAG_INFO           = 1 << 3,
-	FLAG_INFO_EXPLICITE = 1 << 4,
-	FLAG_YES            = 1 << 5,
+	FLAG_HAS_END_TIME   = 1 << 1,
+	FLAG_PRINT_NO_TIME  = 1 << 2,
+	FLAG_NO_SOUND       = 1 << 3,
+	FLAG_INFO           = 1 << 4,
+	FLAG_INFO_EXPLICITE = 1 << 5,
+	FLAG_YES            = 1 << 6,
 };
 
 static BKInt            istty;
 static BKInt            flags = FLAG_INFO;
 static BKContextWrapper ctx;
 static BKUInt           sampleRate = 44100;
-static BKTime           seekTime;
+static BKTime           seekTime, endTime;
 static BKInt            numChannels = 2;
 static char const     * filename;
 static char const     * outputFilename;
@@ -86,6 +87,7 @@ static FILE           * outputFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
 static char             seekTimeString [64];
+static char             endTimeString [64];
 
 #if BK_USE_PLAYER
 static int              updateUSecs = 91200;
@@ -101,6 +103,7 @@ struct option const options [] =
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"help",         no_argument,       NULL, 'h'},
 	{"info",         required_argument, NULL, 'i'},
+	{"end-time",     required_argument, NULL, 'l'},
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
@@ -196,6 +199,9 @@ static void print_help (void)
 		"  %2$s-i, --info%3$s\n"
 		"      Print info about input file\n"
 		"      Exits when not using with %2$s-o%3$s\n"
+		"  %2$s-l, --end-time time%3$s\n"
+		"      Maximum end time to export\n"
+		"      Time format is the same as of %2$s-f%3$s\n"
 		"  %2$s-n, --no-time%3$s\n"
 		"      Do not print play time\n"
 		"  %2$s-o, --output file.[wav|raw]%3$s\n"
@@ -518,7 +524,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:hino:pr:vy", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "f:hil:no:pr:vy", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
@@ -533,6 +539,11 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 			case 'i': {
 				flags |= FLAG_INFO_EXPLICITE;
+				break;
+			}
+			case 'l': {
+				flags |= FLAG_HAS_END_TIME;
+				strncpy (endTimeString, optarg, 64);
 				break;
 			}
 			case 'n': {
@@ -696,6 +707,14 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 
+	if (flags & FLAG_HAS_END_TIME) {
+		speed = ctx -> stepTicks;
+
+		if (parse_seek_time (endTimeString, & endTime, speed) < 0) {
+			return -1;
+		}
+	}
+
 	return 0;
 }
 
@@ -729,6 +748,12 @@ static BKInt write_output (BKContextWrapper * ctx)
 	while (check_tracks_running (ctx)) {
 		BKContextGenerate (& ctx -> ctx, frames, numFrames);
 		output_chunk (frames, numFrames * numChannels);
+
+		if (flags & FLAG_HAS_END_TIME) {
+			if (BKTimeIsGreaterEqual (ctx -> ctx.currentTime, endTime)) {
+				break;
+			}
+		}
 	}
 
 	free (frames);
