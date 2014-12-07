@@ -865,16 +865,16 @@ int main (int argc, char * argv [])
 
 	if (flags & FLAG_NO_SOUND) {
 		if (write_output (& ctx) < 0) {
-			return 1;
+			return 2;
 		}
 	}
 	else {
 		if (runloop (& ctx) < 0) {
-			return -1;
+			return 3;
 		}
 	}
 
 	cleanup ();
 
-    return 0;
+	return 0;
 }
