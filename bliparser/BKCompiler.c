@@ -29,7 +29,7 @@
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
-#define BK_MAX_GROUPS          255
+#define BK_MAX_GROUP           255
 #define BK_MAX_SEQ_LENGTH      256
 #define BK_MAX_WAVEFORM_LENGTH  64
 #define BK_MAX_PATH           2048
@@ -1289,8 +1289,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= BK_MAX_GROUPS) {
-						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index > BK_MAX_GROUP) {
+						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1309,8 +1309,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= BK_MAX_GROUPS) {
-						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index > BK_MAX_GROUP) {
+						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1330,8 +1330,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= BK_MAX_GROUPS) {
-						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index > BK_MAX_GROUP) {
+						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
@@ -1385,8 +1385,8 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					index = atoix (cmd -> args [0].arg, -1);
 
-					if (index >= BK_MAX_GROUPS) {
-						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", BK_MAX_GROUPS, cmd -> lineno, cmd -> colno);
+					if (index > BK_MAX_GROUP) {
+						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
 						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
 						return 0;
 					}
