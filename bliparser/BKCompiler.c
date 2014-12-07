@@ -359,7 +359,13 @@ static void BKCompilerDispose (BKCompiler * compiler)
 
 static BKInt BKCompilerStrvalTableLookup (strval table [], BKSize size, char const * name, BKInt * outValue, BKUInt * outFlags)
 {
-	strval * item = bsearch (name, table, size, sizeof (strval), (void *) strvalcmp);
+	strval * item;
+
+	if (name == NULL) {
+		return 0;
+	}
+
+	item = bsearch (name, table, size, sizeof (strval), (void *) strvalcmp);
 
 	if (item == NULL) {
 		return 0;
