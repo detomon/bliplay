@@ -1021,6 +1021,8 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 				return 0;
 			}
 
+			values [0] = BKClamp(values[0], 1, 240);
+
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt16 (cmds, values [0]);
 
