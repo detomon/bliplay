@@ -564,8 +564,15 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 			default: {
-				print_error ("Unknown option %c near %s\n", opt, argv [longoptind]);
 				print_help ();
+
+				if (optind < argc) {
+					print_error ("Unknown option '%c' before %s\n", optopt, argv [optind]);
+				}
+				else {
+					print_error ("Unknown option '%c'\n", optopt);
+				}
+
 				exit (1);
 				break;
 			}
