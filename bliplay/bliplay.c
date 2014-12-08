@@ -662,22 +662,31 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		return -1;
 	}
 
-	if (stat (path.chars, & st) < 0) {
-		print_error ("No such file: %s\n", path.chars);
-		return -1;
+	// use stdin
+	if (BKStringIsEqualToChars (& path, "-")) {
+		inputFile = stdin;
 	}
-
-	if (S_ISDIR (st.st_mode)) {
-		if (BKStringAppendChars (& path, "/DATA.blip") < 0) {
+	// use path
+	else {
+		if (stat (path.chars, & st) < 0) {
+			print_error ("No such file: %s\n", path.chars);
 			return -1;
 		}
-	}
 
-	inputFile = fopen (path.chars, "rb");
+		if (S_ISDIR (st.st_mode)) {
+			if (BKStringAppendChars (& path, "/DATA.blip") < 0) {
+				return -1;
+			}
+		}
 
-	if (inputFile == NULL) {
-		print_error ("No such file: %s\n", path.chars);
-		return -1;
+		inputFile = fopen (path.chars, "rb");
+
+		if (inputFile == NULL) {
+			print_error ("No such file: %s\n", path.chars);
+			return -1;
+		}
+
+		set_color (stderr, 2);
 	}
 
 	loadPath = & ctx -> compiler.loadPath;
@@ -685,8 +694,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	if (BKStringGetDirname (& loadPath, & path) < 0) {
 		return -1;
 	}
-
-	set_color (stderr, 2);
 
 	if (BKContextWrapperLoadFile (ctx, inputFile, NULL) < 0) {
 		print_error ("Failed to load file: %s\n", path.chars);
