@@ -33,6 +33,7 @@
 #define BK_MAX_SEQ_LENGTH      256
 #define BK_MAX_WAVEFORM_LENGTH  64
 #define BK_MAX_PATH           2048
+#define BK_MAX_STEPTICKS       240
 
 enum BKCompilerFlag
 {
@@ -1021,7 +1022,7 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 				return 0;
 			}
 
-			values [0] = BKClamp(values[0], 1, 240);
+			values [0] = BKClamp(values[0], 1, BK_MAX_STEPTICKS);
 
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt16 (cmds, values [0]);
