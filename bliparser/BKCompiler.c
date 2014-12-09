@@ -1130,11 +1130,16 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 		// to:32
 		case BKIntrSampleRange: {
 			values [0] = atoix (cmd -> args [0].arg, 0);
-			args   [0] = atoix (cmd -> args [1].arg, 0);
+			values [1] = atoix (cmd -> args [1].arg, 0);
+
+			// set full range if empty
+			if (values [0] == 0 && values [1] == 0) {
+				values [1] = -1;
+			}
 
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt32 (cmds, values [0]);
-			BKByteBufferAppendInt32 (cmds, args [0]);
+			BKByteBufferAppendInt32 (cmds, values [1]);
 			break;
 		}
 		// command:8
