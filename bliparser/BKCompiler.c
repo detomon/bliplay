@@ -789,10 +789,9 @@ static BKInt BKCompilerTrimParentPartOfPath (BKString * filename)
 	return 0;
 }
 
-static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filename)
+static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filepath, BKString * filename)
 {
 	char cwd [BK_MAX_PATH];
-	BKString path;
 
 	if (BKCompilerTrimParentPartOfPath (filename) < 0) {
 		return -1;
@@ -808,28 +807,17 @@ static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filename)
 		}
 	}
 
-	if (BKStringInit (& path, compiler -> loadPath.chars, compiler -> loadPath.length) < 0) {
+	if (BKStringAppend (filepath, & compiler -> loadPath) < 0) {
 		return -1;
 	}
 
-	if (BKStringAppendChars (& path, "/") < 0) {
-		BKDispose (& path);
+	if (BKStringAppendChars (filepath, "/") < 0) {
 		return -1;
 	}
 
-
-	if (BKStringAppend (& path, filename) < 0) {
-		BKDispose (& path);
+	if (BKStringAppend (filepath, filename) < 0) {
 		return -1;
 	}
-
-
-	if (BKStringReplaceInRange (filename, & path, 0, filename -> length) < 0) {
-		BKDispose (& path);
-		return -1;
-	}
-
-	BKDispose (& path);
 
 	return 0;
 }
@@ -837,7 +825,7 @@ static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filename)
 static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const * cmd)
 {
 	BKInt value;
-	BKString filename;
+	BKString filename, filepath;
 	FILE * file;
 	BKData * sample = compiler -> currentSample;
 
@@ -855,25 +843,34 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 						return -1;
 					}
 
-					if (BKCompilerMakeFilePath (compiler, & filename) < 0) {
+					if (BKStringInit (& filepath, "", -1) < 0) {
+						BKDispose (& filename);
 						return -1;
 					}
 
-					file = fopen (filename.chars, "rb");
+					if (BKCompilerMakeFilePath (compiler, & filepath, & filename) < 0) {
+						return -1;
+					}
+
+					file = fopen (filepath.chars, "rb");
 
 					if (file == NULL) {
 						fprintf (stderr, "File '%s' not found on line %u:%u\n", filename.chars, cmd -> lineno, cmd -> colno);
 						BKDispose (& filename);
+						BKDispose (& filepath);
 						return -1;
 					}
 
 					if (BKDataLoadWAVE (sample, file) < 0) {
 						fprintf (stderr, "Failed to load WAVE file '%s' on line %u:%u\n", filename.chars, cmd -> lineno, cmd -> colno);
 						BKDispose (& filename);
+						BKDispose (& filepath);
+						fclose (file);
 						return -1;
 					}
 
 					BKDispose (& filename);
+					BKDispose (& filepath);
 					fclose (file);
 				}
 			}

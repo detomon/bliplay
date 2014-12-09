@@ -100,6 +100,7 @@ static char const * colorGreen  = "";
 
 struct option const options [] =
 {
+	{"load-dir",     required_argument, NULL, 'd'},
 	{"fast-forward", required_argument, NULL, 'f'},
 	{"help",         no_argument,       NULL, 'h'},
 	{"info",         required_argument, NULL, 'i'},
@@ -189,6 +190,9 @@ static void print_help (void)
 	print_version ();
 	printf (
 		"usage: %1$s [options] file\n"
+		"  %2$s-d, --load-dir path%3$s\n"
+		"      Sets the path for loading resources\n"
+		"      If not set, the parent directory of the input file is used\n"
 		"  %2$s-f, --fast-forward time%3$s\n"
 		"      Fast forward to time\n"
 		"      Time format: number[s|b|t|f]\n"
@@ -520,12 +524,19 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	BKUInt speed      = 0;
 	FILE * inputFile;
 	struct stat st;
-	BKString path, * loadPath;
+	BKString path, * loadPath = NULL;
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "f:hil:no:pr:vy", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:vy", options, & longoptind)) != -1) {
 		switch (opt) {
+			case 'd': {
+				if (BKStringAlloc (& loadPath, optarg, -1) < 0) {
+					print_error ("Allocation error\n");
+					return -1;
+				}
+				break;
+			}
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
 				strncpy (seekTimeString, optarg, 64);
@@ -696,10 +707,30 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		set_color (stderr, 2);
 	}
 
-	loadPath = & ctx -> compiler.loadPath;
+	// path set by option
+	if (loadPath) {
+		if (stat (loadPath -> chars, & st) < 0) {
+			print_error ("No such path for loading: %s\n", loadPath -> chars);
+			return -1;
+		}
 
-	if (BKStringGetDirname (& loadPath, & path) < 0) {
-		return -1;
+		if (!S_ISDIR (st.st_mode)) {
+			print_error ("Load path is not a directory: %s\n", loadPath -> chars);
+			return -1;
+		}
+
+		BKStringReplaceInRange (& ctx -> compiler.loadPath, loadPath, 0, ctx -> compiler.loadPath.length);
+		BKDispose (loadPath);
+
+		loadPath = & ctx -> compiler.loadPath;
+	}
+	// parent directory from input file
+	else {
+		loadPath = & ctx -> compiler.loadPath;
+
+		if (BKStringGetDirname (& loadPath, & path) < 0) {
+			return -1;
+		}
 	}
 
 	if (BKContextWrapperLoadFile (ctx, inputFile, NULL) < 0) {
