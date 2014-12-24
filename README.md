@@ -27,7 +27,7 @@ $ git submodule update
 
 First execute `autogen.sh` in the base directory to generate the build system:
 
-``Shell
+```Shell
 $ sh ./autogen.sh
 ```
 
