@@ -1728,26 +1728,17 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 
 	for (BKInt i = 0; i < compiler -> instruments.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler -> instruments, i, & instrument);
-
-		if (instrument) {
-			BKDispose (instrument);
-		}
+		BKDispose (instrument);
 	}
 
 	for (BKInt i = 0; i < compiler -> waveforms.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler -> waveforms, i, & data);
-
-		if (data) {
-			BKDispose (data);
-		}
+		BKDispose (data);
 	}
 
 	for (BKInt i = 0; i < compiler -> samples.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& compiler -> samples, i, & data);
-
-		if (data) {
-			BKDispose (data);
-		}
+		BKDispose (data);
 	}
 
 	BKArrayEmpty (& compiler -> instruments, keepData);
