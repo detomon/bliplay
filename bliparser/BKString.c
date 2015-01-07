@@ -38,7 +38,7 @@ static BKSize BKStrlen (char const * chars)
 	return chars ? strlen (chars) : 0;
 }
 
-static BKSize BKStrcmp (char const * chars1, BKSize length1, char const * chars2, BKSize length2)
+static BKInt BKStrcmp (char const * chars1, BKSize length1, char const * chars2, BKSize length2)
 {
 	if (length1 != length2) {
 		return 0;
@@ -315,9 +315,9 @@ BKInt BKStringReplaceCharsInRange (BKString * string, char const * replace, BKSi
 /**
  * Returns index of first char from right not in `stripChars`
  */
-static BKInt BKStringCharsStripRightChars (char const * chars, BKSize length, char const * strip, BKSize slength)
+static BKSize BKStringCharsStripRightChars (char const * chars, BKSize length, char const * strip, BKSize slength)
 {
-	BKInt i, j;
+	BKSize i, j;
 	BKInt found;
 
 	if (length == 0 || slength == 0) {
@@ -347,9 +347,9 @@ static BKInt BKStringCharsStripRightChars (char const * chars, BKSize length, ch
  *
  * If no character is found, -1 is returned
  */
-static BKInt BKStringCharsStripRightToChars (char const * chars, BKSize length, char const * nstrip, BKSize slength)
+static BKSize BKStringCharsStripRightToChars (char const * chars, BKSize length, char const * nstrip, BKSize slength)
 {
-	BKInt i, j;
+	BKSize i, j;
 	BKInt found;
 
 	if (length == 0 || slength == 0) {

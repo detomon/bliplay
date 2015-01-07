@@ -519,14 +519,14 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				}*/
 
 				if (interpreter -> stackPtr < interpreter -> stackEnd) {
-					* (interpreter -> stackPtr ++) = opcode - interpreter -> opcode;
+					* (interpreter -> stackPtr ++) = (BKInt) (opcode - interpreter -> opcode);
 					opcode = interpreter -> opcode + value0;
 				}
 
 				break;
 			}
 			case BKIntrSetRepeatStart: {
-				interpreter -> repeatStartAddr = opcode - interpreter -> opcode;
+				interpreter -> repeatStartAddr = (BKInt) (opcode - interpreter -> opcode);
 				break;
 			}
 			case BKIntrJump: {

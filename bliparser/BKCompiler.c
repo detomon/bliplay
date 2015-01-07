@@ -300,12 +300,6 @@ static void BKCompilerTrackDispose (BKCompilerTrack * track)
 	}
 }
 
-static void BKCompilerTrackClear (BKCompilerTrack * track, BKInt keepData)
-{
-	BKArrayEmpty (& track -> cmdGroups, keepData);
-	BKByteBufferEmpty (& track -> globalCmds, keepData);
-}
-
 BKInt BKCompilerInit (BKCompiler * compiler)
 {
 	if (BKObjectInit (compiler, & BKCompilerClass, sizeof (*compiler))) {
@@ -425,7 +419,7 @@ static BKByteBuffer * BKCompilerGetCmdGroupForIndex (BKCompiler * compiler, BKIn
 		}
 
 		if (index == -1) {
-			index  = track -> cmdGroups.length;
+			index  = (BKInt) track -> cmdGroups.length;
 			buffer = NULL;
 		}
 	}
@@ -478,7 +472,7 @@ static BKInstrument * BKCompilerGetInstrumentForIndex (BKCompiler * compiler, BK
 		}
 
 		if (index == -1) {
-			index = compiler -> instruments.length;
+			index = (BKInt) compiler -> instruments.length;
 			instrument = NULL;
 		}
 	}
@@ -527,7 +521,7 @@ static BKData * BKCompilerGetWaveformForIndex (BKCompiler * compiler, BKInt inde
 		}
 
 		if (index == -1) {
-			index = compiler -> waveforms.length;
+			index = (BKInt) compiler -> waveforms.length;
 			data = NULL;
 		}
 	}
@@ -576,7 +570,7 @@ static BKData * BKCompilerGetSampleForIndex (BKCompiler * compiler, BKInt index)
 		}
 
 		if (index == -1) {
-			index = compiler -> samples.length;
+			index = (BKInt) compiler -> samples.length;
 			data = NULL;
 		}
 	}
@@ -894,9 +888,9 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * cmd)
 {
 	char const      * arg0str;
-	BKInt             values [2];
+	BKInt             value, values [2];
 	BKInt             args [3];
-	BKInt             numArgs, value;
+	BKSize            numArgs;
 	BKInstruction     instr;
 	BKCompilerGroup * group = BKArrayGetLastItem (& compiler -> groupStack);
 	BKByteBuffer    * cmds  = group -> cmdBuffer;
@@ -1280,7 +1274,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 			if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, & flags) == 0) {
 				fprintf (stderr, "Ignoring unknown group '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
-				compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+				compiler -> ignoreGroupLevel = (BKInt) (compiler -> groupStack.length - 1);
 				return 0;
 			}
 
@@ -1294,7 +1288,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					if (index > BK_MAX_GROUP) {
 						fprintf (stderr, "Group number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
-						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						compiler -> ignoreGroupLevel = (BKInt) (compiler -> groupStack.length - 1);
 						return 0;
 					}
 
@@ -1314,7 +1308,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					if (index > BK_MAX_GROUP) {
 						fprintf (stderr, "Instrument number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
-						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						compiler -> ignoreGroupLevel = (BKInt) (compiler -> groupStack.length - 1);
 						return 0;
 					}
 
@@ -1335,7 +1329,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					if (index > BK_MAX_GROUP) {
 						fprintf (stderr, "Sample number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
-						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						compiler -> ignoreGroupLevel = (BKInt) (compiler -> groupStack.length - 1);
 						return 0;
 					}
 
@@ -1390,7 +1384,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					if (index > BK_MAX_GROUP) {
 						fprintf (stderr, "Waveform number is limited to %u on line %u:%u\n", BK_MAX_GROUP, cmd -> lineno, cmd -> colno);
-						compiler -> ignoreGroupLevel = compiler -> groupStack.length - 1;
+						compiler -> ignoreGroupLevel = (BKInt) (compiler -> groupStack.length - 1);
 						return 0;
 					}
 
@@ -1569,7 +1563,7 @@ static BKInt BKCompilerTrackLink (BKCompilerTrack * track)
 {
 	BKArray groupOffsets;
 	BKByteBuffer * group;
-	BKInt codeOffset, offset;
+	BKSize codeOffset, offset;
 
 	if (BKArrayInit (& groupOffsets, sizeof (BKInt), track -> cmdGroups.length) < 0) {
 		return -1;
