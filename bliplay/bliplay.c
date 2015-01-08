@@ -742,7 +742,9 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	set_color (stderr, 0);
 
-	fclose (inputFile);
+	if (inputFile != stdin) {
+		fclose (inputFile);
+	}
 
 	if (flags & FLAG_HAS_SEEK_TIME) {
 		speed = ctx -> stepTicks;
