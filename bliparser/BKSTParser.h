@@ -33,7 +33,8 @@ typedef struct BKSTCmd    BKSTCmd;
 
 enum
 {
-	BKSTParserFlagGroup = 1 << 0,
+	BKSTParserFlagGroup        = 1 << 0,
+	BKSTParserFlagHasLastToken = 1 << 1,
 };
 
 struct BKSTParser
@@ -43,6 +44,7 @@ struct BKSTParser
 	BKSTArg     * argBuf;
 	BKSTArg     * argBufPtr;
 	BKSize        argBufCapacity;
+	BKSTToken     lastToken;
 };
 
 struct BKSTArg

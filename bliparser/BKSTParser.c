@@ -130,6 +130,29 @@ static void BKSTParserArgsClear (BKSTParser * parser)
 	parser -> argBufPtr = parser -> argBuf;
 }
 
+/**
+ * Save token
+ *
+ * Does not preserve the arguments!
+ */
+static void BKSTParserPushToken (BKSTParser * parser, BKSTToken * token)
+{
+	parser -> object.flags |= BKSTParserFlagHasLastToken;
+	parser -> lastToken = *token;
+}
+
+static BKSTTokenType BKSTParserNextToken (BKSTParser * parser, BKSTToken * outToken)
+{
+	if (parser -> object.flags & BKSTParserFlagHasLastToken) {
+		*outToken = parser -> lastToken;
+		parser -> object.flags &= ~BKSTParserFlagHasLastToken;
+
+		return outToken -> type;
+	}
+
+	return BKSTTokenizerNextToken (& parser -> tokenizer, outToken);
+}
+
 BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 {
 	BKInt flag = 1, flags = 0;
@@ -143,7 +166,7 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 	outCmd -> args = parser -> argBuf;
 
 	do  {
-		type = BKSTTokenizerNextToken (& parser -> tokenizer, & token);
+		type = BKSTParserNextToken (parser, & token);
 
 		if ((int) type == -1) {
 			return -1;
@@ -158,10 +181,24 @@ BKSTTokenType BKSTParserNextCommand (BKSTParser * parser, BKSTCmd * outCmd)
 				break;
 			}
 			case BKSTTokenGrpBegin: {
+				if (parser -> argBufPtr > parser -> argBuf) {
+					BKSTParserPushToken (parser, & token);
+					type = BKSTTokenValue;
+					flag = 0;
+					break;
+				}
+
 				flags |= BKSTParserFlagGroup;
 				break;
 			}
 			case BKSTTokenGrpEnd: {
+				if (parser -> argBufPtr > parser -> argBuf) {
+					BKSTParserPushToken (parser, & token);
+					type = BKSTTokenValue;
+					flag = 0;
+					break;
+				}
+
 				lineno = token.lineno;
 				colno  = token.colno;
 				flag   = 0;

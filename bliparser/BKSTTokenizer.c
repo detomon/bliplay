@@ -401,9 +401,11 @@ BKSTTokenType BKSTTokenizerNextToken (BKSTTokenizer * tokenizer, BKSTToken * out
 	}
 	while (token == BKSTTokenNone);
 
-	outToken -> size = tokenizer -> readBufPtr - readPtr;
+	outToken -> type   = token;
+	outToken -> size   = tokenizer -> readBufPtr - readPtr;
 	outToken -> lineno = lineno + 1;
-	outToken -> colno = colno + 1;
+	outToken -> colno  = colno + 1;
+
 	BKSTTokenizerReadBufferPutChar (tokenizer, '\0');
 
 	return token;
