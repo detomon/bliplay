@@ -47,6 +47,7 @@ struct BKTrackWrapper
 	BKDivider     divider;
 	BKByteBuffer  opcode;
 	BKEnum        waveform;
+	BKInt         slot;
 };
 
 /**

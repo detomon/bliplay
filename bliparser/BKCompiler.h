@@ -39,6 +39,7 @@ struct BKCompilerTrack
 	BKArray      cmdGroups;
 	BKByteBuffer globalCmds;
 	BKEnum       waveform;
+	BKInt        slot;
 };
 
 struct BKCompiler

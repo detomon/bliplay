@@ -240,6 +240,8 @@ static BKInt BKCompilerTrackInit (BKCompilerTrack * track)
 		return -1;
 	}
 
+	track -> slot = -1;
+
 	return 0;
 }
 
@@ -1345,6 +1347,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 				}
 				case BKIntrTrackDef: {
 					BKInt waveform = BK_SQUARE;
+					BKInt slot     = -1;
 
 					if (BKCompilerTrackAlloc (& track) < 0) {
 						return -1;
@@ -1359,6 +1362,10 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 
 					if (cmd -> numArgs > 0) {
 						args [0] = cmd -> args [0].arg;
+
+						if (cmd -> numArgs > 1) {
+							slot = atoix (cmd -> args [1].arg, 0);
+						}
 
 						// use custom waveform
 						if (BKCompilerStrvalTableLookup (waveformNames, NUM_WAVEFORM_NAMES, args [0], & waveform, NULL) == 0) {
@@ -1375,6 +1382,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 					BKByteBufferAppendInt16 (& track -> globalCmds, compiler -> stepTicks);
 
 					track -> waveform = waveform;
+					track -> slot     = slot;
 
 					break;
 				}

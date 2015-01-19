@@ -158,6 +158,7 @@ static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTr
 	track -> interpreter.waveforms     = & wrapper -> waveforms;
 	track -> interpreter.samples       = & wrapper -> samples;
 	track -> waveform                  = compilerTrack -> waveform;
+	track -> slot                      = compilerTrack -> slot;
 
 	if (BKTrackAttach (& track -> track, & wrapper -> ctx) < 0) {
 		return -1;
