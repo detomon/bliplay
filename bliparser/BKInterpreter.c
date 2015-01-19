@@ -333,6 +333,11 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrArpeggioSpeed: {
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
+
+				if (value0 <= 0) {
+					value0 = BK_DEFAULT_ARPEGGIO_DIVIDER;
+				}
+
 				BKSetAttr (track, BK_ARPEGGIO_DIVIDER, value0);
 				break;
 			}
