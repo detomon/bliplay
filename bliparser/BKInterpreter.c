@@ -328,7 +328,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					BKSetPtr (track, BK_ARPEGGIO, arpeggio, sizeof (arpeggio));
 				}
 
-				opcode += 4 * value0;
+				opcode += value0 * sizeof (BKInt);
 				break;
 			}
 			case BKIntrArpeggioSpeed: {
