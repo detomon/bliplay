@@ -423,10 +423,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 				value0 = (int16_t) BKInterpreterOpcodeReadInt16 ((void *) & opcode);
 
-				if (value0 > -1) {
-					if (value0 < interpreter -> instruments -> length) {
-						instr = ((BKInstrument **) interpreter -> instruments -> items)[value0];
-					}
+				if (value0 >= 0 && value0 < interpreter -> instruments -> length) {
+					instr = ((BKInstrument **) interpreter -> instruments -> items)[value0];
 				}
 
 				BKSetPtr (track, BK_INSTRUMENT, instr, sizeof (void *));
@@ -441,7 +439,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				if (value0 & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
 					value0 &= ~BK_INTR_CUSTOM_WAVEFORM_FLAG;
 
-					if (value0 < interpreter -> waveforms -> length) {
+					if (value0 >= 0 && value0 < interpreter -> waveforms -> length) {
 						waveform = ((BKData **) interpreter -> waveforms -> items)[value0];
 						value0 = BK_CUSTOM;
 					}
@@ -482,10 +480,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
 
-				if (value0 > -1) {
-					if (value0 < interpreter -> samples -> length) {
-						sample = ((BKData **) interpreter -> samples -> items)[value0];
-					}
+				if (value0 >= 0 && value0 < interpreter -> samples -> length) {
+					sample = ((BKData **) interpreter -> samples -> items)[value0];
 				}
 
 				BKSetPtr (track, BK_SAMPLE, sample, sizeof (void *));
