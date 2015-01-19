@@ -169,7 +169,7 @@ BKInt BKInterpreterInit (BKInterpreter * interpreter)
 static uint8_t BKInterpreterOpcodeReadInt8 (void const ** opcode)
 {
 	uint16_t i = * (uint8_t *) (* opcode);
-	(* opcode) += 1;
+	(* opcode) += sizeof (uint8_t);
 
 	return i;
 }
@@ -177,7 +177,7 @@ static uint8_t BKInterpreterOpcodeReadInt8 (void const ** opcode)
 static uint16_t BKInterpreterOpcodeReadInt16 (void const ** opcode)
 {
 	uint16_t i = * (uint16_t *) (* opcode);
-	(* opcode) += 2;
+	(* opcode) += sizeof (uint16_t);
 
 	return i;
 }
@@ -185,7 +185,7 @@ static uint16_t BKInterpreterOpcodeReadInt16 (void const ** opcode)
 static uint32_t BKInterpreterOpcodeReadInt32 (void const ** opcode)
 {
 	uint32_t i = * (uint32_t *) (* opcode);
-	(* opcode) += 4;
+	(* opcode) += sizeof (uint32_t);
 
 	return i;
 }
@@ -400,7 +400,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			case BKIntrEffect: {
 				value0 = BKInterpreterOpcodeReadInt16 ((void *) & opcode);
 				BKTrackSetEffect (track, value0, opcode, sizeof (BKInt [3]));
-				opcode += 4 * 3;
+				opcode += 3 * sizeof (BKInt);
 				break;
 			}
 			case BKIntrDutyCycle: {
@@ -493,7 +493,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 			}
 			case BKIntrSampleRange: {
 				BKSetPtr (track, BK_SAMPLE_RANGE, opcode, sizeof (BKInt [2]));
-				opcode += 4 * 2;
+				opcode += 2 * sizeof (BKInt);
 				break;
 			}
 			case BKIntrReturn: {
