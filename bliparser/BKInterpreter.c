@@ -449,13 +449,6 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 					}
 				}
 
-				if (value0 == BK_CUSTOM) {
-					BKSetPtr (track, BK_WAVEFORM, waveform, sizeof (void *));
-				}
-				else {
-					BKSetAttr (track, BK_WAVEFORM, value0);
-				}
-
 				switch (value0) {
 					case BK_SQUARE:
 					case BK_NOISE:
@@ -469,6 +462,19 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 						masterVolume = BK_MAX_VOLUME * 0.30;
 						break;
 					}
+					// special waveform type
+					case BK_SAMPLE: {
+						masterVolume = BK_MAX_VOLUME * 0.30;
+						value0 = BK_SQUARE;
+						break;
+					}
+				}
+
+				if (value0 == BK_CUSTOM) {
+					BKSetPtr (track, BK_WAVEFORM, waveform, sizeof (void *));
+				}
+				else {
+					BKSetAttr (track, BK_WAVEFORM, value0);
 				}
 
 				BKSetAttr (track, BK_MASTER_VOLUME, masterVolume);

@@ -159,6 +159,7 @@ static strval effectNames [] =
 static strval waveformNames [] =
 {
 	{"noise",    BK_NOISE},
+	{"sample",   BK_SAMPLE},
 	{"sawtooth", BK_SAWTOOTH},
 	{"sine",     BK_SINE},
 	{"square",   BK_SQUARE},

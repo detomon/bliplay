@@ -481,6 +481,7 @@ static void print_track_info (BKContextWrapper * ctx)
 				case BK_NOISE:    waveformName = "noise";    break;
 				case BK_SAWTOOTH: waveformName = "sawtooth"; break;
 				case BK_SINE:     waveformName = "sine";     break;
+				case BK_SAMPLE:   waveformName = "sample";   break;
 				default:          waveformName = "unknown";  break;
 			}
 
