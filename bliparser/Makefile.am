@@ -1,5 +1,7 @@
 AM_CFLAGS = @BK_STD_CFLAGS@ -I$(srcdir)/../BlipKit/src -L$(srcdir)/../BlipKit/src
 
+SUBDIRS = amiga-mod
+
 noinst_LIBRARIES = libbliparser.a
 
 libbliparser_a_SOURCES = \

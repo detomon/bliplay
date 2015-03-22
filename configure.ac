@@ -55,6 +55,7 @@ AC_CONFIG_FILES([
   Makefile
   bliparser/Makefile
   bliplay/Makefile
+  bliparser/amiga-mod/Makefile
 ])
 
 AC_CONFIG_SUBDIRS([BlipKit])
