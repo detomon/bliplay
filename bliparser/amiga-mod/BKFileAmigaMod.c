@@ -30,7 +30,7 @@
  * Volume values used for lookup
  * Generated with `volume_values.c`
  */
-static const uint16_t volumeValues [64 + 1] =
+static BKFrame const volumeValues [64 + 1] =
 {
 	    0,     0,     0,     0,     0,     0,     0,     1,
 	    2,     3,     6,     9,    14,    21,    29,    41,
@@ -42,13 +42,6 @@ static const uint16_t volumeValues [64 + 1] =
 	17716, 19220, 20823, 22529, 24342, 26267, 28309, 30474,
 	32767,
 };
-
-/**
- * Volume calculation (see mod-spec.txt:352)
- * volume: 0 - 64; muted if 0 (division by 0)
- *
- * 10 ^ (0.1 * (20 * log10(volume / 64))) * BK_MAX_VOLUME
- */
 
 extern BKClass BKFileAmigaModClass;
 
@@ -118,7 +111,11 @@ BKInt BKFileAmigaModAlloc (BKFileAmigaMod ** outMod, FILE * file)
 
 static void BKFileAmigaModDispose (BKFileAmigaMod * mod)
 {
-	return;
+	if (mod -> patterns) {
+		free (mod -> patterns);
+	}
+
+	BKDispose (& mod -> sample);
 }
 
 static BKInt BKFileAmigaModGetMaxNumPatterns (BKFileAmigaMod * mod)
@@ -132,27 +129,6 @@ static BKInt BKFileAmigaModGetMaxNumPatterns (BKFileAmigaMod * mod)
 	return maxPattern + 1;
 }
 
-static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
-{
-	uint8_t pattern [1024];
-	size_t size;
-	uint8_t * ptr;
-
-	for (int i = 0; i < mod -> numPatterns; i ++) {
-		size = fread (pattern, sizeof (uint8_t), sizeof (pattern) / sizeof (uint8_t), mod -> file);
-
-		if (size < sizeof (pattern)) {
-			return BK_FILE_ERROR;
-		}
-
-		// ...
-
-		ptr = pattern;
-	}
-
-	return 0;
-}
-
 static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 {
 	uint8_t header [1084];
@@ -160,6 +136,7 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 	uint8_t * ptr;
 	BKInt isBigEndian = BKSystemIsBigEndian ();
 	BKFileAmigaModSample * sample;
+	BKInt sampleOffset = 0;
 
 	// read whole header at once
 	size = fread (header, sizeof (uint8_t), sizeof (header) / sizeof (uint8_t), mod -> file);
@@ -176,7 +153,8 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 
 	for (int i = 0; i < BK_AMIGA_MOD_NUM_SAMPLES; i ++) {
 		strncpy (sample -> sampleName, (void *) ptr, BK_AMIGA_MOD_SAMP_NAME_MAX_LENGTH);
-		sample -> sampleOffset = *(uint16_t *) ptr;
+		ptr += 22;
+		sample -> sampleLength = *(uint16_t *) ptr;
 		ptr += 2;
 		sample -> fineTune = (*(uint8_t *) ptr) & 0xF;
 		ptr ++;
@@ -188,15 +166,18 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 		ptr += 2;
 
 		if (!isBigEndian) {
-			sample -> sampleOffset = BK_REVERSE16 (sample -> sampleOffset);
+			sample -> sampleLength = BK_REVERSE16 (sample -> sampleLength);
 			sample -> repeatStart  = BK_REVERSE16 (sample -> repeatStart);
 			sample -> repeatLength = BK_REVERSE16 (sample -> repeatLength);
 		}
 
 		sample -> volume = volumeValues [sample -> volume];
-		sample -> sampleOffset *= 2;
-		sample -> repeatStart *= 2;
+		sample -> sampleLength *= 2;
+		sample -> repeatStart  *= 2;
 		sample -> repeatLength *= 2;
+
+		sample -> sampleOffset = sampleOffset;
+		sampleOffset += sample -> sampleLength;
 
 		sample ++;
 	}
@@ -211,6 +192,76 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 	memcpy (mod -> identifier, ptr, 4);
 
 	mod -> numPatterns = BKFileAmigaModGetMaxNumPatterns (mod);
+
+	return 0;
+}
+
+static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
+{
+	uint8_t patternData [1024];
+	uint32_t const * channels;
+	uint8_t const * channel;
+	BKFileAmigaModPattern * pattern;
+	BKFileAmigaModNote * row;
+	size_t size;
+	uint8_t * ptr;
+
+	mod -> patterns = malloc (sizeof (BKFileAmigaModPattern) * mod -> numPatterns);
+
+	if (mod -> patterns == NULL) {
+		return BK_ALLOCATION_ERROR;
+	}
+
+	for (int i = 0; i < mod -> numPatterns; i ++) {
+		size = fread (patternData, sizeof (uint8_t), sizeof (patternData) / sizeof (uint8_t), mod -> file);
+
+		if (size < sizeof (pattern)) {
+			return BK_FILE_ERROR;
+		}
+
+		ptr = patternData;
+		pattern = & mod -> patterns [i];
+
+		for (int j = 0; j < BK_AMIGA_MOD_NUM_ROWS; j ++) {
+			row      = pattern [i].rows [j];
+			channels = (void *) ptr;
+
+			for (int k = 0; k < BK_AMIGA_MOD_NUM_CHANNELS; k ++) {
+				channel = (void *) & channels [k];
+				row [k].sample = (channel [0] & 0xF0) | ((channel [2] & 0xF0) >> 4);
+				row [k].note   = ((channel [0] & 0x0F) << 16) | channel [1];
+				row [k].effect = ((channel [2] & 0x0F) << 8) | channel [3];
+			}
+
+			ptr += 16;
+		}
+	}
+
+	return 0;
+}
+
+static BKInt BKFileAmigaModMakeTracks (BKFileAmigaMod * mod)
+{
+	// ...
+
+	return 0;
+}
+
+static BKInt BKFileAmigaModReadSample (BKFileAmigaMod * mod)
+{
+	BKInt res;
+
+	res = BKDataInit (& mod -> sample);
+
+	if (res < 0) {
+		return res;
+	}
+
+	res = BKDataLoadRaw (& mod -> sample, mod -> file, 1, BK_8_BIT_SIGNED);
+
+	if (res < 0) {
+		return res;
+	}
 
 	return 0;
 }
@@ -231,7 +282,17 @@ BKInt BKFileAmigaModRead (BKFileAmigaMod * mod)
 		return res;
 	}
 
-	// ...
+	res = BKFileAmigaModReadSample (mod);
+
+	if (res < 0) {
+		return res;
+	}
+
+	res = BKFileAmigaModMakeTracks (mod);
+
+	if (res < 0) {
+		return res;
+	}
 
 	return 0;
 }

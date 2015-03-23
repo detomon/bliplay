@@ -50,7 +50,7 @@ int main (int argc, char const * argv [])
 		" * Volume values used for lookup\n"
 		" * Generated with `%s`\n"
 		" */\n"
-		"static const uint16_t volumeValues [%d + 1] =\n{\n\t",
+		"static BKFrame const volumeValues [%d + 1] =\n{\n\t",
 		__FILE__, BK_AMIGA_NUM_VOLUME_STEPS
 	);
 

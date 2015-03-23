@@ -43,6 +43,7 @@ typedef struct BKFileAmigaMod        BKFileAmigaMod;
 struct BKFileAmigaModSample
 {
 	BKInt    sampleOffset;
+	BKInt    sampleLength;
 	BKInt    repeatStart;
 	BKInt    repeatLength;
 	uint16_t volume;
@@ -59,7 +60,7 @@ struct BKFileAmigaModNote
 
 struct BKFileAmigaModPattern
 {
-	BKFileAmigaModNote row [BK_AMIGA_MOD_NUM_CHANNELS][BK_AMIGA_MOD_NUM_ROWS];
+	BKFileAmigaModNote rows [BK_AMIGA_MOD_NUM_ROWS][BK_AMIGA_MOD_NUM_CHANNELS];
 };
 
 struct BKFileAmigaMod
