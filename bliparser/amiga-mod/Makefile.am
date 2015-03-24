@@ -8,22 +8,19 @@ libamigamod_a_SOURCES = \
 dist_noinst_HEADERS = \
 	BKFileAmigaMod.h
 
-libamigamod_a_CFLAGS = $(AM_CFLAGS)
-libamigamod_a_LIBADD = ../libbliparser.a
-
 EXTRA_PROGRAMS = volume_values test_load
 
 volume_values_SOURCES = \
 	volume_values.c
 
 volume_values_CFLAGS = $(AM_CFLAGS)
-volume_values_LDADD = -lm -lblipkit @SDL_CFLAGS@
+volume_values_LDADD = -lm $(srcdir)/../../BlipKit/src/libblipkit.a @SDL_CFLAGS@
 
 test_load_SOURCES = \
 	test_load.c
 
 test_load_CFLAGS = $(AM_CFLAGS)
-test_load_LDADD = -lm ../../BlipKit/src/libblipkit.a ../libbliparser.a libamigamod.a @SDL_CFLAGS@
+test_load_LDADD = -lm $(srcdir)/../../BlipKit/src/libblipkit.a ../libbliparser.a libamigamod.a @SDL_CFLAGS@
 
 pkginclude_HEADERS = $(HEADER_LIST)
 

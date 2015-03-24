@@ -9,7 +9,7 @@ bliplay_SOURCES = \
 # But some newer GCC versions need to have the linkings at the end
 
 bliplay_CFLAGS = $(AM_CFLAGS) -DPROGRAM_NAME=\"bliplay\"
-bliplay_LDADD = -lm ../bliparser/libbliparser.a ../bliparser/amiga-mod/libamigamod.a ../BlipKit/src/libblipkit.a @SDL_CFLAGS@
+bliplay_LDADD = -lm ../BlipKit/src/libblipkit.a ../bliparser/libbliparser.a ../bliparser/amiga-mod/libamigamod.a @SDL_CFLAGS@
 
 EXTRA_DIST = \
 	examples/template.blip \
