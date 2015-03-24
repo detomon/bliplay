@@ -240,7 +240,7 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 	return 0;
 }
 
-static BKInt BKFileAmigaModMakeTracks (BKFileAmigaMod * mod)
+static BKInt BKFileAmigaModCompile (BKFileAmigaMod * mod)
 {
 	// ...
 
@@ -288,7 +288,7 @@ BKInt BKFileAmigaModRead (BKFileAmigaMod * mod)
 		return res;
 	}
 
-	res = BKFileAmigaModMakeTracks (mod);
+	res = BKFileAmigaModCompile (mod);
 
 	if (res < 0) {
 		return res;
