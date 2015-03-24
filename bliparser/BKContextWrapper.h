@@ -64,3 +64,11 @@ extern BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * 
  * Load data to compile from file
  */
 extern BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char const * loadPath);
+
+/**
+ * Create tracks from compiler data
+ *
+ * This function is invoked by `BKContextWrapperLoadData` and
+ * `BKContextWrapperLoadFile` automatically
+ */
+extern BKInt BKContextWrapperFinish (BKContextWrapper * wrapper);

@@ -171,7 +171,7 @@ static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTr
 	return 0;
 }
 
-static BKInt BKContextWrapperMakeTracks (BKContextWrapper * wrapper)
+BKInt BKContextWrapperFinish (BKContextWrapper * wrapper)
 {
 	BKCompilerTrack * compilerTrack;
 
@@ -229,7 +229,7 @@ BKInt BKContextWrapperLoadData (BKContextWrapper * wrapper, char const * data, s
 		}
 	}
 
-	if (BKContextWrapperMakeTracks (wrapper) < 0) {
+	if (BKContextWrapperFinish (wrapper) < 0) {
 		return -1;
 	}
 
@@ -257,7 +257,7 @@ BKInt BKContextWrapperLoadFile (BKContextWrapper * wrapper, FILE * file, char co
 		}
 	}
 
-	if (BKContextWrapperMakeTracks (wrapper) < 0) {
+	if (BKContextWrapperFinish (wrapper) < 0) {
 		return -1;
 	}
 
