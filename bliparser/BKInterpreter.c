@@ -503,6 +503,11 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				opcode += 2 * sizeof (BKInt);
 				break;
 			}
+			case BKIntrSampleSustainRange: {
+				BKSetPtr (track, BK_SAMPLE_SUSTAIN_RANGE, opcode, sizeof (BKInt [2]));
+				opcode += 2 * sizeof (BKInt);
+				break;
+			}
 			case BKIntrReturn: {
 				if (interpreter -> stackPtr > interpreter -> stack) {
 					value0 = * (-- interpreter -> stackPtr);

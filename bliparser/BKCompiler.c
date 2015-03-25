@@ -114,6 +114,7 @@ static strval cmdNames [] =
 	{"dc",        BKIntrDutyCycle},
 	{"dn",        BKIntrSampleRange},
 	{"dr",        BKIntrSampleRepeat},
+	{"ds",        BKIntrSampleSustainRange},
 	{"e",         BKIntrEffect},
 	{"g",         BKIntrGroupJump},
 	{"grp",       BKIntrGroupDef, BKCompilerFlagOpenGroup},
@@ -1133,6 +1134,18 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 			if (values [0] == 0 && values [1] == 0) {
 				values [1] = -1;
 			}
+
+			BKByteBufferAppendInt8 (cmds, instr);
+			BKByteBufferAppendInt32 (cmds, values [0]);
+			BKByteBufferAppendInt32 (cmds, values [1]);
+			break;
+		}
+		// command:8
+		// from:32
+		// to:32
+		case BKIntrSampleSustainRange: {
+			values [0] = atoix (cmd -> args [0].arg, 0);
+			values [1] = atoix (cmd -> args [1].arg, 0);
 
 			BKByteBufferAppendInt8 (cmds, instr);
 			BKByteBufferAppendInt32 (cmds, values [0]);
