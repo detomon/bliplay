@@ -60,6 +60,7 @@ enum BKCompilerMiscCmds
 	BKCompilerMiscLoad,
 	BKCompilerMiscRaw,
 	BKCompilerMiscPitch,
+	BKCompilerMiscSampleSustainRange,
 };
 
 /**
@@ -188,6 +189,7 @@ static strval envelopeNames [] =
  */
 static strval miscNames [] =
 {
+	{"ds",   BKCompilerMiscSampleSustainRange},
 	{"load", BKCompilerMiscLoad},
 	{"pt",   BKCompilerMiscPitch},
 	{"raw",  BKCompilerMiscRaw},
@@ -823,6 +825,7 @@ static BKInt BKCompilerMakeFilePath (BKCompiler * compiler, BKString * filepath,
 static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const * cmd)
 {
 	BKInt value;
+	BKInt values [2];
 	BKString filename, filepath;
 	FILE * file;
 	BKData * sample = compiler -> currentSample;
@@ -879,6 +882,13 @@ static BKInt BKCompilerPushCommandSample (BKCompiler * compiler, BKSTCmd const *
 			if (cmd -> numArgs >= 1) {
 				BKSetAttr (sample, BK_SAMPLE_PITCH, atoix (cmd -> args [0].arg, 0) * PITCH_UNIT);
 			}
+			break;
+		}
+		case BKCompilerMiscSampleSustainRange: {
+			values [0] = atoix (cmd -> args [0].arg, 0);
+			values [1] = atoix (cmd -> args [1].arg, 0);
+
+			BKSetPtr (sample, BK_SAMPLE_SUSTAIN_RANGE, values, sizeof (BKInt [2]));
 			break;
 		}
 		case BKCompilerMiscRaw: {

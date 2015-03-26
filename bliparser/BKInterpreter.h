@@ -40,7 +40,7 @@ typedef enum BKInstruction   BKInstruction;
 
 enum BKInstruction
 {
-	BKIntrArpeggio       = 0,
+	BKIntrArpeggio           = 0,
 	BKIntrArpeggioSpeed      = 1,
 	BKIntrAttack             = 2,
 	BKIntrAttackTicks        = 3,
