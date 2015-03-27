@@ -152,7 +152,7 @@ static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTr
 	memset (& compilerTrack -> globalCmds, 0, sizeof (compilerTrack -> globalCmds));
 
 	track -> interpreter.stepTickCount = wrapper -> compiler.stepTicks;
-	track -> interpreter.opcode        = track -> opcode.data;
+	track -> interpreter.opcode        = track -> opcode.firstSegment -> data;
 	track -> interpreter.opcodePtr     = track -> interpreter.opcode;
 	track -> interpreter.instruments   = & wrapper -> instruments;
 	track -> interpreter.waveforms     = & wrapper -> waveforms;
