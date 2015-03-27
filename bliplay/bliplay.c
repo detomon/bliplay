@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014 Simon Schoenenberger
+ * Copyright (c) 2015 Simon Schoenenberger
  * http://blipkit.monoxid.net/
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -47,7 +47,7 @@
 #include "BKWaveFileWriter.h"
 #include "BKString.h"
 
-#define BK_BLIPLAY_VERSION "2.2.1"
+#define BK_BLIPLAY_VERSION "2.3"
 
 #ifndef FD_COPY
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))

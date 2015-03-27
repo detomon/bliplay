@@ -1,3 +1,15 @@
+Changes in bliplay 2.3:
+  Release date: 2015-03-27
+
+* Use new BlipKit version 0.12
+* Fixed some compiler warnings
+* Fixed parser issues
+* Reset arpeggio speed to default with 'as:0'
+* Check for valid ranges when selecting instrument, waveforms or samples
+* Added sample type 'sample' to use higher master volume
+* Added optional track slot number 'track:0'
+* Added new sample range command 'ds'
+
 Changes in bliplay 2.2.1:
   Release date: 2014-12-24
 
