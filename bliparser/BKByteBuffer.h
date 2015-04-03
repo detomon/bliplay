@@ -42,6 +42,7 @@ typedef struct BKByteBufferSegment BKByteBufferSegment;
 
 struct BKByteBuffer
 {
+	BKObject              object;
 	unsigned              info;         //
 	BKUSize               capacity;     // Capacity of active segments
 	BKUSize               readSize;     // Capacity of read segments
