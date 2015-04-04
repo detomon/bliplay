@@ -66,14 +66,17 @@ enum OUTPUT_TYPE
 
 enum FLAG
 {
-	FLAG_HAS_SEEK_TIME  = 1 << 0,
-	FLAG_HAS_END_TIME   = 1 << 1,
-	FLAG_PRINT_NO_TIME  = 1 << 2,
-	FLAG_NO_SOUND       = 1 << 3,
-	FLAG_INFO           = 1 << 4,
-	FLAG_INFO_EXPLICITE = 1 << 5,
-	FLAG_YES            = 1 << 6,
-	FLAG_TIMING_DATA    = 1 << 7,
+	FLAG_HAS_SEEK_TIME     = 1 << 0,
+	FLAG_HAS_END_TIME      = 1 << 1,
+	FLAG_PRINT_NO_TIME     = 1 << 2,
+	FLAG_NO_SOUND          = 1 << 3,
+	FLAG_INFO              = 1 << 4,
+	FLAG_INFO_EXPLICITE    = 1 << 5,
+	FLAG_YES               = 1 << 6,
+	FLAG_TIMING_UNIT_SHIFT = 7,
+	FLAG_TIMING_UNIT_SECS  = 1 << 7,
+	FLAG_TIMING_UNIT_TICKS = 2 << 7,
+	FLAG_TIMING_UNIT_MASK  = 3 << 7, // next flag is at 9
 };
 
 static BKInt            istty;
@@ -110,9 +113,9 @@ struct option const options [] =
 	{"no-time",      no_argument,       NULL, 'n'},
 	{"output",       required_argument, NULL, 'o'},
 	{"samplerate",   required_argument, NULL, 'r'},
+	{"timing-data",  required_argument, NULL, 't'},
 	{"version",      no_argument,       NULL, 'v'},
 	{"yes",          no_argument,       NULL, 'y'},
-	{"timing-data",  no_argument,       NULL, 't'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -219,8 +222,9 @@ static void print_help (void)
 		"  %2$s-r, --samplerate value%3$s\n"
 		"      Set sample rate of output (default: 44100)\n"
 		"      Range: 16000 - 96000\n"
-		"  %2$s-t, --timing-data%3$s\n"
+		"  %2$s-t, --timing-data unit[s|t]%3$s\n"
 		"      Write timing data to [output file].txt\n"
+		"      s: seconds, t: ticks\n"
 		"  %2$s-y, --yes%3$s\n"
 		"      Overwrite output file without asking\n",
 		PROGRAM_NAME, colorYellow, colorNormal
@@ -556,7 +560,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:tvy", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:t:vy", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'd': {
 				if (BKStringAlloc (& loadPath, optarg, -1) < 0) {
@@ -599,7 +603,17 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 			case 't': {
-				flags |= FLAG_TIMING_DATA;
+				if (strcmp (optarg, "s") == 0) {
+					flags |= FLAG_TIMING_UNIT_SECS;
+				}
+				else if (strcmp (optarg, "t") == 0) {
+					flags |= FLAG_TIMING_UNIT_TICKS;
+				}
+				else {
+					print_error ("Unknown timing unit '%s'; use 's' or 't'\n", optarg);
+					return -1;
+				}
+
 				break;
 			}
 			case 'y': {
@@ -692,7 +706,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 #endif
 
-	opts = BKBitCond2 (BKTrackWrapperOptionTimingData, flags & FLAG_TIMING_DATA);
+	opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTrackWrapperOptionTimingShift;
 
 	if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
 		print_error ("Could not initialize context\n");
@@ -767,7 +781,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 
-	if ((flags & FLAG_TIMING_DATA) && outputFilename) {
+	if ((flags & FLAG_TIMING_UNIT_MASK) && outputFilename) {
 		BKString path;
 
 		if (BKStringInit (& path, outputFilename, -1) < 0) {

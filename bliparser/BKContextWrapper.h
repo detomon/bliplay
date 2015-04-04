@@ -55,7 +55,10 @@ struct BKTrackWrapper
 
 enum
 {
-	BKTrackWrapperOptionTimingData = 1 << 0,
+	BKTrackWrapperOptionTimingShift     = 0,
+	BKTrackWrapperOptionTimingDataSecs  = 1 << 0,
+	BKTrackWrapperOptionTimingDataTicks = 2 << 0, // next field is at 2
+	BKTrackWrapperOptionTimingDataMask  = 3 << 0,
 };
 
 /**

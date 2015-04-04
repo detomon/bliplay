@@ -43,6 +43,35 @@ static void BKTrackWrapperWriteTimingData (BKTrackWrapper * track, char const * 
 	BKByteBufferWriteBytes (& track -> timingData, buffer, strlen (buffer));
 }
 
+static void BKTrackWrapperWriteTimingLine (BKTrackWrapper * track)
+{
+	BKInterpreter * interpreter = & track -> interpreter;
+	BKEnum type = track -> object.flags & BKTrackWrapperOptionTimingDataMask;
+	float tickTime = 0;
+
+	if (type == BKTrackWrapperOptionTimingDataSecs) {
+		BKContext * ctx = & track -> ctx -> ctx;
+		BKTime masterTick;
+		BKInt sampleRate;
+
+		BKGetPtr (ctx, BK_CLOCK_PERIOD, & masterTick, sizeof (masterTick));
+		BKGetAttr (ctx, BK_SAMPLE_RATE, & sampleRate);
+		tickTime = (float) BKTimeGetTime (masterTick);
+		tickTime += (float) BKTimeGetFrac (masterTick) / BK_FINT20_UNIT;
+		tickTime = tickTime / sampleRate * interpreter -> lineTime;
+	}
+	else if (type == BKTrackWrapperOptionTimingDataTicks) {
+		tickTime = interpreter -> lineTime;
+	}
+
+	if (interpreter -> lineno != interpreter -> lastLineno + 1) {
+		BKTrackWrapperWriteTimingData (track, "l:%g:%u\n", tickTime, interpreter -> lineno);
+	}
+	else {
+		BKTrackWrapperWriteTimingData (track, "l:%g\n", tickTime);
+	}
+}
+
 static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
 {
 	BKInt ticks;
@@ -51,27 +80,10 @@ static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
 	BKInterpreterTrackAdvance (interpreter, & track -> track, & ticks);
 	info -> divider = ticks;
 
-	if (track -> object.flags & BKTrackWrapperOptionTimingData) {
+	if (track -> object.flags & BKTrackWrapperOptionTimingDataMask) {
 		if (interpreter -> lineno != interpreter -> lastLineno) {
 			if ((interpreter -> object.flags & BKInterpreterFlagHasRepeated) == 0) {
-				BKContext * ctx = & track -> ctx -> ctx;
-				BKTime masterTick;
-				BKInt sampleRate;
-				float tickTime;
-
-				BKGetPtr (ctx, BK_CLOCK_PERIOD, & masterTick, sizeof (masterTick));
-				BKGetAttr (ctx, BK_SAMPLE_RATE, & sampleRate);
-				tickTime = (float) BKTimeGetTime (masterTick);
-				tickTime += (float) BKTimeGetFrac (masterTick) / BK_FINT20_UNIT;
-				tickTime = tickTime / sampleRate * interpreter -> lineTime;
-
-				if (interpreter -> lineno != interpreter -> lastLineno + 1) {
-					BKTrackWrapperWriteTimingData (track, "l:%f:%u\n", tickTime, interpreter -> lineno);
-				}
-				else {
-					BKTrackWrapperWriteTimingData (track, "l:%f\n", tickTime);
-				}
-
+				BKTrackWrapperWriteTimingLine (track);
 				interpreter -> lastLineno = interpreter -> lineno;
 			}
 		}
