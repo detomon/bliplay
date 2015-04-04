@@ -1248,6 +1248,7 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 	BKInstruction     instr;
 	BKCompilerGroup * group, * newGroup;
 	BKCompilerTrack * track;
+	BKByteBuffer    * cmds;
 	char const      * args [2];
 
 	switch (cmd -> token) {
@@ -1452,6 +1453,12 @@ BKInt BKCompilerPushCommand (BKCompiler * compiler, BKSTCmd const * cmd)
 				fprintf (stderr, "Unbalanced group on line %d:%d\n", cmd -> lineno, cmd -> colno);
 				return -1;
 			}
+
+			group = BKArrayGetLastItem (& compiler -> groupStack);
+			cmds  = group -> cmdBuffer;
+
+			BKByteBufferWriteByte (cmds, BKIntrLineNo);
+			BKByteBufferWriteInt32 (cmds, cmd -> lineno);
 
 			BKArrayPop (& compiler -> groupStack, NULL);
 
