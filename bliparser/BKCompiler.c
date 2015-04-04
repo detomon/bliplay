@@ -279,7 +279,7 @@ static void BKCompilerTrackReset (BKCompilerTrack * track, BKInt keepData)
 	BKByteBuffer * buffer;
 
 	BKArrayEmpty (& track ->  cmdGroups, keepData);
-	BKByteBufferClear (& track ->  globalCmds, BKBitCondNorm (BKByteBufferOptionReuseStorage, keepData));
+	BKByteBufferClear (& track ->  globalCmds, BKBitCond2 (BKByteBufferOptionReuseStorage, keepData));
 
 	for (BKInt i = 0; i < track -> cmdGroups.length; i ++) {
 		BKArrayGetItemAtIndexCopy (& track -> cmdGroups, i, & buffer);
@@ -917,6 +917,12 @@ static BKInt BKCompilerPushCommandTrack (BKCompiler * compiler, BKSTCmd const * 
 	if (BKCompilerStrvalTableLookup (cmdNames, NUM_CMD_NAMES, cmd -> name, & value, NULL) == 0) {
 		fprintf (stderr, "Unknown command '%s' on line %u:%u\n", cmd -> name, cmd -> lineno, cmd -> colno);
 		return 0;
+	}
+
+	if (compiler -> lineno != cmd -> lineno) {
+		compiler -> lineno = cmd -> lineno;
+		BKByteBufferWriteByte (cmds, BKIntrLineNo);
+		BKByteBufferWriteInt32 (cmds, cmd -> lineno);
 	}
 
 	instr = value;
@@ -1582,6 +1588,10 @@ static BKInt BKCompilerByteCodeLink (BKCompilerTrack * track, BKByteBuffer * gro
 				cmdSize = 4;
 				break;
 			}
+			case BKIntrLineNo: {
+				cmdSize = 4;
+				break;
+			}
 		}
 
 		opcode += cmdSize;
@@ -1777,6 +1787,7 @@ void BKCompilerReset (BKCompiler * compiler, BKInt keepData)
 	compiler -> currentInstrument = NULL;
 	compiler -> currentWaveform   = NULL;
 	compiler -> currentSample     = NULL;
+	compiler -> lineno            = -1;
 }
 
 BKClass BKCompilerClass =

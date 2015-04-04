@@ -57,6 +57,7 @@ struct BKCompiler
 	BKData        * currentWaveform;
 	BKData        * currentSample;
 	BKString        loadPath;
+	BKInt           lineno;
 };
 
 /**

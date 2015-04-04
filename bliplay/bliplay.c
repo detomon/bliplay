@@ -73,6 +73,7 @@ enum FLAG
 	FLAG_INFO           = 1 << 4,
 	FLAG_INFO_EXPLICITE = 1 << 5,
 	FLAG_YES            = 1 << 6,
+	FLAG_TIMING_DATA    = 1 << 7,
 };
 
 static BKInt            istty;
@@ -84,6 +85,7 @@ static BKInt            numChannels = 2;
 static char const     * filename;
 static char const     * outputFilename;
 static FILE           * outputFile;
+static FILE           * timingFile;
 static BKEnum           outputType = OUTPUT_TYPE_NONE;
 static BKWaveFileWriter waveWriter;
 static char             seekTimeString [64];
@@ -110,6 +112,7 @@ struct option const options [] =
 	{"samplerate",   required_argument, NULL, 'r'},
 	{"version",      no_argument,       NULL, 'v'},
 	{"yes",          no_argument,       NULL, 'y'},
+	{"timing-data",  no_argument,       NULL, 't'},
 	{NULL,           0,                 NULL, 0},
 };
 
@@ -216,6 +219,8 @@ static void print_help (void)
 		"  %2$s-r, --samplerate value%3$s\n"
 		"      Set sample rate of output (default: 44100)\n"
 		"      Range: 16000 - 96000\n"
+		"  %2$s-t, --timing-data%3$s\n"
+		"      Write timing data to [output file].txt\n"
 		"  %2$s-y, --yes%3$s\n"
 		"      Overwrite output file without asking\n",
 		PROGRAM_NAME, colorYellow, colorNormal
@@ -459,33 +464,54 @@ static BKInt count_slots (BKArray * array)
 	return count;
 }
 
+static void waveform_get_name (char name [], BKSize size, BKEnum waveform, BKInt * isCustom)
+{
+	char const * waveformName;
+
+	if (waveform & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
+		if (isCustom) {
+			*isCustom = 1;
+		}
+
+		snprintf (name, size, "%u", waveform &~ BK_INTR_CUSTOM_WAVEFORM_FLAG);
+		return;
+	}
+
+	switch (waveform) {
+		case BK_SQUARE:   waveformName = "square";   break;
+		case BK_TRIANGLE: waveformName = "triangle"; break;
+		case BK_NOISE:    waveformName = "noise";    break;
+		case BK_SAWTOOTH: waveformName = "sawtooth"; break;
+		case BK_SINE:     waveformName = "sine";     break;
+		case BK_SAMPLE:   waveformName = "sample";   break;
+		default:          waveformName = "unknown";  break;
+	}
+
+	if (isCustom) {
+		*isCustom = 0;
+	}
+
+	strcpy (name, waveformName);
+}
+
 static void print_track_info (BKContextWrapper * ctx)
 {
 	BKEnum waveform;
 	BKTrackWrapper * track;
-	char const * waveformName;
+	BKInt isCustom;
+	char name [64];
 
 	for (BKInt i = 0; i < ctx -> tracks.length; i ++) {
 		track = BKArrayGetItemAtIndex (& ctx -> tracks, i);
 		waveform = track -> waveform;
 
-		// custom waveform
-		if (waveform & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
-			print_message ("              #%d: custom %d\n", i, waveform &= ~BK_INTR_CUSTOM_WAVEFORM_FLAG);
-		}
-		// default waveform
-		else {
-			switch (waveform) {
-				case BK_SQUARE:   waveformName = "square";   break;
-				case BK_TRIANGLE: waveformName = "triangle"; break;
-				case BK_NOISE:    waveformName = "noise";    break;
-				case BK_SAWTOOTH: waveformName = "sawtooth"; break;
-				case BK_SINE:     waveformName = "sine";     break;
-				case BK_SAMPLE:   waveformName = "sample";   break;
-				default:          waveformName = "unknown";  break;
-			}
+		waveform_get_name (name, sizeof (name), waveform, & isCustom);
 
-			print_message ("              #%d: %s\n", i, waveformName);
+		if (isCustom) {
+			print_message ("              #%d: custom %s\n", i, name);
+		}
+		else {
+			print_message ("              #%d: %s\n", i, name);
 		}
 	}
 }
@@ -526,10 +552,11 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	FILE * inputFile;
 	struct stat st;
 	BKString path, * loadPath = NULL;
+	BKEnum opts;
 
 	opterr = 0;
 
-	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:vy", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:tvy", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'd': {
 				if (BKStringAlloc (& loadPath, optarg, -1) < 0) {
@@ -569,6 +596,10 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 			case 'r': {
 				sampleRate = atoi (optarg);
+				break;
+			}
+			case 't': {
+				flags |= FLAG_TIMING_DATA;
 				break;
 			}
 			case 'y': {
@@ -661,7 +692,9 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 #endif
 
-	if (BKContextWrapperInit (ctx, numChannels, sampleRate) < 0) {
+	opts = BKBitCond2 (BKTrackWrapperOptionTimingData, flags & FLAG_TIMING_DATA);
+
+	if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
 		print_error ("Could not initialize context\n");
 		return -1;
 	}
@@ -734,6 +767,24 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 
+	if ((flags & FLAG_TIMING_DATA) && outputFilename) {
+		BKString path;
+
+		if (BKStringInit (& path, outputFilename, -1) < 0) {
+			print_error ("Allocation error\n");
+			return -1;
+		}
+
+		if (BKStringAppendChars (& path, ".txt") < 0) {
+			print_error ("Allocation error\n");
+			return -1;
+		}
+
+		timingFile = fopen (path.chars, "w");
+
+		BKDispose (& path);
+	}
+
 	if (BKContextWrapperLoadFile (ctx, inputFile, NULL) < 0) {
 		print_error ("Failed to load file: %s\n", path.chars);
 		set_color (stderr, 0);
@@ -764,6 +815,50 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 
 	return 0;
+}
+
+static void writeTimingData (void)
+{
+	BKTrackWrapper * track;
+
+	if (timingFile) {
+		char name [64];
+		char buffer [4096];
+		BKSize size;
+
+		fprintf (
+			timingFile,
+			"%% Timing data for tracks contained in '%s'\n"
+			"%%\n"
+			"%% track:[waveformtype]:[tracknumber]\n"
+			"%% l:[tick]:[lineno]\n"
+			"%% If 'lineno' is ommited, the line follows the previous one"
+			"\n\n",
+			outputFilename
+		);
+
+		for (BKInt i = 0; i < ctx.tracks.length; i++) {
+			track = BKArrayGetItemAtIndex (& ctx.tracks, i);
+
+			if (i > 0) {
+				fprintf (timingFile, "\n");
+			}
+
+			waveform_get_name (name, sizeof (name), track -> waveform, NULL);
+			fprintf (timingFile, "track:%s:%d\n", name, track -> slot);
+
+			while ((size = BKByteBufferReadBytes (& track -> timingData, buffer, sizeof (buffer)))) {
+				if (size < 0) {
+					print_error ("Buffer error\n");
+					return;
+				}
+
+				fwrite (buffer, sizeof (char), size, timingFile);
+			}
+		}
+
+		fclose (timingFile);
+	}
 }
 
 static void cleanup (void)
@@ -921,6 +1016,8 @@ int main (int argc, char * argv [])
 			return 3;
 		}
 	}
+
+	writeTimingData ();
 
 	cleanup ();
 

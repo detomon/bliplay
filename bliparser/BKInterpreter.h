@@ -76,6 +76,7 @@ enum BKInstruction
 	BKIntrVolume             = 33,
 	BKIntrWaveform           = 34,
 	BKIntrWaveformDef        = 35,
+	BKIntrLineNo             = 36,
 };
 
 enum
@@ -121,6 +122,9 @@ struct BKInterpreter
 	BKInt           nextArpeggio [1 + BK_MAX_ARPEGGIO];
 	BKInt           numEvents;
 	BKTickEvent     events [BK_INTR_MAX_EVENTS];
+	BKInt           time;
+	BKInt           lineTime;
+	BKInt           lineno, lastLineno;
 };
 
 /**

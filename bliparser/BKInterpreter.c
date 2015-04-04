@@ -160,8 +160,11 @@ BKInt BKInterpreterInit (BKInterpreter * interpreter)
 		return -1;
 	}
 
-	interpreter -> stackPtr = interpreter -> stack;
-	interpreter -> stackEnd = (void *) interpreter -> stack + sizeof (interpreter -> stack);
+	interpreter -> stackPtr   = interpreter -> stack;
+	interpreter -> stackEnd   = (void *) interpreter -> stack + sizeof (interpreter -> stack);
+	interpreter -> time       = 0;
+	interpreter -> lineno     = -1;
+	interpreter -> lastLineno = -1;
 
 	return 0;
 }
@@ -276,6 +279,7 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 		if (numSteps) {
 			interpreter -> numSteps = numSteps;
+			interpreter -> time += numSteps;
 			(* outTicks) = numSteps;
 
 			return 1;
@@ -561,6 +565,13 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 				result = 0;
 				break;
 			}
+			case BKIntrLineNo: {
+				value0 = BKInterpreterOpcodeReadInt32 ((void *) & opcode);
+				interpreter -> lineno = value0;
+				interpreter -> lineTime = interpreter -> time;
+
+				break;
+			}
 		}
 	}
 	while (run);
@@ -571,8 +582,9 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 	if (tickEvent)
 		numSteps = tickEvent -> ticks;
 
-	interpreter -> numSteps  = numSteps;
+	interpreter -> numSteps = numSteps;
 	interpreter -> opcodePtr = opcode;
+	interpreter -> time += numSteps;
 
 	(* outTicks) = numSteps;
 
@@ -581,6 +593,8 @@ BKInt BKInterpreterTrackAdvance (BKInterpreter * interpreter, BKTrack * track, B
 
 static void BKInterpreterDispose (BKInterpreter * interpreter)
 {
+	// do not release arrays
+	// owned by track wrapper
 }
 
 void BKInterpreterReset (BKInterpreter * interpreter)
@@ -595,6 +609,10 @@ void BKInterpreterReset (BKInterpreter * interpreter)
 	interpreter -> numEvents       = 0;
 	interpreter -> nextNoteIndex   = 0;
 	interpreter -> repeatStartAddr = 0;
+	interpreter -> time            = 0;
+	interpreter -> lineTime        = 0;
+	interpreter -> lineno          = -1;
+	interpreter -> lastLineno      = 0;
 }
 
 BKClass BKInterpreterClass =

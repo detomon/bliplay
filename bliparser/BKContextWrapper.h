@@ -37,23 +37,31 @@ struct BKContextWrapper
 	BKArray    samples;
 	BKArray    tracks;
 	BKInt      stepTicks;
+	BKEnum     options;
 };
 
 struct BKTrackWrapper
 {
-	BKObject      object;
-	BKInterpreter interpreter;
-	BKTrack       track;
-	BKDivider     divider;
-	BKByteBuffer  opcode;
-	BKEnum        waveform;
-	BKInt         slot;
+	BKObject           object;
+	BKContextWrapper * ctx;
+	BKInterpreter      interpreter;
+	BKTrack            track;
+	BKDivider          divider;
+	BKByteBuffer       opcode;
+	BKEnum             waveform;
+	BKInt              slot;
+	BKByteBuffer       timingData;
+};
+
+enum
+{
+	BKTrackWrapperOptionTimingData = 1 << 0,
 };
 
 /**
  * Initialize context wrapper
  */
-extern BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate);
+extern BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate, BKEnum options);
 
 /**
  * Load data to compile

@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdarg.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "BKContextWrapper.h"
@@ -28,12 +29,53 @@
 extern BKClass BKContextWrapperClass;
 extern BKClass BKTrackWrapperClass;
 
+static void BKTrackWrapperWriteTimingData (BKTrackWrapper * track, char const * data, ...)
+{
+	va_list args;
+	char buffer [1024];
+
+	buffer [0] = '\0';
+
+	va_start (args, data);
+	vsnprintf (buffer, sizeof (buffer), data, args);
+	va_end (args);
+
+	BKByteBufferWriteBytes (& track -> timingData, buffer, strlen (buffer));
+}
+
 static BKInt BKTrackWrapperTick (BKCallbackInfo * info, BKTrackWrapper * track)
 {
 	BKInt ticks;
+	BKInterpreter * interpreter = & track -> interpreter;
 
-	BKInterpreterTrackAdvance (& track -> interpreter, & track -> track, & ticks);
+	BKInterpreterTrackAdvance (interpreter, & track -> track, & ticks);
 	info -> divider = ticks;
+
+	if (track -> object.flags & BKTrackWrapperOptionTimingData) {
+		if (interpreter -> lineno != interpreter -> lastLineno) {
+			if ((interpreter -> object.flags & BKInterpreterFlagHasRepeated) == 0) {
+				BKContext * ctx = & track -> ctx -> ctx;
+				BKTime masterTick;
+				BKInt sampleRate;
+				float tickTime;
+
+				BKGetPtr (ctx, BK_CLOCK_PERIOD, & masterTick, sizeof (masterTick));
+				BKGetAttr (ctx, BK_SAMPLE_RATE, & sampleRate);
+				tickTime = (float) BKTimeGetTime (masterTick);
+				tickTime += (float) BKTimeGetFrac (masterTick) / BK_FINT20_UNIT;
+				tickTime = tickTime / sampleRate * interpreter -> lineTime;
+
+				if (interpreter -> lineno != interpreter -> lastLineno + 1) {
+					BKTrackWrapperWriteTimingData (track, "l:%f:%u\n", tickTime, interpreter -> lineno);
+				}
+				else {
+					BKTrackWrapperWriteTimingData (track, "l:%f\n", tickTime);
+				}
+
+				interpreter -> lastLineno = interpreter -> lineno;
+			}
+		}
+	}
 
 	return 0;
 }
@@ -64,6 +106,12 @@ static BKInt BKTrackWrapperInit (BKTrackWrapper * track)
 		return -1;
 	}
 
+
+	if (BKByteBufferInit (& track -> timingData, 0, BKByteBufferOptionKeepBytes) < 0) {
+		BKDispose (track);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -73,9 +121,10 @@ static void BKTrackWrapperDispose (BKTrackWrapper * track)
 	BKDispose (& track -> track);
 	BKDispose (& track -> divider);
 	BKDispose (& track -> opcode);
+	BKDispose (& track -> timingData);
 }
 
-BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate)
+BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUInt sampleRate, BKEnum options)
 {
 	if (BKObjectInit (wrapper, & BKContextWrapperClass, sizeof (*wrapper)) < 0) {
 		return -1;
@@ -95,6 +144,8 @@ BKInt BKContextWrapperInit (BKContextWrapper * wrapper, BKUInt numChannels, BKUI
 		BKDispose (wrapper);
 		return -1;
 	}
+
+	wrapper -> options = options;
 
 	return 0;
 }
@@ -151,6 +202,8 @@ static BKInt BKContextWrapperMakeTrack (BKContextWrapper * wrapper, BKCompilerTr
 	memcpy (& track -> opcode, & compilerTrack -> globalCmds, sizeof (track -> opcode));
 	memset (& compilerTrack -> globalCmds, 0, sizeof (compilerTrack -> globalCmds));
 
+	track -> object.flags             |= wrapper -> options;
+	track -> ctx                       = wrapper;
 	track -> interpreter.stepTickCount = wrapper -> compiler.stepTicks;
 	track -> interpreter.opcode        = track -> opcode.firstSegment -> data;
 	track -> interpreter.opcodePtr     = track -> interpreter.opcode;
