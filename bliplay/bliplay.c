@@ -819,6 +819,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 
 static void writeTimingData (void)
 {
+	BKEnum waveform;
 	BKTrackWrapper * track;
 
 	if (timingFile) {
@@ -837,14 +838,15 @@ static void writeTimingData (void)
 			outputFilename
 		);
 
-		for (BKInt i = 0; i < ctx.tracks.length; i++) {
+		for (BKInt i = 0; i < ctx.tracks.length; i ++) {
 			track = BKArrayGetItemAtIndex (& ctx.tracks, i);
+			waveform = track -> waveform;
 
 			if (i > 0) {
 				fprintf (timingFile, "\n");
 			}
 
-			waveform_get_name (name, sizeof (name), track -> waveform, NULL);
+			waveform_get_name (name, sizeof (name), waveform, NULL);
 			fprintf (timingFile, "track:%s:%d\n", name, track -> slot);
 
 			while ((size = BKByteBufferReadBytes (& track -> timingData, buffer, sizeof (buffer)))) {
