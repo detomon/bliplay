@@ -24,10 +24,10 @@
 #define __USE_POSIX
 
 #ifdef HAVE_CONFIG_H
-#	include "config.h"
+#include "config.h"
 #endif
 
-#if !BK_USE_PLAYER
+#ifndef BK_USE_PLAYER
 #define BK_USE_PLAYER 1
 #endif
 
@@ -41,7 +41,7 @@
 #include <termios.h>
 #include <unistd.h>
 #if BK_USE_PLAYER
-#	include <SDL/SDL.h>
+#include <SDL/SDL.h>
 #endif
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
