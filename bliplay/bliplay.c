@@ -700,7 +700,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 		}
 	}
 #if !BK_USE_PLAYER
-	else {
+	else if ((flags & FLAG_INFO) == 0) {
 		print_error ("SDL support disabled. Output file must be given\n");
 		return -1;
 	}
