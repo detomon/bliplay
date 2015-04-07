@@ -831,7 +831,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	return 0;
 }
 
-static void writeTimingData (void)
+static void write_timing_data (void)
 {
 	BKEnum waveform;
 	BKTrackWrapper * track;
@@ -1033,7 +1033,7 @@ int main (int argc, char * argv [])
 		}
 	}
 
-	writeTimingData ();
+	write_timing_data ();
 
 	cleanup ();
 
