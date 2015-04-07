@@ -158,6 +158,26 @@ static int getchar_nocanon (unsigned tcflags)
 }
 #endif
 
+static int string_begins_with (char const * str, char const * head)
+{
+	char const * sc, * hc;
+
+	if (str == NULL || head == NULL) {
+		return 0;
+	}
+
+	sc = str;
+	hc = head;
+
+	for (; *hc; hc ++, sc ++) {
+		if (* hc != * sc) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static int string_ends_with (char const * str, char const * tail)
 {
 	char const * sc, * tc;
@@ -686,11 +706,16 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			return -1;
 		}
 
-		outputFile = fopen (outputFilename, "wb+");
+		if (string_begins_with (outputFilename, "-")) {
+			outputFile = stdout;
+		}
+		else {
+			outputFile = fopen (outputFilename, "wb+");
 
-		if (outputFile == NULL) {
-			print_error ("Could not open output file: %s\n", outputFilename);
-			return -1;
+			if (outputFile == NULL) {
+				print_error ("Could not open output file: %s\n", outputFilename);
+				return -1;
+			}
 		}
 
 		if (outputType == OUTPUT_TYPE_WAVE) {
@@ -885,7 +910,9 @@ static void cleanup (void)
 			BKDispose (& waveWriter);
 		}
 
-		fclose (outputFile);
+		if (outputFile != stdout) {
+			fclose (outputFile);
+		}
 	}
 
 	BKDispose (& ctx);
