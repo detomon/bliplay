@@ -1,3 +1,12 @@
+Changes in bliplay 2.4:
+  Release date: 2015-06-02
+
+* Audio data can now be written directly to stdout
+* Fix byte buffer implementation
+* Implemented option to output timing file
+* Made various fixes
+* Use new BlipKit version 0.12.1
+
 Changes in bliplay 2.3:
   Release date: 2015-03-27
 
