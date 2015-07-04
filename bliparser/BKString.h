@@ -77,6 +77,11 @@ extern BKInt BKStringAppendChars (BKString * string, char const * chars);
 extern void BKStringEmpty (BKString * string, BKInt keepData);
 
 /**
+ * Returns 1 if `chars1` is equal to `chars2`
+ */
+extern BKInt BKStringCharsIsEqual (char const * chars1, BKSize length1, char const * chars2, BKSize length2);
+
+/**
  * Returns 1 if `string` is equal to `string2`
  */
 extern BKInt BKStringIsEqual (BKString const * string, BKString const * string2);

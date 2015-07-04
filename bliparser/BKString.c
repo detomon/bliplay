@@ -83,7 +83,7 @@ static BKInt BKStringAppendCharsWithLength (BKString * string, char const * char
 	return 0;
 }
 
-BKInt BKStringInitGeneric (BKString * string, char const * chars, BKSize length)
+static BKInt BKStringInitGeneric (BKString * string, char const * chars, BKSize length)
 {
 	if (chars) {
 		if (length < 0) {

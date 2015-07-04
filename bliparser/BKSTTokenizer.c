@@ -97,7 +97,7 @@ BKInt BKSTTokenizerInitWithFile (BKSTTokenizer * tokenizer, FILE * file)
 	return 0;
 }
 
-void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
+static void BKSTTokenizerDispose (BKSTTokenizer * tokenizer)
 {
 	if (tokenizer -> readBuf) {
 		free (tokenizer -> readBuf);

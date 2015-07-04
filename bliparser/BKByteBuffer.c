@@ -255,7 +255,7 @@ BKInt BKByteBufferAlloc (BKByteBuffer ** outBuffer, BKUSize initSize, unsigned o
 	return 0;
 }
 
-void BKByteBufferDispose (BKByteBuffer * buffer)
+static void BKByteBufferDispose (BKByteBuffer * buffer)
 {
 	BKByteBufferFreeSegment (buffer -> firstSegment, 1);
 	BKByteBufferFreeSegment (buffer -> freeSegments, 1);

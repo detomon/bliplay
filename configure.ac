@@ -60,7 +60,13 @@ AC_CONFIG_FILES([
 AC_CONFIG_SUBDIRS([BlipKit])
 
 # Define flags.
-BK_STD_CFLAGS="-std=c99 -Wall"
+BK_STD_CFLAGS="-std=c99 -Wall \
+    -Wmissing-prototypes \
+    -Wmissing-declarations \
+    -Wstrict-prototypes \
+    -Wformat-security \
+    -Wmissing-format-attribute \
+    -Winline"
 
 AC_SUBST(BK_STD_CFLAGS)
 
