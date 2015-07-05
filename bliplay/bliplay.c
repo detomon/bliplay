@@ -242,9 +242,10 @@ static void print_help (void)
 		"  %2$s-r, --samplerate value%3$s\n"
 		"      Set sample rate of output (default: 44100)\n"
 		"      Range: 16000 - 96000\n"
-		"  %2$s-t, --timing-data unit[s|t]%3$s\n"
+		"  %2$s-t, --timing-data [s|t]%3$s\n"
 		"      Write timing data to [output file].txt\n"
 		"      s: seconds, t: ticks\n"
+		"      Ignored when not used with %2$s-o%3$s\n"
 		"  %2$s-y, --yes%3$s\n"
 		"      Overwrite output file without asking\n",
 		PROGRAM_NAME, colorYellow, colorNormal
