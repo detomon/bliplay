@@ -351,7 +351,7 @@ stepticks:20
 
 	s:32
 	s:32
-	pt:-1200;g:6;pt:0
+	i:11;pt:-1200;g:6;pt:0
 
 	i:12
 	s:32
@@ -520,8 +520,8 @@ stepticks:20
 
 		v:92
 		s:7
-		e:pr:640;e:vb:13:200;a:f1;a:f0;s:32;e:pr
-		v:64;e:vb:18:100;s:32;e:vb
+		e:vs:640;e:pr:640;e:vb:13:200;v:0;a:f1;a:f0;s:32;r;e:pr;
+		v:64;e:vb:18:100;s:32;r;e:vb;e:vs;
 	]
 
 	w:0
