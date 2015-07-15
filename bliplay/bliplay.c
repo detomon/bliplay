@@ -47,7 +47,7 @@
 #include "BKWaveFileWriter.h"
 #include "BKString.h"
 
-#define BK_BLIPLAY_VERSION "2.4"
+#define BK_BLIPLAY_VERSION "2.4.1"
 
 #ifndef FD_COPY
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
