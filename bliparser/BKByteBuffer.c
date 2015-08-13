@@ -56,7 +56,7 @@ static void BKByteBufferFreeSegment (BKByteBufferSegment * segment, BKInt freeLi
 	}
 }
 
-static BKInt BKByteBufferPushStorage (BKByteBuffer * buffer, BKUSize preferredSize)
+BKInt BKByteBufferPushStorage (BKByteBuffer * buffer, BKUSize preferredSize)
 {
 	BKByteBufferSegment * segment = NULL;
 
@@ -151,7 +151,7 @@ static BKInt BKByteBufferPushStorage (BKByteBuffer * buffer, BKUSize preferredSi
 	return -1;
 }
 
-static BKSize BKByteBufferShiftStorage (BKByteBuffer * buffer)
+BKSize BKByteBufferShiftStorage (BKByteBuffer * buffer)
 {
 	BKSize shiftSize = 0;
 
@@ -313,24 +313,6 @@ BKSize BKByteBufferReadBytes (BKByteBuffer * buffer, void * bytes, BKUSize size)
 	return readSize;
 }
 
-int BKByteBufferReadByte (BKByteBuffer * buffer)
-{
-	if (buffer -> readCursor >= buffer -> readDataEnd) {
-		BKSize shiftSize = BKByteBufferShiftStorage (buffer);
-
-		if (shiftSize <= 0) {
-			if (shiftSize == 0) {
-				return -1;
-			}
-			else {
-				return -1;
-			}
-		}
-	}
-
-	return (* buffer -> readCursor ++);
-}
-
 void * BKByteBufferGetBytes (BKByteBuffer * buffer)
 {
 	if (buffer -> info & BKByteBufferOptionContinuousStorage) {
@@ -380,87 +362,6 @@ BKSize BKByteBufferWriteBytes (BKByteBuffer * buffer, const void * bytes, BKUSiz
 	while (size);
 
 	return writtenSize;
-}
-
-BKSize BKByteBufferWriteByte (BKByteBuffer * buffer, unsigned char byte)
-{
-	if (buffer -> writeCursor >= buffer -> writeDataEnd) {
-		if (BKByteBufferPushStorage (buffer, 1) != 0) {
-			return -1;
-		}
-	}
-
-	(* buffer -> writeCursor ++) = byte;
-
-	if (buffer -> readSegment == buffer -> writeSegment) {
-		buffer -> readDataEnd = buffer -> writeCursor;
-	}
-
-	return 1;
-}
-
-BKSize BKByteBufferWriteInt16 (BKByteBuffer * buffer, uint16_t c)
-{
-	if (buffer -> writeCursor >= buffer -> writeDataEnd - 1) {
-		if (BKByteBufferPushStorage (buffer, 2) != 0) {
-			return -1;
-		}
-	}
-
-	*(uint16_t *) buffer -> writeCursor = c;
-	buffer -> writeCursor += 2;
-
-	if (buffer -> readSegment == buffer -> writeSegment) {
-		buffer -> readDataEnd = buffer -> writeCursor;
-	}
-
-	return 2;
-}
-
-BKSize BKByteBufferWriteInt32 (BKByteBuffer * buffer, uint32_t c)
-{
-	if (buffer -> writeCursor >= buffer -> writeDataEnd - 3) {
-		if (BKByteBufferPushStorage (buffer, 4) != 0) {
-			return -1;
-		}
-	}
-
-	*(uint32_t *) buffer -> writeCursor = c;
-	buffer -> writeCursor += 4;
-
-	if (buffer -> readSegment == buffer -> writeSegment) {
-		buffer -> readDataEnd = buffer -> writeCursor;
-	}
-
-	return 4;
-}
-
-BKUSize BKByteBufferGetSize (BKByteBuffer * buffer)
-{
-	BKUSize size = buffer -> capacity;
-
-	// subtract end of current write segment
-	size -= buffer -> writeDataEnd - buffer -> writeCursor;
-	// subtract beginning of current read segment
-	size -= buffer -> readCursor - buffer -> readSegment -> data;
-
-	return size;
-}
-
-BKSize BKByteBufferGetOffset (BKByteBuffer * buffer)
-{
-	BKSize offset = -1;
-
-	if (buffer -> info & BKByteBufferOptionKeepBytes) {
-		offset = buffer -> readSize;
-
-		// add number of read bytes of current segment
-		if (buffer -> readSegment) {
-			offset += buffer -> readCursor - buffer -> readSegment -> data;
-		}
-	}
-
-	return offset;
 }
 
 static BKUSize BKByteBufferRestoreBytes (BKByteBuffer * buffer, BKUSize size)

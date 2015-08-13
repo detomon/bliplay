@@ -128,7 +128,7 @@ extern BKSize BKByteBufferReadBytes (BKByteBuffer * buffer, void * bytes, BKUSiz
  * Read one byte at beginning of buffer
  * Returns -1 if end of buffer is reached
  */
-extern int BKByteBufferReadByte (BKByteBuffer * buffer);
+BK_INLINE int BKByteBufferReadByte (BKByteBuffer * buffer);
 
 /**
  * Returns a pointer to the unread bytes
@@ -146,30 +146,30 @@ extern BKSize BKByteBufferWriteBytes (BKByteBuffer * buffer, const void * bytes,
  * Append one byte at end of buffer
  * Returns 1 otherwise -1 if no memory could be allocated
  */
-extern BKSize BKByteBufferWriteByte (BKByteBuffer * buffer, uint8_t byte);
+BK_INLINE BKSize BKByteBufferWriteByte (BKByteBuffer * buffer, uint8_t byte);
 
 /**
  * Append 16 bit integer
  * Returns 1 otherwise -1 if no memory could be allocated
  */
-extern BKSize BKByteBufferWriteInt16 (BKByteBuffer * buffer, uint16_t c);
+BK_INLINE BKSize BKByteBufferWriteInt16 (BKByteBuffer * buffer, uint16_t c);
 
 /**
  * Append 32 bit integer
  * Returns 1 otherwise -1 if no memory could be allocated
  */
-extern BKSize BKByteBufferWriteInt32 (BKByteBuffer * buffer, uint32_t c);
+BK_INLINE BKSize BKByteBufferWriteInt32 (BKByteBuffer * buffer, uint32_t c);
 
 /**
  * Get number of remaining bytes to read
  */
-extern BKUSize BKByteBufferGetSize (BKByteBuffer * buffer);
+BK_INLINE BKUSize BKByteBufferGetSize (BKByteBuffer * buffer);
 
 /**
  * Get offset of read cursor
  * If option `BKByteBufferOptionKeepBytes` is not set -1 is returned
  */
-extern BKSize BKByteBufferGetOffset (BKByteBuffer * buffer);
+BK_INLINE BKSize BKByteBufferGetOffset (BKByteBuffer * buffer);
 
 /**
  * Seek read cursor to specific offset
@@ -197,5 +197,116 @@ extern BKSize BKByteBufferSeek (BKByteBuffer * buffer, BKSize offset, unsigned o
  *   Allocated storage is not freed but reused for new data
  */
 extern void BKByteBufferClear (BKByteBuffer * buffer, unsigned options);
+
+/**
+ * Used internally
+ */
+extern BKInt BKByteBufferPushStorage (BKByteBuffer * buffer, BKUSize preferredSize);
+
+/**
+ * Used internally
+ */
+extern BKSize BKByteBufferShiftStorage (BKByteBuffer * buffer);
+
+// ---
+
+BK_INLINE int BKByteBufferReadByte (BKByteBuffer * buffer)
+{
+	if (buffer -> readCursor >= buffer -> readDataEnd) {
+		BKSize shiftSize = BKByteBufferShiftStorage (buffer);
+
+		if (shiftSize <= 0) {
+			if (shiftSize == 0) {
+				return -1;
+			}
+			else {
+				return -1;
+			}
+		}
+	}
+
+	return (* buffer -> readCursor ++);
+}
+
+BK_INLINE BKSize BKByteBufferWriteByte (BKByteBuffer * buffer, unsigned char byte)
+{
+	if (buffer -> writeCursor >= buffer -> writeDataEnd) {
+		if (BKByteBufferPushStorage (buffer, 1) != 0) {
+			return -1;
+		}
+	}
+
+	(* buffer -> writeCursor ++) = byte;
+
+	if (buffer -> readSegment == buffer -> writeSegment) {
+		buffer -> readDataEnd = buffer -> writeCursor;
+	}
+
+	return 1;
+}
+
+BK_INLINE BKSize BKByteBufferWriteInt16 (BKByteBuffer * buffer, uint16_t c)
+{
+	if (buffer -> writeCursor >= buffer -> writeDataEnd - 1) {
+		if (BKByteBufferPushStorage (buffer, 2) != 0) {
+			return -1;
+		}
+	}
+
+	*(uint16_t *) buffer -> writeCursor = c;
+	buffer -> writeCursor += 2;
+
+	if (buffer -> readSegment == buffer -> writeSegment) {
+		buffer -> readDataEnd = buffer -> writeCursor;
+	}
+
+	return 2;
+}
+
+BK_INLINE BKSize BKByteBufferWriteInt32 (BKByteBuffer * buffer, uint32_t c)
+{
+	if (buffer -> writeCursor >= buffer -> writeDataEnd - 3) {
+		if (BKByteBufferPushStorage (buffer, 4) != 0) {
+			return -1;
+		}
+	}
+
+	*(uint32_t *) buffer -> writeCursor = c;
+	buffer -> writeCursor += 4;
+
+	if (buffer -> readSegment == buffer -> writeSegment) {
+		buffer -> readDataEnd = buffer -> writeCursor;
+	}
+
+	return 4;
+}
+
+BK_INLINE BKUSize BKByteBufferGetSize (BKByteBuffer * buffer)
+{
+	BKUSize size = buffer -> capacity;
+
+	// subtract end of current write segment
+	size -= buffer -> writeDataEnd - buffer -> writeCursor;
+	// subtract beginning of current read segment
+	size -= buffer -> readCursor - buffer -> readSegment -> data;
+
+	return size;
+}
+
+BK_INLINE BKSize BKByteBufferGetOffset (BKByteBuffer * buffer)
+{
+	BKSize offset = -1;
+
+	if (buffer -> info & BKByteBufferOptionKeepBytes) {
+		offset = buffer -> readSize;
+
+		// add number of read bytes of current segment
+		if (buffer -> readSegment) {
+			offset += buffer -> readCursor - buffer -> readSegment -> data;
+		}
+	}
+
+	return offset;
+}
 
 #endif /* ! _BK_BYTE_BUFFER_H_ */
