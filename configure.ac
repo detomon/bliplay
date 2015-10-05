@@ -82,6 +82,7 @@ AC_CANONICAL_HOST
 case $host_os in
   darwin* )
     SDL_CFLAGS="-framework SDL"
+    BK_STD_CFLAGS+=" -F\"$HOME/Library/Frameworks\" -F/Library/Frameworks -F/System/Library/Frameworks"
     ;;
   *)
     SDL_CFLAGS="`sdl-config --cflags` `sdl-config --libs`"
