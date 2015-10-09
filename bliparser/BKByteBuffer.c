@@ -217,7 +217,6 @@ BKSize BKByteBufferShiftStorage (BKByteBuffer * buffer)
 
 static BKInt BKByteBufferInitGeneric (BKByteBuffer * buffer, BKUSize initSize, unsigned options)
 {
-	memset (buffer, 0, sizeof (* buffer));
 	buffer -> info |= (options & OPTIONS_MASK);
 
 	if (initSize) {
