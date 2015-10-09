@@ -102,20 +102,6 @@ static void BKArrayDispose (BKArray * array)
 	}
 }
 
-BKSize BKArrayGetLength (BKArray const * array)
-{
-	return array -> length;
-}
-
-void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index)
-{
-	if (index >= array -> length) {
-		return NULL;
-	}
-
-	return array -> items + index * array -> itemSize;
-}
-
 BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, void * outItem)
 {
 	void const * item = BKArrayGetItemAtIndex (array, index);
@@ -128,15 +114,6 @@ BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, void * out
 	memcpy (outItem, item, array -> itemSize);
 
 	return 0;
-}
-
-void * BKArrayGetLastItem (BKArray const * array)
-{
-	if (array -> length == 0) {
-		return NULL;
-	}
-
-	return BKArrayGetItemAtIndex (array, array -> length - 1);
 }
 
 BKInt BKArrayGetLastItemCopy (BKArray const * array, void * outItem)

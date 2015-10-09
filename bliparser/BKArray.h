@@ -58,14 +58,14 @@ extern BKInt BKArrayAlloc (BKArray ** outArray, BKSize itemSize, BKSize initCapa
 /**
  * Get number of items
  */
-extern BKSize BKArrayGetLength (BKArray const * array);
+BK_INLINE BKSize BKArrayGetLength (BKArray const * array);
 
 /**
  * Get item at index
  *
  * Returns NULL if index is out of bounds
  */
-extern void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index);
+BK_INLINE void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index);
 
 /**
  * Get item at index and copy to `outItem`
@@ -79,7 +79,7 @@ extern BKInt BKArrayGetItemAtIndexCopy (BKArray const * array, BKSize index, voi
  *
  * Returns NULL if array is empty
  */
-extern void * BKArrayGetLastItem (BKArray const * array);
+BK_INLINE void * BKArrayGetLastItem (BKArray const * array);
 
 /**
  * Get last item and copy to `outItem`
@@ -124,5 +124,30 @@ extern BKInt BKArrayPop (BKArray * array, void * outItem);
  * If `keepData` is 1 the allocated buffer is reused
  */
 extern void BKArrayEmpty (BKArray * array, BKInt keepData);
+
+// ---
+
+BK_INLINE BKSize BKArrayGetLength (BKArray const * array)
+{
+	return array -> length;
+}
+
+BK_INLINE void * BKArrayGetItemAtIndex (BKArray const * array, BKSize index)
+{
+	if (index >= array -> length) {
+		return NULL;
+	}
+
+	return array -> items + index * array -> itemSize;
+}
+
+BK_INLINE void * BKArrayGetLastItem (BKArray const * array)
+{
+	if (array -> length == 0) {
+		return NULL;
+	}
+
+	return BKArrayGetItemAtIndex (array, array -> length - 1);
+}
 
 #endif /* ! _BK_ARRAY_H_ */

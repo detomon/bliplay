@@ -133,11 +133,6 @@ static void BKStringDispose (BKString * string)
 	}
 }
 
-BKSize BKStringGetLength (BKString const * string)
-{
-	return string ? string -> length : 0;
-}
-
 BKInt BKStringAppend (BKString * string, BKString const * tail)
 {
 	if (tail == NULL) {

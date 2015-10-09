@@ -57,7 +57,7 @@ extern BKInt BKStringAlloc (BKString ** outString, char const * chars, BKSize le
 /**
  * Get length of string
  */
-extern BKSize BKStringGetLength (BKString const * string);
+BK_INLINE BKSize BKStringGetLength (BKString const * string);
 
 /**
  * Append string object
@@ -136,5 +136,12 @@ extern BKInt BKStringGetBasename (BKString ** outBasename, BKString const * path
  * If `outDirname` is an existing string, the content is overwritten
  */
 extern BKInt BKStringGetDirname (BKString ** outDirname, BKString const * path);
+
+// ---
+
+BK_INLINE BKSize BKStringGetLength (BKString const * string)
+{
+	return string ? string -> length : 0;
+}
 
 #endif /* ! _BK_STRING_H_ */
