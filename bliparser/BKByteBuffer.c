@@ -83,14 +83,21 @@ BKInt BKByteBufferPushStorage (BKByteBuffer * buffer, BKUSize preferredSize)
 		preferredSize = (usedSize + preferredSize) * MORE_STORAGE_FACTOR;
 		preferredSize = BKMax (preferredSize, MIN_SEGMENT_SIZE);
 
-		if ((buffer -> info & BKByteBufferOptionKeepBytes) != 0) {
-			memmove (segment -> data, buffer -> readCursor, usedSize);
+		if (segment) {
+			if ((buffer -> info & BKByteBufferOptionKeepBytes) == 0) {
+				memmove (segment -> data, buffer -> readCursor, usedSize);
+			}
 		}
 
 		if (preferredSize > capacity) {
 			BKByteBufferSegment * newSegment = realloc (segment, sizeof (BKByteBufferSegment) + preferredSize);
 
 			if (newSegment) {
+				// clear newly allocated segment
+				if (segment == NULL) {
+					memset (newSegment, 0, sizeof (*newSegment));
+				}
+
 				newSegment -> capacity = preferredSize;
 				buffer -> capacity     = preferredSize;
 				buffer -> firstSegment = newSegment;
