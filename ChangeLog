@@ -1,3 +1,9 @@
+Changes in bliplay 2.4.2:
+  Release date: 2015-10-10
+
+* Many small fixes and code cleanups
+* Use BlipKit version 0.13.1
+
 Changes in bliplay 2.4.1:
   Release date: 2015-07-15
 
