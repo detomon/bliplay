@@ -265,8 +265,6 @@ static void BKByteBufferDispose (BKByteBuffer * buffer)
 {
 	BKByteBufferFreeSegment (buffer -> firstSegment, 1);
 	BKByteBufferFreeSegment (buffer -> freeSegments, 1);
-
-	BKDispose (buffer);
 }
 
 void BKByteBufferSetSource (BKByteBuffer * buffer, BKByteBufferSource * source)
