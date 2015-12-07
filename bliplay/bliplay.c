@@ -215,10 +215,12 @@ static void print_help (void)
 {
 	print_version ();
 	printf (
+		"  sound player and renderer\n"
+		"  more info for file syntax: " PACKAGE_URL "\n"
 		"usage: %1$s [options] file\n"
 		"  %2$s-d, --load-dir path%3$s\n"
 		"      Sets the path for loading resources\n"
-		"      If not set, the parent directory of the input file is used\n"
+		"      If not set, the input file's directory is used\n"
 		"  %2$s-f, --fast-forward time%3$s\n"
 		"      Fast forward to time\n"
 		"      Time format: number[s|b|t|f]\n"
@@ -240,11 +242,11 @@ static void print_help (void)
 		"      RAW format: headerless native signed 16 bit, stereo\n"
 		"      Does not print file info. Use %2$s-i%3$s to print info explictly.\n"
 		"  %2$s-r, --samplerate value%3$s\n"
-		"      Set sample rate of output (default: 44100)\n"
+		"      Set output sample rate (default: 44100)\n"
 		"      Range: 16000 - 96000\n"
 		"  %2$s-t, --timing-data [s|t]%3$s\n"
 		"      Write timing data to [output file].txt\n"
-		"      s: seconds, t: ticks\n"
+		"      Units: s: seconds, t: ticks\n"
 		"      Ignored when not used with %2$s-o%3$s\n"
 		"  %2$s-y, --yes%3$s\n"
 		"      Overwrite output file without asking\n",
