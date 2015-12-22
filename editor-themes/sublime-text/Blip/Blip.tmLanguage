@@ -7,6 +7,8 @@
 	<key>fileTypes</key>
 	<array>
 		<string>blip</string>
+		<string>blip2</string>
+		<string>blip3</string>
 	</array>
 	<key>foldingStartMarker</key>
 	<string>\[\s*($|/\*(?!.*?\*/.*\S))</string>
