@@ -68,7 +68,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a|r|s|p|pt|as|m|t|i|dc|d|st|at|rt|g|x|xb|w|v|pw|e|at|adsr|anv|vnv|pnv|dcnv)\b</string>
+			<string>(a|r|s|p|pt|as|m|t|i|dc|d|st|at|rt|g|x|xb|w|v|pw|e|at|adsr|anv|vnv|pnv|dcnv|stepticks|bliplay)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
 		</dict>
@@ -82,7 +82,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(instr|wave|grp|track)\b</string>
+			<string>(instr|wave|grp|track|master)\b</string>
 			<key>name</key>
 			<string>keyword.command.group.blip</string>
 		</dict>
