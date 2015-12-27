@@ -40,9 +40,15 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#if BK_USE_PLAYER
-#include <SDL/SDL.h>
+
+#if defined(BK_USE_PLAYER) && defined(BK_SDL_VERSION)
+#	if BK_SDL_VERSION == 2
+#		include <SDL2/SDL.h>
+#	else
+#		include <SDL/SDL.h>
+#	endif
 #endif
+
 #include "BKContextWrapper.h"
 #include "BKWaveFileWriter.h"
 #include "BKString.h"

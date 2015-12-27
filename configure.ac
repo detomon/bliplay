@@ -80,7 +80,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 AC_CANONICAL_HOST
 
 if test "x${with_player}" = xyes; then
-	m4_include([check-sdl.m4])
+	m4_include([BlipKit/check-sdl.m4])
 fi
 
 AC_OUTPUT
