@@ -21,21 +21,18 @@ AC_PROG_RANLIB
 AC_PROG_LN_S
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
-# Checks for libraries.
-AC_CHECK_LIB([blipkit], [BKContextInit])
-
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h termios.h unistd.h])
 
 AC_ARG_ENABLE([player],
-  [  --disable-player        do not link against SDL library; only enable file output],
-  [with_player=${enableval}],
-  [with_player=yes])
+	[  --disable-player        do not link against SDL library; only enable file output],
+	[with_player=${enableval}],
+	[with_player=yes])
 
 if test "x${with_player}" = xyes; then
-  AC_DEFINE(BK_USE_PLAYER, 1, [Define to 1 if configure had option --enable-player])
+	AC_DEFINE(BK_USE_PLAYER, 1, [Define to 1 if configure had option --enable-player])
 else
-  AC_DEFINE(BK_USE_PLAYER, 0, [Define to 1 if configure had option --enable-player])
+	AC_DEFINE(BK_USE_PLAYER, 0, [Define to 1 if configure had option --enable-player])
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -52,48 +49,38 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([getcwd memmove memset select])
 
 AC_CONFIG_FILES([
-  Makefile
-  bliparser/Makefile
-  bliplay/Makefile
+	Makefile
+	bliparser/Makefile
+	bliplay/Makefile
 ])
 
 AC_CONFIG_SUBDIRS([BlipKit])
 
 # Define flags.
 BK_STD_CFLAGS="-std=c99 -Wall \
-    -Wmissing-prototypes \
-    -Wmissing-declarations \
-    -Wstrict-prototypes \
-    -Wformat-security \
-    -Wmissing-format-attribute \
-    -Winline"
+	-Wmissing-prototypes \
+	-Wmissing-declarations \
+	-Wstrict-prototypes \
+	-Wformat-security \
+	-Wmissing-format-attribute \
+	-Winline"
 
 AC_SUBST(BK_STD_CFLAGS)
 
 # Run tests.
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
-int main () { return !((-15 >> 2) == -4); }
-]])],[],[AC_MSG_ERROR(Host CPU seems not to handle shifting of negative values as expected)
+	int main () {
+		return !((-15 >> 2) == -4);
+	}
+]])], [], [
+	AC_MSG_ERROR(Host CPU seems not to handle shifting of negative values as expected)
 ],[])
 
 # Set platform specific values.
 AC_CANONICAL_HOST
 
-case $host_os in
-  darwin* )
-    SDL_CFLAGS="-framework SDL2"
-    ;;
-  *)
-    SDL_CFLAGS="`sdl2-config --cflags` `sdl2-config --libs`"
-    ;;
-esac
-
 if test "x${with_player}" = xyes; then
-  echo "using SDL linking flags: $SDL_CFLAGS"
-  AC_SUBST(SDL_CFLAGS)
-else
-  SDL_CFLAGS=""
-  AC_SUBST(SDL_CFLAGS)
+	m4_include([check-sdl.m4])
 fi
 
 AC_OUTPUT
