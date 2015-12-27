@@ -70,7 +70,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a|r|s|p|pt|as|m|t|i|dc|d|st|at|rt|g|x|xb|w|v|pw|e|at|adsr|anv|vnv|pnv|dcnv|stepticks|bliplay)\b</string>
+			<string>(a|r|s|p|pt|as|m|t|i|dc|d|st|at|rt|g|x|xb|w|v|pw|e|at|adsr|anv|vnv|pnv|dcnv|stepticks|title|info)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
 		</dict>
