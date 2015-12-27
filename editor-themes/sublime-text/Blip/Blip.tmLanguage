@@ -56,7 +56,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(square|triangle|noise|sawtooth|sine)\b</string>
+			<string>(no|noi|noise|sam|sample|saw|sawtooth|si|sin|sine|sm|sq|sqr|square|sw|tr|tri|triangle)\b</string>
 			<key>name</key>
 			<string>constant.other.argument.waveform.blip</string>
 		</dict>
@@ -70,9 +70,23 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a|r|s|p|pt|as|m|t|i|dc|d|st|at|rt|g|x|xb|w|v|pw|e|at|adsr|anv|vnv|pnv|dcnv|stepticks|title|info)\b</string>
+			<string>(a|adsr|anv|as|at|d|dc|dcnv|dn|dr|ds|e|g|i|info|load|m|mt|p|pnv|pt|pw|r|raw|rt|s|st|stepticks|t|title|v|vm|vnv|w|x|xb|z)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
+		</dict>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>constant.other.argument.effect.blip</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(pr|ps|tr|vb|vs)\b</string>
+			<key>name</key>
+			<string>constant.other.argument.effect.blip</string>
 		</dict>
 		<dict>
 			<key>captures</key>
@@ -84,7 +98,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(instr|wave|grp|track|master)\b</string>
+			<string>(grp|instr|master|samp|track|wave)\b</string>
 			<key>name</key>
 			<string>keyword.command.group.blip</string>
 		</dict>
@@ -98,7 +112,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>([a-z\-\_]+)\b</string>
+			<string>([^\s:;%\[\]]+)\b</string>
 			<key>name</key>
 			<string>variable.argument.blip</string>
 		</dict>
