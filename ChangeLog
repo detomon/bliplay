@@ -1,3 +1,11 @@
+Changes in bliplay 2.4.3:
+  Release date: 2015-12-27
+
+* Add Sublime Text language bundle for .blip files
+* Using better detection for SDL (with preference for version 2)
+* Added waveform name aliases
+* Use BlipKit version 0.13.2
+
 Changes in bliplay 2.4.2:
   Release date: 2015-10-10
 
