@@ -86,7 +86,7 @@ enum FLAG
 };
 
 static BKInt            istty;
-static BKInt            flags = FLAG_INFO;
+static BKInt            flags;
 static BKContextWrapper ctx;
 static BKUInt           sampleRate = 44100;
 static BKTime           seekTime, endTime;
@@ -588,6 +588,10 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	BKEnum opts;
 
 	opterr = 0;
+
+#if BK_USE_PLAYER
+	flags = FLAG_INFO;
+#endif
 
 	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:t:vy", options, & longoptind)) != -1) {
 		switch (opt) {
