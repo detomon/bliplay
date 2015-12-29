@@ -468,6 +468,7 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 	return 0;
 }
 
+#if BK_USE_PLAYER
 static void print_time (BKContextWrapper * ctx)
 {
 	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
@@ -480,6 +481,7 @@ static void print_time (BKContextWrapper * ctx)
 	printf ("%s%4d:%02d.%02d%s\r", colorGreen, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
+#endif
 
 static BKInt count_slots (BKArray * array)
 {
