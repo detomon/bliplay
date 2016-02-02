@@ -64,6 +64,7 @@ AC_CHECK_FUNCS([getcwd memmove memset select])
 AC_CONFIG_FILES([
 	Makefile
 	bliparser/Makefile
+	bliparser/amiga-mod/Makefile
 	bliplay/Makefile
 ])
 

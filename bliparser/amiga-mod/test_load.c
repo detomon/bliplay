@@ -43,6 +43,68 @@ static void fill_audio (BKSDLUserData * info, Uint8 * stream, int len)
 	BKContextGenerate (& mod.contextWrapper.ctx, (BKFrame *) stream, numFrames);
 }
 
+static void printSongInfo (BKFileAmigaMod const * mod) {
+	BKInt usedSamples [BK_AMIGA_MOD_NUM_SAMPLES];
+
+	memset (usedSamples, 0, sizeof (usedSamples));
+
+	printf ("Song name: %s\n", mod -> songName);
+	printf ("Song length: %u\n", mod -> songLength);
+	printf ("Num patterns: %u\n", mod -> numPatterns);
+	printf ("\nSamples:\n");
+
+	for (BKInt i = 0; i < BK_AMIGA_MOD_NUM_SAMPLES; i ++) {
+		BKFileAmigaModSample const * sample = &mod -> samples [i];
+
+		printf ("%02x ----\n", i);
+		printf ("  Name:      %s\n", sample -> sampleName);
+		printf ("  Offset:    %u\n", sample -> sampleOffset);
+		printf ("  Length:    %u\n", sample -> sampleLength);
+		printf ("  R start:   %u\n", sample -> repeatStart);
+		printf ("  R length:  %u\n", sample -> repeatLength);
+		printf ("  Volume:    %u\n", sample -> volume);
+		printf ("  Fine tune: %u\n", sample -> fineTune);
+	}
+
+	printf ("\nPatterns:\n");
+
+	for (BKInt i = 0; i < mod -> numPatterns; i ++) {
+		BKFileAmigaModPattern const * pattern = &mod -> patterns [i];
+
+		printf ("%02x ----\n", i);
+
+		for (BKInt j = 0; j < BK_AMIGA_MOD_NUM_ROWS; j ++) {
+			printf ("  %02x   ", j);
+
+			for (BKInt k = 0; k < BK_AMIGA_MOD_NUM_CHANNELS; k ++) {
+				BKFileAmigaModNote const * note = &pattern -> rows [j][k];
+
+				if (note -> note) {
+					usedSamples [note -> sample] ++;
+				}
+
+				printf ("%02x %02x %02x %02x   ", note -> sample, note -> note, note -> effect, note -> effectData);
+			}
+
+			printf("\n");
+		}
+	}
+
+	printf ("\nOffsets:\n");
+
+	for (BKInt i = 0; i < mod -> songLength; i ++) {
+		printf ("%02x %02x\n", i, mod -> songOffsets [i]);
+	}
+
+
+	printf ("\nUsed samples:\n");
+
+	for (BKInt i = 0; i < BK_AMIGA_MOD_NUM_SAMPLES; i ++) {
+		printf ("%02x %u\n", i, usedSamples [i]);
+	}
+
+}
+
 #ifdef main
 #undef main
 #endif
@@ -76,8 +138,9 @@ int main (int argc, char const * argv [])
 	fclose (file);
 
 
+	printSongInfo (&mod);
 
-	printf("num patterns: %u\n", mod.numPatterns);
+
 	return 0;
 
 

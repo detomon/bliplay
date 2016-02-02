@@ -21,6 +21,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <math.h>
+#include "BKTone.h"
 #include "BKFileAmigaMod.h"
 
 #define BK_REVERSE16(value) ((value & 0xFF) << 8 | ((value & 0xFF00) >> 8))
@@ -40,6 +42,29 @@ static BKFrame const volumeValues [64 + 1] =
 	 8711,  9578, 10512, 11516, 12593, 13748, 14984, 16305,
 	17716, 19220, 20823, 22529, 24342, 26267, 28309, 30474,
 	32767,
+};
+
+/**
+ * Signed values for 4-bit integers
+ */
+static BKInt const nibbleValues [16] =
+{
+	[0x0] =  0,
+	[0x1] = +1,
+	[0x2] = +2,
+	[0x3] = +3,
+	[0x4] = +4,
+	[0x5] = +5,
+	[0x6] = +6,
+	[0x7] = +7,
+	[0x8] = -8,
+	[0x9] = -7,
+	[0xA] = -6,
+	[0xB] = -5,
+	[0xC] = -4,
+	[0xD] = -3,
+	[0xE] = -2,
+	[0xF] = -1,
 };
 
 extern BKClass BKFileAmigaModClass;
@@ -140,18 +165,21 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 
 	ptr = & header [0];
 	strncpy (mod -> songName, (void *) ptr, BK_AMIGA_MOD_SONG_NAME_MAX_LENGTH);
+	mod -> songName [BK_AMIGA_MOD_SONG_NAME_MAX_LENGTH] = '\0';
 
 	ptr = & header [20];
-	sample = mod -> samples;
 
 	for (int i = 0; i < BK_AMIGA_MOD_NUM_SAMPLES; i ++) {
+		sample = &mod -> samples [i];
+
 		strncpy (sample -> sampleName, (void *) ptr, BK_AMIGA_MOD_SAMP_NAME_MAX_LENGTH);
+		sample -> sampleName [BK_AMIGA_MOD_SAMP_NAME_MAX_LENGTH] = '\0';
 		ptr += 22;
 		sample -> sampleLength = *(uint16_t *) ptr;
 		ptr += 2;
-		sample -> fineTune = (*(uint8_t *) ptr) & 0xF;
+		sample -> fineTune = nibbleValues [(*(uint8_t *) ptr) & 0xF];
 		ptr ++;
-		sample -> volume = BKClamp(*(uint8_t *) ptr, 0, BK_AMIGA_NUM_VOLUME_STEPS);
+		sample -> volume = BKClamp (*(uint8_t *) ptr, 0, BK_AMIGA_NUM_VOLUME_STEPS);
 		ptr ++;
 		sample -> repeatStart = *(uint16_t *) ptr;
 		ptr += 2;
@@ -171,8 +199,6 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 
 		sample -> sampleOffset = sampleOffset;
 		sampleOffset += sample -> sampleLength;
-
-		sample ++;
 	}
 
 	ptr = & header [950];
@@ -216,7 +242,7 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 		pattern = & mod -> patterns [i];
 
 		for (int j = 0; j < BK_AMIGA_MOD_NUM_ROWS; j ++) {
-			row      = pattern [i].rows [j];
+			row      = pattern -> rows [j];
 			channels = (void *) ptr;
 
 			for (int k = 0; k < BK_AMIGA_MOD_NUM_CHANNELS; k ++) {
@@ -230,6 +256,13 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 				if (row [k].effect == 0x0E) {
 					row [k].effect = row [k].effectData >> 4;
 					row [k].effectData &= 0x0F;
+				}
+
+				if (row [k].note) {
+					float hz = 7093789.2 / (row [k].note * 2.f);
+					float n = log2 (hz / 440.f) * 12.f - BK_C_3 - 3;
+
+					row [k].note = round (n);
 				}
 			}
 
@@ -251,15 +284,11 @@ static BKInt BKFileAmigaModReadSample (BKFileAmigaMod * mod)
 {
 	BKInt res;
 
-	res = BKDataInit (& mod -> sample);
-
-	if (res < 0) {
+	if ((res = BKDataInit (& mod -> sample)) < 0) {
 		return res;
 	}
 
-	res = BKDataLoadRaw (& mod -> sample, mod -> file, 1, BK_8_BIT_SIGNED);
-
-	if (res < 0) {
+	if ((res = BKDataLoadRaw (& mod -> sample, mod -> file, 1, BK_8_BIT_SIGNED)) < 0) {
 		return res;
 	}
 
@@ -272,27 +301,19 @@ BKInt BKFileAmigaModRead (BKFileAmigaMod * mod, FILE * file)
 
 	mod -> file = file;
 
-	res = BKFileAmigaModReadHeader (mod);
-
-	if (res < 0) {
+	if ((res = BKFileAmigaModReadHeader (mod)) < 0) {
 		return res;
 	}
 
-	res = BKFileAmigaModReadPatterns (mod);
-
-	if (res < 0) {
+	if ((res = BKFileAmigaModReadPatterns (mod)) < 0) {
 		return res;
 	}
 
-	res = BKFileAmigaModReadSample (mod);
-
-	if (res < 0) {
+	if ((res = BKFileAmigaModReadSample (mod)) < 0) {
 		return res;
 	}
 
-	res = BKFileAmigaModCompile (mod);
-
-	if (res < 0) {
+	if ((res = BKFileAmigaModCompile (mod)) < 0) {
 		return res;
 	}
 
