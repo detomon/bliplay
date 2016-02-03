@@ -2,7 +2,7 @@ bliplay
 =======
 
 This program was build to play sound files to test the BlipKit library.
-Some example files are located in `examples`.
+Some example files are located in `bliplay/examples`.
 
 1. Install SDL
 --------------
