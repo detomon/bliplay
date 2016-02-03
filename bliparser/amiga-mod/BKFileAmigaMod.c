@@ -217,7 +217,16 @@ static BKInt BKFileAmigaModReadHeader (BKFileAmigaMod * mod)
 
 static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 {
-	uint8_t patternData [sizeof (BKFileAmigaModPattern)];
+	struct pattern {
+		struct row {
+			uint8_t sample;
+			uint8_t note;
+			uint8_t effect;
+			uint8_t effectData;
+		} rows [BK_AMIGA_MOD_NUM_ROWS][BK_AMIGA_MOD_NUM_CHANNELS];
+	};
+
+	uint8_t patternData [sizeof (struct pattern)];
 	uint32_t const * channels;
 	uint8_t const * channel;
 	BKFileAmigaModPattern * pattern;
@@ -234,16 +243,20 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 	for (int i = 0; i < mod -> numPatterns; i ++) {
 		size = fread (patternData, sizeof (uint8_t), sizeof (patternData) / sizeof (uint8_t), mod -> file);
 
-		if (size < sizeof (BKFileAmigaModPattern)) {
+		if (size < sizeof (patternData)) {
 			return BK_FILE_ERROR;
 		}
 
 		ptr = patternData;
 		pattern = & mod -> patterns [i];
 
+		printf("** %u\n", i);
+
 		for (int j = 0; j < BK_AMIGA_MOD_NUM_ROWS; j ++) {
 			row      = pattern -> rows [j];
 			channels = (void *) ptr;
+
+			printf("- ");
 
 			for (int k = 0; k < BK_AMIGA_MOD_NUM_CHANNELS; k ++) {
 				channel = (void *) & channels [k];
@@ -252,9 +265,13 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 				row [k].effect     = channel [2] & 0x0F;
 				row [k].effectData = channel [3];
 
+				printf(" *%2x %2x %2x %2x* ", channel[0], channel[1], channel[2], channel[3]);
+
 				// extended command
 				if (row [k].effect == 0x0E) {
-					row [k].effect = row [k].effectData >> 4;
+					// Use upper 4 bits and use effect numbers
+					// after normal effects
+					row [k].effect = (row [k].effectData >> 4) + 0xF;
 					row [k].effectData &= 0x0F;
 				}
 
@@ -262,9 +279,16 @@ static BKInt BKFileAmigaModReadPatterns (BKFileAmigaMod * mod)
 					float hz = 7093789.2 / (row [k].note * 2.f);
 					float n = log2 (hz / 440.f) * 12.f - BK_C_3 - 3;
 
+					printf("%2d (%03d) -- ", (int) n, row [k].note);
+
 					row [k].note = round (n);
 				}
+				else {
+					printf("   (   ) -- ");
+				}
 			}
+
+			printf("\n");
 
 			ptr += 16;
 		}

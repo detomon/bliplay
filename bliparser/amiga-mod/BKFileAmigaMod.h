@@ -52,10 +52,10 @@ struct BKFileAmigaModSample
 
 struct BKFileAmigaModNote
 {
-	uint8_t sample;
-	uint8_t note;
-	uint8_t effect;
-	uint8_t effectData;
+	uint16_t sample;
+	uint16_t note;
+	uint16_t effect;
+	uint16_t effectData;
 };
 
 struct BKFileAmigaModPattern
