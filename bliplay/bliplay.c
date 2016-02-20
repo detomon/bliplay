@@ -630,7 +630,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 			}
 			case 'o': {
 				outputFilename = optarg;
-				flags = (flags & ~FLAG_INFO) | FLAG_NO_SOUND;
+				flags |= FLAG_INFO | FLAG_NO_SOUND;
 				break;
 			}
 			case 'r': {
@@ -669,10 +669,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 				break;
 			}
 		}
-	}
-
-	if (flags & FLAG_NO_SOUND) {
-		flags &= ~FLAG_INFO;
 	}
 
 	if (flags & FLAG_INFO_EXPLICITE) {
