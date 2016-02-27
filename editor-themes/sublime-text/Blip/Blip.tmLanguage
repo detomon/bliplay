@@ -25,6 +25,20 @@
 			<string>#string-double</string>
 		</dict>
 		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.blip</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>!</string>
+			<key>name</key>
+			<string>punctuation.definition.string.begin.blip</string>
+		</dict>
+		<dict>
 			<key>include</key>
 			<string>#numeric-values</string>
 		</dict>
@@ -70,7 +84,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a|adsr|anv|as|at|d|dc|dcnv|dn|dr|ds|e|g|i|info|load|m|mt|p|pnv|pt|pw|r|raw|rt|s|st|stepticks|t|title|v|vm|vnv|w|x|xb|z)\b</string>
+			<string>(a|adsr|anv|as|at|d|data|dc|dcnv|dn|dr|ds|e|g|i|info|load|m|mstepticks|mt|p|pnv|pt|pw|r|raw|rt|s|st|stepticks|t|tickrate|title|tk|v|vm|vnv|w|x|xb|z)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
 		</dict>
@@ -153,7 +167,7 @@
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>(\-?[0-9]+)\b</string>
+					<string>(\-?[0-9]+)(\/\-?[0-9]+)?\b</string>
 					<key>name</key>
 					<string>constant.numeric.blip</string>
 				</dict>
