@@ -34,9 +34,9 @@
 #include <getopt.h>
 #include <math.h>
 #include <stdarg.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
@@ -49,9 +49,8 @@
 #	endif
 #endif
 
-#include "BKContextWrapper.h"
-#include "BKWaveFileWriter.h"
-#include "BKString.h"
+#include "BKTK.h"
+#include "BlipKit.h"
 
 #define BK_BLIPLAY_VERSION "2.4.4"
 
@@ -87,7 +86,8 @@ enum FLAG
 
 static BKInt            istty;
 static BKInt            flags;
-static BKContextWrapper ctx;
+static BKTKContext      ctx
+static BKContext        renderCtx;
 static BKUInt           sampleRate = 44100;
 static BKTime           seekTime, endTime;
 static BKInt            numChannels = 2;
@@ -162,7 +162,7 @@ static int getchar_nocanon (unsigned tcflags)
 
 	return c;
 }
-#endif
+#endif /* BK_USE_PLAYER */
 
 static int string_begins_with (char const * str, char const * head)
 {
@@ -347,28 +347,28 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 }
 
 #if BK_USE_PLAYER
-static void fill_audio (BKContextWrapper * ctx, Uint8 * stream, int len)
+static void fill_audio (BKTKWrapper * ctx, Uint8 * stream, int len)
 {
 	BKUInt numChannels = ctx -> ctx.numChannels;
 	BKUInt numFrames   = len / sizeof (BKFrame) / numChannels;
 
-	BKContextGenerate (& ctx -> ctx, (BKFrame *) stream, numFrames);
+	BKContextGenerate (ctx -> ctx, (BKFrame *) stream, numFrames);
 	output_chunk ((BKFrame *) stream, numFrames * numChannels);
 }
-#endif
+#endif /* BK_USE_PLAYER */
 
 static BKInt push_frames (BKFrame inFrames [], BKUInt size, void * info)
 {
 	return 0;
 }
 
-static void seek_context (BKContextWrapper * ctx, BKTime time)
+static void seek_context (BKTKWrapper * ctx, BKTime time)
 {
-	BKContextGenerateToTime (& ctx -> ctx, time, push_frames, NULL);
+	BKContextGenerateToTime (ctx -> ctx, time, push_frames, NULL);
 }
 
 #if BK_USE_PLAYER
-static BKInt init_sdl (BKContextWrapper * ctx, char const ** error)
+static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 {
 	SDL_Init (SDL_INIT_AUDIO);
 
@@ -388,15 +388,15 @@ static BKInt init_sdl (BKContextWrapper * ctx, char const ** error)
 
 	return 0;
 }
-#endif
+#endif /* BK_USE_PLAYER */
 
-static BKInt check_tracks_running (BKContextWrapper * ctx)
+static BKInt check_tracks_running (BKTKContext * ctx)
 {
-	BKTrackWrapper * track;
+	BKTKTrack * track;
 	BKInt numActive = ctx -> tracks.length;
 
 	for (BKInt i = 0; i < ctx -> tracks.length; i ++) {
-		track = BKArrayGetItemAtIndex (& ctx -> tracks, i);
+		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
 
 		// exit if tracks have repeated
 		if (flags & FLAG_NO_SOUND) {
@@ -469,29 +469,29 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 }
 
 #if BK_USE_PLAYER
-static void print_time (BKContextWrapper * ctx)
+static void print_time (BKTKContext * ctx)
 {
-	int frames = BKTimeGetTime (ctx -> ctx.currentTime) * 100 / ctx -> ctx.sampleRate;
+	int frames = BKTimeGetTime (ctx -> ctx -> currentTime) * 100 / ctx -> ctx -> sampleRate;
 	int frac   = frames % 100;
 	int hsecs  = frames / 100;
 
 	int secs = hsecs % 60;
 	int mins = hsecs / 60;
 
-	printf ("%s%4d:%02d.%02d%s\r", colorGreen, mins, secs, frac, colorNormal);
+	printf ("\r%s%4d:%02d.%02d%s", colorGreen, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
-#endif
+#endif /* BK_USE_PLAYER */
 
 static BKInt count_slots (BKArray * array)
 {
-	void * ptr;
 	BKInt count = 0;
+	BKTKObject const * object;
 
 	for (BKInt i = 0; i < array -> length; i ++) {
-		BKArrayGetItemAtIndexCopy (array, i, & ptr);
+		object = *(BKTKObject **) BKArrayItemAt (array, i);
 
-		if (ptr) {
+		if (object) {
 			count ++;
 		}
 	}
@@ -529,15 +529,15 @@ static void waveform_get_name (char name [], BKSize size, BKEnum waveform, BKInt
 	strcpy (name, waveformName);
 }
 
-static void print_track_info (BKContextWrapper * ctx)
+static void print_track_info (BKTKContext * ctx)
 {
 	BKEnum waveform;
-	BKTrackWrapper * track;
+	BKTKTrack * track;
 	BKInt isCustom;
 	char name [64];
 
-	for (BKInt i = 0; i < ctx -> tracks.length; i ++) {
-		track = BKArrayGetItemAtIndex (& ctx -> tracks, i);
+	for (BKInt i = 0; i < ctx -> tracks.len; i ++) {
+		track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, i);
 		waveform = track -> waveform;
 
 		waveform_get_name (name, sizeof (name), waveform, & isCustom);
@@ -551,16 +551,16 @@ static void print_track_info (BKContextWrapper * ctx)
 	}
 }
 
-static void print_info (BKContextWrapper * ctx)
+static void print_info (BKTKContext * ctx)
 {
 	print_message ("      step ticks: %d\n", ctx -> stepTicks);
 	print_message ("     instruments: %d\n", count_slots (& ctx -> instruments));
 	print_message ("custom waveforms: %d\n", count_slots (& ctx -> waveforms));
 	print_message ("         samples: %d\n", count_slots (& ctx -> samples));
-	print_message ("          tracks: %d\n", ctx -> tracks.length);
+	print_message ("          tracks: %d\n", ctx -> tracks.len);
 	print_track_info (ctx);
-	print_message ("     sample rate: %d\n", ctx -> ctx.sampleRate);
-	print_message ("        channels: %d\n\n", ctx -> ctx.numChannels);
+	print_message ("     sample rate: %d\n", ctx -> ctx -> sampleRate);
+	print_message ("        channels: %d\n\n", ctx -> ctx -> numChannels);
 }
 
 static BKInt should_overwrite_output (char const * filename)
@@ -743,6 +743,11 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 #endif
 
 	opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTrackWrapperOptionTimingShift;
+
+	/*if (BKContextInit (& renderCtx, numChannels, sampleRate) != 0) {
+		print_error ("Could not initialize context\n");
+		return -1;
+	}*/
 
 	if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
 		print_error ("Could not initialize context\n");
@@ -1018,7 +1023,7 @@ static BKInt runloop (BKContextWrapper * ctx)
 		}
 	}
 	while (1);
-#endif
+#endif /* BK_USE_PLAYER */
 
 #if BK_USE_PLAYER
 	SDL_PauseAudio (1);

@@ -63,7 +63,7 @@ AC_CHECK_FUNCS([getcwd memmove memset select])
 
 AC_CONFIG_FILES([
 	Makefile
-	bliparser/Makefile
+	parser/Makefile
 	bliplay/Makefile
 ])
 
