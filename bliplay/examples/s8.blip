@@ -1,0 +1,190 @@
+stepticks:22
+
+[instr
+	v:4:1:127:192:255:245:240:220:192:164:127:96:32:0
+	a:2:1:-1200:-1200:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
+]
+
+[track:square
+
+	[grp
+		e:pr:22
+		a:a3;s:2;r;s:2
+		a:c#4;s:2;r;s:2
+		a:e4;s:2;r;s:2
+		rt:33;a:f#4;a:a4;s:2;r
+		a:g#4;s:3;r;s:1
+
+		a:e4;s:2;r;s:2
+		a:d4;s:2;r;s:2
+		a:c#4;s:1;r;s:1
+		a:a3;s:3;r;s:1
+		s:4
+
+		e:pr:22
+		a:a3;s:2;r;s:2
+		a:f#4;s:1;r;s:1
+		a:e4;s:3;r;s:1
+		a:f#4;s:1;r;s:1
+		a:e4;s:1;r;s:1
+		a:d4;s:1;r;s:1
+		a:d4;a:e4;s:1;r;s:1
+
+		a:c#4;s:2;r;s:2
+		a:a3;s:3;r;s:1
+
+		s:2
+	]
+
+	xb
+
+	i:0
+	dc:2
+	v:255
+	pt:-1200
+
+	s:32
+	s:32
+	g:0
+
+	x
+
+]
+
+[track:square
+
+	[grp
+		s:8
+	]
+
+	xb
+
+	g:0
+
+	x
+
+]
+
+[track:triangle
+
+	[grp
+		e:pr:11
+		a:a2;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		a:d3;a:d1;s:2;r
+		rt:33;a:d2;s:2;r
+		rt:33;a:c#1;s:2;r
+		rt:33;a:c#2;s:2;r
+		a:a2;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		a:d3;a:d1;s:2;r
+		rt:33;a:d2;s:2;r
+		a:c#1;s:2;r
+		a:c#2;s:2;r
+	]
+
+	[grp
+		e:pr:11
+		a:a2;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		a:d3;a:d1;s:2;r
+		rt:33;a:d2;s:2;r
+		rt:33;a:c#1;s:2;r
+		rt:33;a:c#2;s:2;r
+		a:a2;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		a:a1;s:2;r
+		a:d3;a:d1;s:2;r
+		a:d2;s:2;r
+		a:c#2;s:2;r
+		a:c#1;s:2;r
+	]
+
+	xb
+
+	g:0
+	g:1
+	g:0
+	g:1
+
+	x
+
+]
+
+[track:sawtooth
+
+	[grp
+		e:pr:22
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		a:d1;s:2;r
+		rt:33;a:d0;s:2;r
+		a:c#1;s:2
+		a:c#2;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a2;a:a1;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:d1;s:2;r
+		a:d0;s:2;r
+		a:c#1;s:2
+		a:c#2;s:2;r
+	]
+
+	[grp
+		e:pr:22
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		rt:33;a:a0;s:2;r
+		rt:33;a:a1;s:2;r
+		a:d1;s:2;r
+		rt:33;a:d0;s:2;r
+		a:c#1;s:2
+		a:c#2;s:2;r
+		rt:33;a:a2;a:a1;s:2;r
+		rt:33;a:a1;a:a2;s:2;r
+		rt:33;a:a2;a:a1;s:2;r
+		rt:33;a:a1;a:a2;s:2;r
+		rt:33;a:d1;a:d2;s:2;r
+		a:d1;s:2;r
+		a:c#2;s:2
+		a:c#1;s:2;r
+	]
+
+	xb
+
+	g:0
+	g:1
+	g:0
+	g:1
+
+	x
+
+]
+
+[track:noise
+
+	[grp
+		e:pr:11
+		v:192;rt:8;pw:32;a:c2;a:c0;s:2;r;pw:0
+		v:192;rt:3;a:c4;s:2;r
+		rt:8;a:c6;s:2;r
+		rt:3;a:c4;s:2;r
+	]
+
+	xb
+
+	g:0
+
+	x
+
+]

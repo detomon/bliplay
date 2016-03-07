@@ -1389,7 +1389,7 @@ stepticks:22
 
 		a:g2;s:1;r;s:1;at:11;a:f2;s:1;r;s:1
 		a:d#2;s:1;r;s:1;at:11;a:d2;s:1;r;s:1
-		a:c2;s:1;r;s:1;a:11;a:b1;s:2;r;s:1
+		a:c2;s:1;r;s:1;at:11;a:b1;s:2;r;s:1
 
 		s:11
 	]
@@ -1414,7 +1414,7 @@ stepticks:22
 		s:4;a:c2;s:3;r;s:1
 		a:g2;s:1;r;s:1;at:11;a:f2;s:1;r;s:1
 
-		a:d#2;s:1;r;s:1;a:11;a:d2;s:1;r;s:2;s:3
+		a:d#2;s:1;r;s:1;at:11;a:d2;s:1;r;s:2;s:3
 		a:c2;s:4;r;s:4
 		a:c2;s:4;r
 
@@ -1431,7 +1431,7 @@ stepticks:22
 		s:4;a:d2;s:3;r;s:1
 		a:g2;s:1;r;s:1;at:11;a:f2;s:1;r;s:1
 
-		a:d#2;s:1;r;s:1;a:11;a:d2;s:1;r;s:1;s:4
+		a:d#2;s:1;r;s:1;at:11;a:d2;s:1;r;s:1;s:4
 		a:c2;s:4;r;s:4
 		a:c2;s:4;r
 

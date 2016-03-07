@@ -1,0 +1,191 @@
+stepticks:24
+
+[instr:0
+	adsr:0:0:255:18
+	dc:0:1:0:4
+]
+
+[instr:1
+	adsr:5:10:230:10
+]
+
+[instr:10
+	adsr:60:30:128:300
+	pnv:0:1:20:-64:40:64
+]
+
+[instr:20
+	vnv:1:1:0:255:1:255:20:64:80:0
+	dc:0:1:0:4
+]
+
+[wave:0
+	s:255:0:255:0:0:0:0:0
+]
+
+[track:square
+
+	[grp
+		dc:8
+		e:pr:24
+		rt:36;a:a1;s:2;r
+		rt:47;at:11;a:a2;s:2;r
+		rt:36;a:a1;s:2;r
+		rt:47;at:11;a:a2;s:2;r
+		rt:36;a:g#1;s:2;r
+		rt:47;at:11;a:g#2;s:2;r
+		rt:36;a:g#1;s:2;r
+		rt:47;at:11;a:g#2;s:2;r
+		rt:36;a:f1;s:2;r
+		rt:47;at:11;a:f2;s:2;r
+		rt:36;a:f1;s:2;r
+		rt:47;at:11;a:f2;s:2;r
+		rt:36;a:e1;s:2;r
+		rt:47;at:11;a:e2;s:2;r
+		rt:36;a:e1;s:2;r
+		rt:47;at:11;a:e2;s:2;r
+	]
+
+	xb
+
+	i:20
+	v:255
+	pt:-1190
+	g:0
+
+	x
+
+]
+
+[track:square
+
+	[grp
+		e:pr:24
+		a:a3;s:2;r;s:2;r
+		a:c4;s:2;r;s:2;r
+		a:a3;s:1;r;s:1;r
+		at:11;a:g#3;s:1;r;s:1;r
+		a:f3;s:1;r;s:1;r
+		at:11;a:g#3;s:1;r;s:1;r
+		a:a3;s:2;r;s:2
+		a:c3;s:2;r;s:2
+		a:d3;s:1;r;s:1
+		at:11;a:f3;s:1;r;s:1
+		a:e3;s:2;r;s:2
+	]
+
+	[grp
+		e:pr:24
+		a:a3;s:2;r;s:2;r
+		a:c4;s:2;r;s:2;r
+		a:a3;s:1;r;s:1;r
+		at:11;a:g#3;s:1;r;s:1;r
+		a:f3;s:1;r;s:1;r
+		at:11;a:g#3;s:1;r;s:1;r
+		a:a3;s:2;r;s:2
+		a:c3;s:1;r;s:1;r
+		at:11;a:c3;s:1;r;s:1;r
+		a:d#3;s:1;r;s:1
+		at:11;a:f3;s:1;r;s:1
+		a:e3;s:2;r;s:2
+	]
+
+	xb
+
+	i:1
+	dc:4
+	v:224
+	pt:0
+	g:0
+	g:1
+	pt:0
+
+	x
+
+]
+
+[track:square
+
+	[grp
+		e:pr:24
+		s:2;a:e3;s:2;r;s:2;r
+		a:c3;s:2;r;s:2;r
+		a:e3;s:2;r;s:2;r
+		a:g#3;s:2;r;s:2;r
+		a:f3;s:2;r;s:2;r
+		a:e3;s:2;r;s:2;r
+		a:c3;s:2;r;s:2
+		a:a2;s:2;r
+	]
+
+	xb
+
+	i:0
+	dc:8
+	pt:10
+	v:96
+	v:0
+	g:0
+
+	x
+
+]
+
+[track:noise
+
+	[grp
+		e:pr:24
+		rt:4;a:c5;a:c3;s:1;r;s:1
+		at:11;rt:17;a:c6;s:1;r;s:1
+		rt:15;a:c5;a:g4;s:1;r;s:1
+		at:11;rt:17;a:c6;s:1;r;s:1
+	]
+
+	xb
+
+	v:178
+	g:0
+
+	x
+
+]
+
+[track:triangle
+
+	[grp
+		e:pr:24
+		a:a2;a:a0;s:1;r;s:3
+		a:a2;a:a0;s:1;r;s:3
+		a:a2;a:a0;s:1;r;s:3
+		a:a2;a:a0;s:1;r;s:3
+	]
+
+	xb
+
+	g:0
+
+	x
+
+]
+
+[track:sawtooth
+
+	[grp
+		dc:8
+		e:pr:24
+		a:a0;s:2;r;s:6
+		a:g#0;s:2;r;s:6
+		a:f0;s:2;r;s:6
+		a:e0;s:2;r;s:6
+	]
+
+	xb
+
+	i:0
+	v:192
+	pt:-13
+	g:0
+
+	x
+
+]
