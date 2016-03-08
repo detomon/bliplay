@@ -539,39 +539,54 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 			}
 			case BKIntrReturn: {
 				if (interpreter -> stackPtr > interpreter -> stack) {
-					opcode = (void *) *(-- interpreter -> stackPtr);
+					opcode = (void *) (-- interpreter -> stackPtr) -> ptr;
 				}
 				break;
 			}
 			case BKIntrCall: {
-				BKTKGroup * group;
-				BKTKTrack * track;
+				BKTKGroup * group = NULL;
+				BKTKTrack * track = NULL;
+				BKTKStackItem * prevItem = NULL;
+				BKTKStackItem * item;
 
 				value0 = cmdMask.grp.idx1;
 				value1 = cmdMask.grp.idx2 + 1;
 
-				if (interpreter -> stackPtr < interpreter -> stackEnd) {
-					*(interpreter -> stackPtr ++) = (uintptr_t) opcode;
+				if (interpreter -> stackPtr >= interpreter -> stackEnd) {
+					break;
 				}
+
+				if (interpreter -> stackPtr > interpreter -> stack) {
+					prevItem = interpreter -> stackPtr - 1;
+				}
+
+				item = interpreter -> stackPtr ++;
+				item -> ptr = (uintptr_t) opcode;
 
 				switch (cmdMask.grp.type) {
 					case BKGroupIndexTypeLocal: {
-						group = *(BKTKGroup **) BKArrayItemAt (&ctx -> groups, value0);
-						opcode = group -> byteCode.first -> data;
+						if (prevItem) {
+							track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, prevItem -> trackIdx + 1);
+						}
+						else {
+							track = ctx;
+						}
 						break;
 					}
 					case BKGroupIndexTypeGlobal: {
 						track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, 0);
-						group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, value0);
-						opcode = group -> byteCode.first -> data;
 						break;
 					}
 					case BKGroupIndexTypeTrack: {
 						track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, value1);
-						group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, value0);
-						opcode = group -> byteCode.first -> data;
 						break;
 					}
+				}
+
+				if (track) {
+					group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, value0);
+					opcode = group -> byteCode.first -> data;
+					item -> trackIdx = track -> object.index;
 				}
 
 				break;
