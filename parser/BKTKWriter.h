@@ -6,7 +6,7 @@
 /**
  * Writer callback
  */
-typedef BKInt (* BKTKWriterWriteFunc) (void * userInfo, uint8_t const * data, size_t size);
+typedef BKInt (* BKTKWriterWriteFunc) (void * userInfo, uint8_t const * data, BKUSize size);
 
 /**
  * Write node

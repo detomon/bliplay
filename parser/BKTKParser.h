@@ -57,7 +57,7 @@ struct BKTKParserNode
 	BKUInt           flags;
 	BKString         name;
 	BKString       * args;
-	size_t           argCount;
+	BKUSize          argCount;
 	BKTKType       * argTypes;
 	BKTKOffset       offset;
 	BKTKOffset     * argOffsets;
@@ -72,23 +72,23 @@ struct BKTKParserNode
 struct BKTKParserItem
 {
 	BKTKParserNode * node;
-	size_t           itemCount;
+	BKUSize          itemCount;
 };
 
 struct BKTKParser
 {
 	BKObject         object;
-	size_t           stackSize;
-	size_t           stackCapacity;
-	size_t           itemCount;
+	BKUSize          stackSize;
+	BKUSize          stackCapacity;
+	BKUSize          itemCount;
 	BKTKParserItem * stack;
-	size_t           bufferLen;
-	size_t           bufferCap;
+	BKUSize          bufferLen;
+	BKUSize          bufferCap;
 	uint8_t        * buffer;
-	size_t           argCount;
-	size_t           argLengthsCapacity;
-	size_t         * argCursors;
-	size_t         * argLengths;
+	BKUSize          argCount;
+	BKUSize          argLengthsCapacity;
+	BKUSize        * argCursors;
+	BKUSize        * argLengths;
 	BKTKType       * argTypes;
 	BKTKOffset     * argOffsets;
 	BKTKParserNode   rootNode;
@@ -116,7 +116,7 @@ extern void BKTKParserReset (BKTKParser * parser);
  *
  * Returns a value != 0 if an error ocurred.
  */
-extern BKInt BKTKParserPutTokens (BKTKParser * parser, BKTKToken const * tokens, size_t count);
+extern BKInt BKTKParserPutTokens (BKTKParser * parser, BKTKToken const * tokens, BKUSize count);
 
 /**
  * Get node tree

@@ -373,7 +373,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				value0 = cmdMask.arg1.arg1;
 				interpreter -> stepTickCount = value0;
 
-				for (size_t i = 0; i < ctx -> ctx -> tracks.len; i ++) {
+				for (BKUSize i = 0; i < ctx -> ctx -> tracks.len; i ++) {
 					track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, i);
 
 					if (track) {

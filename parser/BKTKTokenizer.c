@@ -148,10 +148,10 @@ static void BKTKTokenizerRelocateTokenData (BKTKTokenizer * tok, uint8_t * newBu
 	}
 }
 
-static BKInt BKTKTokenizerEnsureBufferSpace (BKTKTokenizer * tok, size_t additionalSize)
+static BKInt BKTKTokenizerEnsureBufferSpace (BKTKTokenizer * tok, BKUSize additionalSize)
 {
 	uint8_t * newBuffer;
-	size_t newCapacity;
+	BKUSize newCapacity;
 
 	if (tok -> bufferLen + additionalSize + MIN_BUFFER_FREE_SPACE >= tok -> bufferCap) {
 		newCapacity = BKNextPow2 (tok -> bufferCap + additionalSize + MIN_BUFFER_FREE_SPACE);
@@ -266,7 +266,7 @@ static void BKTKCharStatePushBack (BKTKCharState * state, BKInt c)
 	state -> offset = state -> lastOffset;
 }
 
-BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, size_t size, BKTKPutTokensFunc putTokens, void * arg)
+BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokensFunc putTokens, void * arg)
 {
 	BKInt c;
 	BKInt res = -1;

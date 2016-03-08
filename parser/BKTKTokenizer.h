@@ -10,7 +10,7 @@ typedef enum BKTKState BKTKState;
 typedef struct BKTKTokenizer BKTKTokenizer;
 typedef struct BKTKToken BKTKToken;
 
-typedef BKInt (* BKTKPutTokensFunc) (BKTKToken const * tokens, size_t count, void * arg);
+typedef BKInt (* BKTKPutTokensFunc) (BKTKToken const * tokens, BKUSize count, void * arg);
 
 /**
  * Defines a token type
@@ -60,7 +60,7 @@ enum BKTKState
 struct BKTKToken
 {
 	BKTKType        type;
-	size_t          dataLen;
+	BKUSize         dataLen;
 	uint8_t const * data;
 	BKTKOffset      offset;
 };
@@ -72,7 +72,7 @@ struct BKTKTokenizer
 {
 	BKObject   object;
 	BKTKState  state;
-	size_t     bufferLen, bufferCap;
+	BKUSize    bufferLen, bufferCap;
 	uint8_t  * buffer;
 	BKUInt     tokensLen;
 	BKUInt     acceptCount;
@@ -107,7 +107,7 @@ extern void BKTKTokenizerReset (BKTKTokenizer * tok);
  *
  *  Call the function with `size` = 0 to terminate the tokenizer.
  */
-extern BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, size_t size, BKTKPutTokensFunc putTokens, void * arg);
+extern BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokensFunc putTokens, void * arg);
 
 /**
  * Check if tokenizer is finished

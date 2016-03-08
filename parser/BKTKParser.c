@@ -130,10 +130,10 @@ static void BKTKParserNodeTransferArgs (BKTKParserNode * target, BKTKParserNode 
 	source -> argOffsets = NULL;
 }
 
-static BKInt BKTKParserBufferEnsureSpace (BKTKParser * parser, size_t addSize)
+static BKInt BKTKParserBufferEnsureSpace (BKTKParser * parser, BKUSize addSize)
 {
 	uint8_t * newBuffer;
-	size_t newCapacity;
+	BKUSize newCapacity;
 
 	addSize += 256;
 
@@ -155,8 +155,8 @@ static BKInt BKTKParserBufferEnsureSpace (BKTKParser * parser, size_t addSize)
 static BKInt BKTKParserStackEnsureSpace (BKTKParser * parser)
 {
 	BKTKParserItem * newBuffer;
-	size_t newCapacity;
-	size_t const minAddCap = 16;
+	BKUSize newCapacity;
+	BKUSize const minAddCap = 16;
 
 	if (parser -> stackSize + minAddCap >= parser -> stackCapacity) {
 		newCapacity = BKNextPow2 (parser -> stackSize + minAddCap);
@@ -175,11 +175,11 @@ static BKInt BKTKParserStackEnsureSpace (BKTKParser * parser)
 
 static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 {
-	size_t * newLengths;
-	size_t * newArgCursors;
+	BKUSize * newLengths;
+	BKUSize * newArgCursors;
 	BKTKType * newArgTypes;
-	size_t newCapacity;
-	size_t const minAddCap = 16;
+	BKUSize newCapacity;
+	BKUSize const minAddCap = 16;
 
 	if (parser -> argCount + minAddCap >= parser -> argLengthsCapacity) {
 		newCapacity = BKNextPow2 (parser -> argCount + minAddCap);
@@ -478,9 +478,9 @@ static BKInt BKTKParserEndCommand (BKTKParser * parser)
 	BKString * args;
 	BKTKType * argTypes;
 	BKTKOffset * argOffsets;
-	size_t bufferSize, argsSize, argTypesSize, argOffsetsSize;
+	BKUSize bufferSize, argsSize, argTypesSize, argOffsetsSize;
 	BKTKParserNode * node;
-	size_t size;
+	BKUSize size;
 
 	if (!parser -> argCount) {
 		return 0;
@@ -517,7 +517,7 @@ static BKInt BKTKParserEndCommand (BKTKParser * parser)
 		memcpy (argTypes,   &parser -> argTypes [1],   argTypesSize);
 		memcpy (argOffsets, &parser -> argOffsets [1], argOffsetsSize);
 
-		for (size_t i = 1; i < parser -> argCount; i ++) {
+		for (BKUSize i = 1; i < parser -> argCount; i ++) {
 			args [i - 1] = (BKString) {
 				.str = &buffer [parser -> argCursors [i]],
 				.len = parser -> argLengths [i],
@@ -847,7 +847,7 @@ static BKInt BKTKParserPutToken (BKTKParser * parser, BKTKToken const * token)
 	}
 }
 
-BKInt BKTKParserPutTokens (BKTKParser * parser, BKTKToken const * tokens, size_t count)
+BKInt BKTKParserPutTokens (BKTKParser * parser, BKTKToken const * tokens, BKUSize count)
 {
 	BKInt res;
 	BKTKToken const * token;

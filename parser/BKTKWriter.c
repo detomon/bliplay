@@ -8,15 +8,15 @@ typedef struct BKTKWriter BKTKWriter;
 struct BKTKWriter
 {
 	BKObject object;
-	size_t bufferLen;
-	size_t bufferCap;
+	BKUSize bufferLen;
+	BKUSize bufferCap;
 	uint8_t * buffer;
 	uint8_t * indentBuffer;
-	size_t indentSize;
-	size_t indentCap;
+	BKUSize indentSize;
+	BKUSize indentCap;
 	BKTKWriterWriteFunc write;
 	void * userInfo;
-	size_t level;
+	BKUSize level;
 };
 
 enum BKTKWriterChar
@@ -61,9 +61,9 @@ static uint8_t const base64Chars [64] =
 	'4', '5', '6', '7', '8', '9', '+', '/',
 };
 
-static void BKTKWriterIndentBufferExtend (uint8_t * indentBuffer, size_t indentSize, size_t capacity, size_t newCapacity)
+static void BKTKWriterIndentBufferExtend (uint8_t * indentBuffer, BKUSize indentSize, BKUSize capacity, BKUSize newCapacity)
 {
-	for (size_t i = capacity; i < newCapacity; i ++) {
+	for (BKUSize i = capacity; i < newCapacity; i ++) {
 		memcpy (&indentBuffer [indentSize * i], &indentBuffer [0], indentSize);
 	}
 }
@@ -128,7 +128,7 @@ static BKInt BKTKWriterCheckIfEscapeNeeded (const BKString * data)
 {
 	BKInt c;
 
-	for (size_t i = 0; i < data->len; i ++) {
+	for (BKUSize i = 0; i < data->len; i ++) {
 		c = data->str [i];
 
 		if (charTypes [c]) {
@@ -156,7 +156,7 @@ static BKInt BKTKWriterWriteChar (BKTKWriter * writer, uint8_t c)
 
 }
 
-static BKInt BKTKWriterWriteChars (BKTKWriter * writer, const uint8_t * data, size_t size)
+static BKInt BKTKWriterWriteChars (BKTKWriter * writer, const uint8_t * data, BKUSize size)
 {
 	BKInt res;
 
@@ -188,10 +188,10 @@ static BKInt BKTKWriterWriteString (BKTKWriter * writer, const BKString * data)
 {
 	BKInt c;
 	BKInt res;
-	size_t maxLen;
-	size_t bufferLen;
+	BKUSize maxLen;
+	BKUSize bufferLen;
 	uint8_t * str = data -> str;
-	size_t size = data -> len;
+	BKUSize size = data -> len;
 
 	if ((res = BKTKWriterWriteChar (writer, '\"')) != 0) {
 		return res;
@@ -203,7 +203,7 @@ static BKInt BKTKWriterWriteString (BKTKWriter * writer, const BKString * data)
 		// assume every character has to be escaped
 		maxLen = BKMin ((writer -> bufferCap - writer -> bufferLen) / 2, size);
 
-		for (size_t i = 0; i < maxLen; i ++) {
+		for (BKUSize i = 0; i < maxLen; i ++) {
 			c = str [i];
 
 			if (charTypes [c] & BKTKWriterCharEscape) {
@@ -236,11 +236,11 @@ static BKInt BKTKWriterWriteString (BKTKWriter * writer, const BKString * data)
 static BKInt BKTKWriterWriteBase64 (BKTKWriter * writer, const BKString * data)
 {
 	BKInt res;
-	size_t maxLen;
-	size_t bufferLen;
+	BKUSize maxLen;
+	BKUSize bufferLen;
 	uint32_t value;
 	uint8_t * str = data -> str;
-	size_t size = data -> len;
+	BKUSize size = data -> len;
 
 	if ((res = BKTKWriterWriteChars (writer, (uint8_t *) "!\"", 2)) != 0) {
 		return res;
@@ -308,10 +308,10 @@ static BKInt BKTKWriterWriteComment (BKTKWriter * writer, const BKString * data)
 {
 	BKInt c;
 	BKInt res;
-	size_t maxLen;
-	size_t bufferLen;
+	BKUSize maxLen;
+	BKUSize bufferLen;
 	uint8_t * str = data -> str;
-	size_t size = data -> len;
+	BKUSize size = data -> len;
 
 	if ((res = BKTKWriterWriteChar (writer, '%')) != 0) {
 		return res;
@@ -322,7 +322,7 @@ static BKInt BKTKWriterWriteComment (BKTKWriter * writer, const BKString * data)
 	while (size) {
 		maxLen = BKMin (writer -> bufferCap - writer -> bufferLen, size);
 
-		for (size_t i = 0; i < maxLen; i ++) {
+		for (BKUSize i = 0; i < maxLen; i ++) {
 			c = str [i];
 
 			if (charTypes [c] & BKTKWriterCharLineBreak) {
@@ -382,8 +382,8 @@ static BKInt BKTKWriterWriteEscaped (BKTKWriter * writer, const BKString * data,
 static BKInt BKTKWriterWriteIndention (BKTKWriter * writer)
 {
 	BKInt res;
-	size_t level = writer -> level;
-	size_t maxLevel;
+	BKUSize level = writer -> level;
+	BKUSize maxLevel;
 
 	while (level > 0) {
 		maxLevel = BKMin (level, writer -> indentCap);
@@ -405,7 +405,7 @@ static BKInt BKTKWriterWriteCommand (BKTKWriter * writer, BKTKParserNode const *
 		return res;
 	}
 
-	for (size_t i = 0; i < node -> argCount; i ++) {
+	for (BKUSize i = 0; i < node -> argCount; i ++) {
 		if ((res = BKTKWriterWriteChar (writer, ':')) != 0) {
 			return res;
 		}

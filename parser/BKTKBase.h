@@ -28,7 +28,7 @@ struct BKTKOffset
 /**
  * Get the next power of 2
  */
-BK_INLINE size_t BKNextPow2 (size_t v)
+BK_INLINE BKUSize BKNextPow2 (BKUSize v)
 {
 	v --;
 	v |= v >> 1;

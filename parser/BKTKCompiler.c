@@ -423,7 +423,7 @@ static BKInt parseDataParams (BKString const * arg)
  *
  * Returns empty string if no argument exists at given offset
  */
-static BKString const * nodeArgString (BKTKParserNode const * node, size_t offset)
+static BKString const * nodeArgString (BKTKParserNode const * node, BKUSize offset)
 {
 	static BKString empty = BK_STRING_INIT;
 
@@ -449,7 +449,7 @@ BK_INLINE BKInt value2Pitch (BKInt value)
  *
  * Returns `alt` if no argument exists at given offset
  */
-static BKInt nodeArgInt (BKTKParserNode const * node, size_t offset, BKInt alt)
+static BKInt nodeArgInt (BKTKParserNode const * node, BKUSize offset, BKInt alt)
 {
 	return strtolx ((uint8_t *) nodeArgString (node, offset) -> str, alt);
 }
@@ -470,7 +470,7 @@ static BKInt firstUnusedSlot (BKArray * list)
 	return i;
 }
 
-static BKTKTrack * BKTKCompilerTrackAtOffset (BKTKCompiler * compiler, size_t offset, BKInt create)
+static BKTKTrack * BKTKCompilerTrackAtOffset (BKTKCompiler * compiler, BKUSize offset, BKInt create)
 {
 	BKTKTrack * track;
 	BKTKTrack ** trackRef;
@@ -498,7 +498,7 @@ static BKTKTrack * BKTKCompilerTrackAtOffset (BKTKCompiler * compiler, size_t of
 	return track;
 }
 
-static BKTKGroup * BKTKCompilerTrackGroupAtOffset (BKTKTrack * track, size_t offset, BKInt create)
+static BKTKGroup * BKTKCompilerTrackGroupAtOffset (BKTKTrack * track, BKUSize offset, BKInt create)
 {
 	BKTKGroup * group;
 	BKTKGroup ** groupRef;
@@ -565,7 +565,7 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 
 	switch (cmd) {
 		case BKIntrAttack: {
-			size_t i;
+			BKUSize i;
 
 			if (node -> argCount < 1) {
 				printError (compiler, node, "Warning: attack command needs at least one argument");
@@ -829,7 +829,7 @@ static BKInt BKTKCompilerParseSequence (BKTKParserNode const * node, BKInt seque
 	BKInt repeatEnd = -1;
 	BKString const * arg;
 
-	for (size_t i = 0; i < node -> argCount; i ++) {
+	for (BKUSize i = 0; i < node -> argCount; i ++) {
 		arg = nodeArgString (node, i);
 
 		if (strcmp ((char *) arg -> str, "<") == 0) {
@@ -871,7 +871,7 @@ static BKInt BKTKCompilerParseEnvelope (BKTKParserNode const * node, BKSequenceP
 	BKInt repeatEnd = -1;
 	BKString const * arg;
 
-	for (size_t i = 0; i < node -> argCount; i ++) {
+	for (BKUSize i = 0; i < node -> argCount; i ++) {
 		arg = nodeArgString (node, i);
 
 		if (strcmp ((char *) arg -> str, "<") == 0) {
@@ -1153,7 +1153,7 @@ static BKInt BKTKCompilerCompileWaveform (BKTKCompiler * compiler, BKTKParserNod
 
 		switch (value) {
 			case BKTKMiscSequence: {
-				for (size_t i = 0; i < node -> argCount; i ++) {
+				for (BKUSize i = 0; i < node -> argCount; i ++) {
 					arg = nodeArgInt (node, i, 0);
 					sequence [length ++] = arg * VOLUME_UNIT;
 
@@ -1584,7 +1584,7 @@ static BKInt BKTKCompilerTrackLink (BKTKCompiler * compiler, BKTKTrack * track)
 		return -1;
 	}
 
-	for (size_t i = 0; i < track -> groups.len; i ++) {
+	for (BKUSize i = 0; i < track -> groups.len; i ++) {
 		group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, i);
 
 		if (group) {
@@ -1601,7 +1601,7 @@ static BKInt BKTKCompilerLink (BKTKCompiler * compiler)
 {
 	BKTKTrack * track;
 
-	for (size_t i = 0; i < compiler -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < compiler -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&compiler -> tracks, i);
 
 		if (track) {
@@ -1712,7 +1712,7 @@ BKInt BKTKCompilerReset (BKTKCompiler * compiler)
 	BKTKSample * sample;
 	BKHashTableIterator itor;
 
-	for (size_t i = 0; i < compiler -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < compiler -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&compiler -> tracks, i);
 		BKDispose (track);
 	}

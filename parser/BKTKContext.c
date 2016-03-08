@@ -104,7 +104,7 @@ static void BKTKTrackDispose (BKTKTrack * track)
 	BKTKGroup * group;
 
 	if (track) {
-		for	(size_t i = 0; i < track -> groups.len; i ++) {
+		for	(BKUSize i = 0; i < track -> groups.len; i ++) {
 			group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, i);
 			BKTKGroupDispose (group);
 		}
@@ -275,7 +275,7 @@ static BKInt BKTKContextCreateTracks (BKTKContext * ctx, BKTKCompiler * compiler
 		goto allocationError;
 	}
 
-	for (size_t i = 0; i < compiler -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < compiler -> tracks.len; i ++) {
 		trackRef = BKArrayItemAt (&compiler -> tracks, i);
 		track = *trackRef;
 
@@ -390,7 +390,7 @@ BKInt BKTKContextAttach (BKTKContext * ctx, BKContext * renderContext)
 	ctx -> renderContext = renderContext;
 	callback.func = (BKCallbackFunc) dividerCallback;
 
-	for (size_t i = 0; i < ctx -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
 
 		if (track) {
@@ -421,7 +421,7 @@ void BKTKContextDetach (BKTKContext * ctx)
 		return;
 	}
 
-	for (size_t i = 0; i < ctx -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
 
 		if (track) {
@@ -437,7 +437,7 @@ void BKTKContextReset (BKTKContext * ctx)
 {
 	BKTKTrack * track;
 
-	for (size_t i = 0; i < ctx -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
 
 		BKDividerReset (&track -> divider);
@@ -450,19 +450,19 @@ void BKTKContextReset (BKTKContext * ctx)
 
 static void BKTKContextDispose (BKTKContext * ctx)
 {
-	for (size_t i = 0; i < ctx -> instruments.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> instruments.len; i ++) {
 		BKTKInstrumentDispose (*(BKTKInstrument **) BKArrayItemAt (&ctx -> instruments, i));
 	}
 
-	for (size_t i = 0; i < ctx -> waveforms.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> waveforms.len; i ++) {
 		BKTKWaveformDispose (*(BKTKWaveform **)BKArrayItemAt (&ctx -> waveforms, i));
 	}
 
-	for (size_t i = 0; i < ctx -> samples.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> samples.len; i ++) {
 		BKTKSampleDispose (*(BKTKSample **)BKArrayItemAt (&ctx -> samples, i));
 	}
 
-	for (size_t i = 0; i < ctx -> tracks.len; i ++) {
+	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
 		BKTKTrackDispose (*(BKTKTrack **)BKArrayItemAt (&ctx -> tracks, i));
 	}
 
