@@ -71,6 +71,8 @@ struct BKTKContext
 	BKArray     tracks;       // BKTKTrack
 	BKString    loadPath;
 	BKString    error;
+	BKInt       tickRate;
+	BKInt       stepTicks;
 };
 
 /**

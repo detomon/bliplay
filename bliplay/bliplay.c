@@ -86,8 +86,11 @@ enum FLAG
 
 static BKInt            istty;
 static BKInt            flags;
-static BKTKContext      ctx
+static BKTKContext      ctx;
 static BKContext        renderCtx;
+static BKTKTokenizer    tok;
+static BKTKParser       parser;
+static BKTKCompiler     compiler;
 static BKUInt           sampleRate = 44100;
 static BKTime           seekTime, endTime;
 static BKInt            numChannels = 2;
@@ -347,12 +350,12 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 }
 
 #if BK_USE_PLAYER
-static void fill_audio (BKTKWrapper * ctx, Uint8 * stream, int len)
+static void fill_audio (BKTKContext * ctx, Uint8 * stream, int len)
 {
-	BKUInt numChannels = ctx -> ctx.numChannels;
+	BKUInt numChannels = ctx -> renderContext -> numChannels;
 	BKUInt numFrames   = len / sizeof (BKFrame) / numChannels;
 
-	BKContextGenerate (ctx -> ctx, (BKFrame *) stream, numFrames);
+	BKContextGenerate (ctx -> renderContext, (BKFrame *) stream, numFrames);
 	output_chunk ((BKFrame *) stream, numFrames * numChannels);
 }
 #endif /* BK_USE_PLAYER */
@@ -362,9 +365,9 @@ static BKInt push_frames (BKFrame inFrames [], BKUInt size, void * info)
 	return 0;
 }
 
-static void seek_context (BKTKWrapper * ctx, BKTime time)
+static void seek_context (BKTKContext * ctx, BKTime time)
 {
-	BKContextGenerateToTime (ctx -> ctx, time, push_frames, NULL);
+	BKContextGenerateToTime (ctx -> renderContext, time, push_frames, NULL);
 }
 
 #if BK_USE_PLAYER
@@ -374,9 +377,9 @@ static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 
 	SDL_AudioSpec wanted;
 
-	wanted.freq     = ctx -> ctx.sampleRate;
+	wanted.freq     = ctx -> renderContext -> sampleRate;
 	wanted.format   = AUDIO_S16SYS;
-	wanted.channels = ctx -> ctx.numChannels;
+	wanted.channels = ctx -> renderContext -> numChannels;
 	wanted.samples  = 512;
 	wanted.callback = (void *) fill_audio;
 	wanted.userdata = ctx;
@@ -393,28 +396,28 @@ static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 static BKInt check_tracks_running (BKTKContext * ctx)
 {
 	BKTKTrack * track;
-	BKInt numActive = ctx -> tracks.length;
+	BKSize numActive = 0;
 
-	for (BKInt i = 0; i < ctx -> tracks.length; i ++) {
+	for (BKInt i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
 
-		// exit if tracks have repeated
-		if (flags & FLAG_NO_SOUND) {
-			if (track -> interpreter.object.flags & (BKInterpreterFlagHasStopped | BKInterpreterFlagHasRepeated)) {
+		if (track) {
+			numActive ++;
+
+			// exit if tracks have repeated
+			if (flags & FLAG_NO_SOUND) {
+				if (track -> interpreter.object.flags & (BKTKInterpreterFlagHasStopped | BKTKInterpreterFlagHasRepeated)) {
+					numActive --;
+				}
+			}
+			// exit if tracks have stopped
+			else if (track -> interpreter.object.flags & BKTKInterpreterFlagHasStopped) {
 				numActive --;
 			}
 		}
-		// exit if tracks have stopped
-		else if (track -> interpreter.object.flags & BKInterpreterFlagHasStopped) {
-			numActive --;
-		}
 	}
 
-	if (numActive == 0) {
-		return 0;
-	}
-
-	return 1;
+	return numActive > 0;
 }
 
 static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed)
@@ -446,15 +449,15 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 			break;
 		}
 		case 'b': {
-			time = BKTimeFromSeconds (& ctx.ctx, (1.0 / 240) * speed * value);
+			time = BKTimeFromSeconds (ctx.renderContext, (1.0 / 240) * speed * value);
 			break;
 		}
 		case 't': {
-			time = BKTimeFromSeconds (& ctx.ctx, (1.0 / 240) * value);
+			time = BKTimeFromSeconds (ctx.renderContext, (1.0 / 240) * value);
 			break;
 		}
 		case 's': {
-			time = BKTimeFromSeconds (& ctx.ctx, value);
+			time = BKTimeFromSeconds (ctx.renderContext, value);
 			break;
 		}
 		default: {
@@ -471,7 +474,7 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 #if BK_USE_PLAYER
 static void print_time (BKTKContext * ctx)
 {
-	int frames = BKTimeGetTime (ctx -> ctx -> currentTime) * 100 / ctx -> ctx -> sampleRate;
+	int frames = BKTimeGetTime (ctx -> renderContext -> currentTime) * 100 / ctx -> renderContext -> sampleRate;
 	int frac   = frames % 100;
 	int hsecs  = frames / 100;
 
@@ -488,7 +491,7 @@ static BKInt count_slots (BKArray * array)
 	BKInt count = 0;
 	BKTKObject const * object;
 
-	for (BKInt i = 0; i < array -> length; i ++) {
+	for (BKInt i = 0; i < array -> len; i ++) {
 		object = *(BKTKObject **) BKArrayItemAt (array, i);
 
 		if (object) {
@@ -538,15 +541,18 @@ static void print_track_info (BKTKContext * ctx)
 
 	for (BKInt i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, i);
-		waveform = track -> waveform;
 
-		waveform_get_name (name, sizeof (name), waveform, & isCustom);
+		if (track) {
+			waveform = track -> waveform;
 
-		if (isCustom) {
-			print_message ("              #%d: custom %s\n", i, name);
-		}
-		else {
-			print_message ("              #%d: %s\n", i, name);
+			waveform_get_name (name, sizeof (name), waveform, & isCustom);
+
+			if (isCustom) {
+				print_message ("              #%d: custom %s\n", i, name);
+			}
+			else {
+				print_message ("              #%d: %s\n", i, name);
+			}
 		}
 	}
 }
@@ -559,8 +565,8 @@ static void print_info (BKTKContext * ctx)
 	print_message ("         samples: %d\n", count_slots (& ctx -> samples));
 	print_message ("          tracks: %d\n", ctx -> tracks.len);
 	print_track_info (ctx);
-	print_message ("     sample rate: %d\n", ctx -> ctx -> sampleRate);
-	print_message ("        channels: %d\n\n", ctx -> ctx -> numChannels);
+	print_message ("     sample rate: %d\n", ctx -> renderContext -> sampleRate);
+	print_message ("        channels: %d\n\n", ctx -> renderContext -> numChannels);
 }
 
 static BKInt should_overwrite_output (char const * filename)
@@ -579,14 +585,121 @@ static BKInt should_overwrite_output (char const * filename)
 	return 0;
 }
 
-static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
+static BKInt put_tokens (BKTKToken const * tokens, size_t count, BKTKParser * parser)
+{
+	BKInt res;
+
+	if ((res = BKTKParserPutTokens (parser, tokens, count)) != 0) {
+		return res;
+	}
+
+	return 0;
+}
+
+static BKInt context_init (BKTKContext * ctx, BKInt numChannels, BKInt sampleRate)
+{
+	BKInt res = 0;
+
+	if ((res = BKTKContextInit (ctx)) != 0) {
+		return res;
+	}
+
+	if ((res = BKContextInit (&renderCtx, numChannels, sampleRate)) != 0) {
+		print_error ("Context init failed (%d)\n", res);
+		return res;
+	}
+
+	return res;
+}
+
+static BKInt make_context (BKTKContext * ctx, FILE * file)
+{
+	BKInt res = 0;
+	BKTKParserNode * nodeTree;
+
+	if ((res = BKTKParserInit (&parser)) != 0) {
+		print_error ("BKTKParserInit failed (%d)\n", res);
+		return res;
+	}
+
+	if ((res = BKTKTokenizerInit (&tok)) != 0) {
+		print_error ("BKTKTokenizerInit failed (%d)\n", res);
+		return res;
+	}
+
+	do {
+		size_t size;
+		uint8_t buffer [1024];
+
+		size = fread (buffer, sizeof (uint8_t), sizeof (buffer), file);
+
+		// will also be called with `chunkSize` = 0 to terminate tokenizer
+		if (BKTKTokenizerPutChars (&tok, buffer, size, (BKTKPutTokensFunc) put_tokens, &parser) != 0) {
+			break;
+		}
+	}
+	while (!BKTKTokenizerIsFinished (&tok));
+
+	fclose (file);
+
+	if (BKTKTokenizerHasError (&tok)) {
+		print_error ("%s\n", tok.buffer);
+		res = -1;
+	}
+
+	if (BKTKParserHasError (&parser)) {
+		print_error ("%s\n", parser.buffer);
+		res = -1;
+	}
+
+	if (res) {
+		return res;
+	}
+
+	BKDispose (&tok);
+
+	nodeTree = BKTKParserGetNodeTree (&parser);
+
+	if ((res = BKTKCompilerInit (&compiler)) != 0) {
+		print_error ("BKTKCompilerInit failed (%d)\n", res);
+		return res;
+	}
+
+	BKStringEmpty (&ctx -> loadPath);
+	BKStringAppend (&ctx -> loadPath, "/Users/simon/Dropbox/Blip Tokenizer/Blip Tokenizer/Samples");
+
+	if ((res = BKTKCompilerCompile (&compiler, nodeTree)) != 0) {
+		print_error ("%s (%d)", (char *) compiler.error.str, res);
+		return res;
+	}
+
+	BKDispose (&parser);
+
+	if ((res = BKTKContextCreate (ctx, &compiler)) != 0) {
+		print_error ("Creating context failed (%d)\n", res);
+		print_error ("%s\n", (char *) ctx -> error.str);
+		return res;
+	}
+
+	BKDispose (&compiler);
+
+	if ((res = BKTKContextAttach (ctx, &renderCtx)) != 0) {
+		print_error ("Attaching context failed (%d)\n");
+		return res;
+	}
+
+	return 0;
+}
+
+static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 {
 	int    opt;
 	int    longoptind = 1;
 	BKUInt speed      = 0;
 	FILE * inputFile;
 	struct stat st;
-	BKString path, * loadPath = NULL;
+	BKString path = BK_STRING_INIT;
+	BKString loadPath = BK_STRING_INIT;
 	BKEnum opts;
 
 	opterr = 0;
@@ -598,7 +711,9 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:t:vy", options, & longoptind)) != -1) {
 		switch (opt) {
 			case 'd': {
-				if (BKStringAlloc (& loadPath, optarg, -1) < 0) {
+				BKStringEmpty (&loadPath);
+
+				if (BKStringAppend (&loadPath, optarg) != 0) {
 					print_error ("Allocation error\n");
 					return -1;
 				}
@@ -742,16 +857,107 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 #endif
 
-	opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTrackWrapperOptionTimingShift;
+#warning Implement opts!
+	//opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTrackWrapperOptionTimingShift;
 
 	/*if (BKContextInit (& renderCtx, numChannels, sampleRate) != 0) {
 		print_error ("Could not initialize context\n");
 		return -1;
 	}*/
 
-	if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
+	/*if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
 		print_error ("Could not initialize context\n");
 		return -1;
+	}*/
+
+	if (context_init (ctx, numChannels, sampleRate) != 0) {
+		return 1;
+	}
+
+	BKStringEmpty (&path);
+
+	if (BKStringAppend (&path, filename) != 0) {
+		return -1;
+	}
+
+	// use stdin
+	if (BKStringCompare (& path, "-") == 0) {
+		inputFile = stdin;
+	}
+	// use path
+	else {
+		if (stat ((char *) path.str, & st) < 0) {
+			print_error ("No such file: %s\n", path.str);
+			return -1;
+		}
+
+		if (S_ISDIR (st.st_mode)) {
+			if (BKStringAppend (& path, "/DATA.blip") < 0) {
+				return -1;
+			}
+		}
+
+		inputFile = fopen ((char *) path.str, "rb");
+
+		if (inputFile == NULL) {
+			print_error ("No such file: %s\n", path.str);
+			return -1;
+		}
+
+		set_color (stderr, 2);
+	}
+
+	// path set by option
+	if (loadPath.len) {
+		if (stat ((char *) loadPath.str, & st) < 0) {
+			print_error ("No such path for loading: %s\n", loadPath.str);
+			return -1;
+		}
+
+		if (!S_ISDIR (st.st_mode)) {
+			print_error ("Load path is not a directory: %s\n", loadPath.str);
+			return -1;
+		}
+
+		BKStringReplaceInRange (& ctx -> loadPath, &loadPath, 0, ctx -> loadPath.len);
+		BKStringDispose (&loadPath);
+
+		BKStringEmpty (&loadPath);
+		BKStringAppendString (&loadPath, &ctx -> loadPath);
+	}
+	// parent directory from input file
+	else {
+		BKStringEmpty (&loadPath);
+		BKStringAppendString (&loadPath, &ctx -> loadPath);
+
+		if (BKStringDirname (&loadPath, &path) != 0) {
+			return -1;
+		}
+	}
+
+	if ((flags & FLAG_TIMING_UNIT_MASK) && outputFilename) {
+		BKString path = BK_STRING_INIT;
+
+		if (BKStringAppend (& path, outputFilename) != 0) {
+			print_error ("Allocation error\n");
+			return -1;
+		}
+
+		if (BKStringAppend (& path, ".txt") != 0) {
+			print_error ("Allocation error\n");
+			return -1;
+		}
+
+		timingFile = fopen ((char *) path.str, "w");
+
+		BKStringDispose (& path);
+	}
+
+	if (make_context (ctx, inputFile) != 0) {
+		print_error ("Failed to load file: %s\n", path.str);
+		set_color (stderr, 0);
+		fclose (inputFile);
+		return 1;
 	}
 
 #if BK_USE_PLAYER
@@ -765,88 +971,6 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	}
 #endif
 
-	if (BKStringInit (& path, filename, -1) < 0) {
-		return -1;
-	}
-
-	// use stdin
-	if (BKStringIsEqualToChars (& path, "-")) {
-		inputFile = stdin;
-	}
-	// use path
-	else {
-		if (stat (path.chars, & st) < 0) {
-			print_error ("No such file: %s\n", path.chars);
-			return -1;
-		}
-
-		if (S_ISDIR (st.st_mode)) {
-			if (BKStringAppendChars (& path, "/DATA.blip") < 0) {
-				return -1;
-			}
-		}
-
-		inputFile = fopen (path.chars, "rb");
-
-		if (inputFile == NULL) {
-			print_error ("No such file: %s\n", path.chars);
-			return -1;
-		}
-
-		set_color (stderr, 2);
-	}
-
-	// path set by option
-	if (loadPath) {
-		if (stat (loadPath -> chars, & st) < 0) {
-			print_error ("No such path for loading: %s\n", loadPath -> chars);
-			return -1;
-		}
-
-		if (!S_ISDIR (st.st_mode)) {
-			print_error ("Load path is not a directory: %s\n", loadPath -> chars);
-			return -1;
-		}
-
-		BKStringReplaceInRange (& ctx -> compiler.loadPath, loadPath, 0, ctx -> compiler.loadPath.length);
-		BKDispose (loadPath);
-
-		loadPath = & ctx -> compiler.loadPath;
-	}
-	// parent directory from input file
-	else {
-		loadPath = & ctx -> compiler.loadPath;
-
-		if (BKStringGetDirname (& loadPath, & path) < 0) {
-			return -1;
-		}
-	}
-
-	if ((flags & FLAG_TIMING_UNIT_MASK) && outputFilename) {
-		BKString path;
-
-		if (BKStringInit (& path, outputFilename, -1) < 0) {
-			print_error ("Allocation error\n");
-			return -1;
-		}
-
-		if (BKStringAppendChars (& path, ".txt") < 0) {
-			print_error ("Allocation error\n");
-			return -1;
-		}
-
-		timingFile = fopen (path.chars, "w");
-
-		BKDispose (& path);
-	}
-
-	if (BKContextWrapperLoadFile (ctx, inputFile, NULL) < 0) {
-		print_error ("Failed to load file: %s\n", path.chars);
-		set_color (stderr, 0);
-		fclose (inputFile);
-		return -1;
-	}
-
 	set_color (stderr, 0);
 
 	if (inputFile != stdin) {
@@ -856,7 +980,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	if (flags & FLAG_HAS_SEEK_TIME) {
 		speed = ctx -> stepTicks;
 
-		if (parse_seek_time (seekTimeString, & seekTime, speed) < 0) {
+		if (parse_seek_time (seekTimeString, & seekTime, speed) != 0) {
 			return -1;
 		}
 	}
@@ -864,7 +988,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 	if (flags & FLAG_HAS_END_TIME) {
 		speed = ctx -> stepTicks;
 
-		if (parse_seek_time (endTimeString, & endTime, speed) < 0) {
+		if (parse_seek_time (endTimeString, & endTime, speed) != 0) {
 			return -1;
 		}
 	}
@@ -875,7 +999,7 @@ static BKInt handle_options (BKContextWrapper * ctx, int argc, char * argv [])
 static void write_timing_data (void)
 {
 	BKEnum waveform;
-	BKTrackWrapper * track;
+	BKTKTrack * track;
 
 	if (timingFile) {
 		char name [64];
@@ -893,8 +1017,8 @@ static void write_timing_data (void)
 			outputFilename
 		);
 
-		for (BKInt i = 0; i < ctx.tracks.length; i ++) {
-			track = BKArrayGetItemAtIndex (& ctx.tracks, i);
+		for (BKInt i = 0; i < ctx.tracks.len; i ++) {
+			track = * (BKTKTrack **) BKArrayItemAt (& ctx.tracks, i);
 			waveform = track -> waveform;
 
 			if (i > 0) {
@@ -902,16 +1026,17 @@ static void write_timing_data (void)
 			}
 
 			waveform_get_name (name, sizeof (name), waveform, NULL);
-			fprintf (timingFile, "track:%s:%d\n", name, track -> slot);
+			fprintf (timingFile, "track:%s:%d\n", name, track -> object.index);
 
-			while ((size = BKByteBufferReadBytes (& track -> timingData, buffer, sizeof (buffer)))) {
+#warning Implement!
+			/*while ((size = BKByteBufferReadBytes (& track -> timingData, buffer, sizeof (buffer)))) {
 				if (size < 0) {
 					print_error ("Buffer error\n");
 					return;
 				}
 
 				fwrite (buffer, sizeof (char), size, timingFile);
-			}
+			}*/
 		}
 
 		fclose (timingFile);
@@ -937,10 +1062,10 @@ static void cleanup (void)
 #endif
 }
 
-static BKInt write_output (BKContextWrapper * ctx)
+static BKInt write_output (BKTKContext * ctx)
 {
 	BKInt numFrames = 512;
-	BKInt numChannels = ctx -> ctx.numChannels;
+	BKInt numChannels = ctx -> renderContext -> numChannels;
 	BKFrame * frames = malloc (numFrames * numChannels * sizeof (BKFrame));
 
 	if (frames == NULL) {
@@ -948,11 +1073,11 @@ static BKInt write_output (BKContextWrapper * ctx)
 	}
 
 	while (check_tracks_running (ctx)) {
-		BKContextGenerate (& ctx -> ctx, frames, numFrames);
+		BKContextGenerate (ctx -> renderContext, frames, numFrames);
 		output_chunk (frames, numFrames * numChannels);
 
 		if (flags & FLAG_HAS_END_TIME) {
-			if (BKTimeIsGreaterEqual (ctx -> ctx.currentTime, endTime)) {
+			if (BKTimeIsGreaterEqual (ctx -> renderContext -> currentTime, endTime)) {
 				break;
 			}
 		}
@@ -963,7 +1088,7 @@ static BKInt write_output (BKContextWrapper * ctx)
 	return 0;
 }
 
-static BKInt runloop (BKContextWrapper * ctx)
+static BKInt runloop (BKTKContext * ctx)
 {
 #if BK_USE_PLAYER
 	int c;
@@ -1048,7 +1173,7 @@ int main (int argc, char * argv [])
 		colorNormal = "\033[0m";
 	}
 
-	if (handle_options (& ctx, argc, argv) < 0) {
+	if (handle_options (& ctx, argc, argv) != 0) {
 		return 1;
 	}
 
