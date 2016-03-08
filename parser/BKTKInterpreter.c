@@ -11,9 +11,9 @@ enum {
 	BKIntrEventMute    = 1 << 3,
 };
 
-static BKTickEvent * BKTKInterpreterEventGet (BKTKInterpreter * interpreter, BKInt eventsMaks)
+static BKTKTickEvent * BKTKInterpreterEventGet (BKTKInterpreter * interpreter, BKInt eventsMaks)
 {
-	BKTickEvent * tickEvent;
+	BKTKTickEvent * tickEvent;
 
 	for (BKInt i = 0; i < interpreter -> numEvents; i ++) {
 		tickEvent = &interpreter -> events [i];
@@ -28,7 +28,7 @@ static BKTickEvent * BKTKInterpreterEventGet (BKTKInterpreter * interpreter, BKI
 static void BKTKInterpreterEventsUnset (BKTKInterpreter * interpreter, BKInt eventMask)
 {
 	BKSize size;
-	BKTickEvent * tickEvent;
+	BKTKTickEvent * tickEvent;
 
 	if (eventMask & BKIntrEventAttack) {
 		interpreter -> object.flags &= ~BKTKInterpreterFlagHasAttackEvent;
@@ -40,7 +40,7 @@ static void BKTKInterpreterEventsUnset (BKTKInterpreter * interpreter, BKInt eve
 		tickEvent = &interpreter -> events [i];
 
 		if (tickEvent -> event & eventMask) {
-			size = sizeof (BKTickEvent) * (interpreter -> numEvents - i - 1);
+			size = sizeof (BKTKTickEvent) * (interpreter -> numEvents - i - 1);
 			memmove (tickEvent,	&tickEvent [1], size);
 			interpreter -> numEvents --;
 		}
@@ -52,7 +52,7 @@ static void BKTKInterpreterEventsUnset (BKTKInterpreter * interpreter, BKInt eve
 
 static BKInt BKTKInterpreterEventSet (BKTKInterpreter * interpreter, BKInt event, BKInt ticks)
 {
-	BKTickEvent * tickEvent, * otherEvent;
+	BKTKTickEvent * tickEvent, * otherEvent;
 
 	if (ticks == 0) {
 		BKTKInterpreterEventsUnset (interpreter, event);
@@ -95,10 +95,10 @@ static BKInt BKTKInterpreterEventSet (BKTKInterpreter * interpreter, BKInt event
 	return 0;
 }
 
-static BKTickEvent * BKTKInterpreterEventGetNext (BKTKInterpreter * interpreter)
+static BKTKTickEvent * BKTKInterpreterEventGetNext (BKTKInterpreter * interpreter)
 {
 	BKInt ticks = BK_INT_MAX;
-	BKTickEvent * tickEvent, * nextEvent = NULL;
+	BKTKTickEvent * tickEvent, * nextEvent = NULL;
 
 	for (BKInt i = 0; i < interpreter -> numEvents; i ++) {
 		tickEvent = &interpreter -> events [i];
@@ -114,7 +114,7 @@ static BKTickEvent * BKTKInterpreterEventGetNext (BKTKInterpreter * interpreter)
 
 static void BKTKInterpreterEventsAdvance (BKTKInterpreter * interpreter, BKInt ticks)
 {
-	BKTickEvent * tickEvent;
+	BKTKTickEvent * tickEvent;
 
 	for (BKInt i = 0; i < interpreter -> numEvents; i ++) {
 		tickEvent = &interpreter -> events [i];
@@ -150,14 +150,14 @@ BK_INLINE BKInt value2Pitch (BKInt value)
 
 BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BKInt * outTicks)
 {
-	BKInt         value0, value1;
-	BKInt         numSteps = 1;
-	BKInt         run = 1;
-	void        * opcode;
-	BKInt         result = 1;
-	BKTickEvent * tickEvent;
-	BKInstrMask   cmdMask, argMask;
-	BKTrack     * track = &ctx -> renderTrack;
+	BKInt           value0, value1;
+	BKInt           numSteps = 1;
+	BKInt           run = 1;
+	void          * opcode;
+	BKInt           result = 1;
+	BKTKTickEvent * tickEvent;
+	BKInstrMask     cmdMask, argMask;
+	BKTrack       * track = &ctx -> renderTrack;
 
 	opcode   = interpreter -> opcodePtr;
 	numSteps = interpreter -> numSteps;

@@ -11,7 +11,8 @@
 #define BK_INTR_MAX_EVENTS 8
 
 typedef struct BKTKInterpreter BKTKInterpreter;
-typedef struct BKTickEvent BKTickEvent;
+typedef struct BKTKTickEvent BKTKTickEvent;
+typedef struct BKTKStackItem BKTKStackItem;
 
 enum BKInstruction
 {
@@ -91,30 +92,36 @@ typedef union
 	} grp;
 } BKInstrMask;
 
-struct BKTickEvent
+struct BKTKTickEvent
 {
 	BKInt event;
 	BKInt ticks;
 };
 
+struct BKTKStackItem
+{
+	uintptr_t ptr;
+	uint8_t   trackIdx;
+};
+
 struct BKTKInterpreter {
-	BKObject    object;
-	void      * opcode;
-	void      * opcodePtr;
-	uintptr_t   repeatStartAddr;
-	uintptr_t   stack [BK_INTR_STACK_SIZE];
-	uintptr_t * stackPtr;
-	uintptr_t * stackEnd;
-	BKUInt      stepTickCount;
-	BKUInt      numSteps;
-	BKUInt      nextNoteIndex;
-	BKInt       nextNotes [2];
-	BKInt       nextArpeggio [1 + BK_MAX_ARPEGGIO];
-	BKInt       numEvents;
-	BKTickEvent events [BK_INTR_MAX_EVENTS];
-	BKInt       time;
-	BKInt       lineTime;
-	BKInt       lineno, lastLineno;
+	BKObject        object;
+	void          * opcode;
+	void          * opcodePtr;
+	uintptr_t       repeatStartAddr;
+	BKTKStackItem   stack [BK_INTR_STACK_SIZE];
+	BKTKStackItem * stackPtr;
+	BKTKStackItem * stackEnd;
+	BKUInt          stepTickCount;
+	BKUInt          numSteps;
+	BKUInt          nextNoteIndex;
+	BKInt           nextNotes [2];
+	BKInt           nextArpeggio [1 + BK_MAX_ARPEGGIO];
+	BKInt           numEvents;
+	BKTKTickEvent   events [BK_INTR_MAX_EVENTS];
+	BKInt           time;
+	BKInt           lineTime;
+	BKInt           lineno, lastLineno;
 };
 
 /**
