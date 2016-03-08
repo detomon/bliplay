@@ -1453,6 +1453,7 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 	track -> object.object.flags |= BKTKFlagUsed | BKBitCond (BKTKFlagAutoIndex, autoindex);
 	track -> object.index  = offset;
 	track -> object.offset = tree -> offset;
+	track -> waveform      = waveform;
 
 	cmd = BKInstrMaskArg1Make (BKIntrWaveform, waveform);
 

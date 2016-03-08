@@ -58,6 +58,7 @@ struct BKTKTrack
 	BKTKContext   * ctx;
 	BKTrack         renderTrack;
 	BKTKInterpreter interpreter;
+	BKInt           waveform;
 };
 
 struct BKTKContext
