@@ -534,25 +534,36 @@ static void waveform_get_name (char name [], BKSize size, BKEnum waveform, BKInt
 
 static void print_track_waveform (BKTKTrack const * track, BKInt index)
 {
-	BKEnum waveform;
-	BKTKTrack * track;
 	BKInt isCustom;
+	BKEnum waveform;
 	char name [64];
+	char const * line;
 
-	for (BKInt i = 0; i < ctx -> tracks.len; i ++) {
+	waveform = track -> waveform;
+	waveform_get_name (name, sizeof (name), waveform, &isCustom);
+
+	if (isCustom) {
+		line = "              #%d: custom %s\n";
+	}
+	else {
+		line = "              #%d: %s\n";
+	}
+
+	print_message (line, index, name);
+
+}
+
+static void print_track_info (BKTKContext const * ctx)
+{
+	BKTKTrack * track;
+
+	track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, 0);
+
+	for (BKInt i = 1; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, i);
 
 		if (track) {
-			waveform = track -> waveform;
-
-			waveform_get_name (name, sizeof (name), waveform, & isCustom);
-
-			if (isCustom) {
-				print_message ("              #%d: custom %s\n", i, name);
-			}
-			else {
-				print_message ("              #%d: %s\n", i, name);
-			}
+			print_track_waveform (track, i - 1);
 		}
 	}
 }
@@ -563,7 +574,7 @@ static void print_info (BKTKContext const * ctx)
 	print_message ("     instruments: %d\n", count_slots (& ctx -> instruments));
 	print_message ("custom waveforms: %d\n", count_slots (& ctx -> waveforms));
 	print_message ("         samples: %d\n", count_slots (& ctx -> samples));
-	print_message ("          tracks: %d\n", ctx -> tracks.len);
+	print_message ("          tracks: %d\n", ctx -> tracks.len - 1);
 	print_track_info (ctx);
 	print_message ("     sample rate: %d\n", ctx -> renderContext -> sampleRate);
 	print_message ("        channels: %d\n\n", ctx -> renderContext -> numChannels);
