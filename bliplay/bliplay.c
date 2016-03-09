@@ -52,7 +52,7 @@
 #include "BKTK.h"
 #include "BlipKit.h"
 
-#define BK_BLIPLAY_VERSION "2.4.4"
+#define BK_BLIPLAY_VERSION "3.0b"
 
 #ifndef FD_COPY
 #define FD_COPY(src, dest) memcpy ((dest), (src), sizeof (*(dest)))
