@@ -656,8 +656,7 @@ void BKTKInterpreterReset (BKTKInterpreter * interpreter)
 	interpreter -> repeatStartAddr = 0;
 	interpreter -> time            = 0;
 	interpreter -> lineTime        = 0;
-	interpreter -> lineno          = -1;
-	interpreter -> lastLineno      = 0;
+	interpreter -> lineno          = 0;
 	interpreter -> stepTickCount   = 24;
 }
 

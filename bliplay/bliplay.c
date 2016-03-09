@@ -596,11 +596,11 @@ static BKInt put_tokens (BKTKToken const * tokens, size_t count, BKTKParser * pa
 	return 0;
 }
 
-static BKInt context_init (BKTKContext * ctx, BKInt numChannels, BKInt sampleRate)
+static BKInt context_init (BKTKContext * ctx, BKInt numChannels, BKInt sampleRate, BKUInt flags)
 {
 	BKInt res = 0;
 
-	if ((res = BKTKContextInit (ctx)) != 0) {
+	if ((res = BKTKContextInit (ctx, flags)) != 0) {
 		return res;
 	}
 
@@ -700,7 +700,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	struct stat st;
 	BKString path = BK_STRING_INIT;
 	BKString loadPath = BK_STRING_INIT;
-	BKEnum opts;
+	BKEnum opts = 0;
 
 	opterr = 0;
 
@@ -857,20 +857,11 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 #endif
 
-#warning Implement opts!
-	//opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTrackWrapperOptionTimingShift;
+	if (outputFilename) {
+		opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTKContextOptionTimingShift;
+	}
 
-	/*if (BKContextInit (& renderCtx, numChannels, sampleRate) != 0) {
-		print_error ("Could not initialize context\n");
-		return -1;
-	}*/
-
-	/*if (BKContextWrapperInit (ctx, numChannels, sampleRate, opts) < 0) {
-		print_error ("Could not initialize context\n");
-		return -1;
-	}*/
-
-	if (context_init (ctx, numChannels, sampleRate) != 0) {
+	if (context_init (ctx, numChannels, sampleRate, opts) != 0) {
 		return 1;
 	}
 
@@ -1000,25 +991,44 @@ static void write_timing_data (void)
 {
 	BKEnum waveform;
 	BKTKTrack * track;
+	BKByteBufferSegment * seg;
 
 	if (timingFile) {
 		char name [64];
-		char buffer [4096];
 		BKSize size;
+		char const * unit = "";
+
+		if (flags & FLAG_TIMING_UNIT_SECS) {
+			unit = "seconds";
+		}
+
+		if (flags & FLAG_TIMING_UNIT_TICKS) {
+			unit = "ticks";
+		}
 
 		fprintf (
 			timingFile,
 			"%% Timing data for tracks contained in '%s'\n"
 			"%%\n"
-			"%% track:[waveformtype]:[tracknumber]\n"
-			"%% l:[tick]:[lineno]\n"
-			"%% If 'lineno' is ommited, the line follows the previous one"
-			"\n\n",
-			outputFilename
+			"%% [track:{waveformtype}:{tracknumber}\n"
+			"%% l:{tick}:{lineno}\n"
+			"%% ...\n"
+			"%% ]\n"
+			"%%\n"
+			"%% If 'lineno' is ommited, the line follows the previous one\n"
+			"%%\n"
+			"%% Using unit '%s'\n"
+			"\n",
+			outputFilename, unit
 		);
 
-		for (BKInt i = 0; i < ctx.tracks.len; i ++) {
-			track = * (BKTKTrack **) BKArrayItemAt (& ctx.tracks, i);
+		for (BKUSize i = 0; i < ctx.tracks.len; i ++) {
+			track = *(BKTKTrack **) BKArrayItemAt (& ctx.tracks, i);
+
+			if (!track) {
+				continue;
+			}
+
 			waveform = track -> waveform;
 
 			if (i > 0) {
@@ -1026,17 +1036,20 @@ static void write_timing_data (void)
 			}
 
 			waveform_get_name (name, sizeof (name), waveform, NULL);
-			fprintf (timingFile, "track:%s:%d\n", name, track -> object.index);
+			fprintf (timingFile, "[track:%s:%d\n", name, track -> object.index);
 
-#warning Implement!
-			/*while ((size = BKByteBufferReadBytes (& track -> timingData, buffer, sizeof (buffer)))) {
-				if (size < 0) {
-					print_error ("Buffer error\n");
-					return;
-				}
+			for (seg = track -> timingData.first; seg != track -> timingData.cur; seg = seg -> next) {
+				fwrite (seg -> data, sizeof (char), seg -> size, timingFile);
+			}
 
-				fwrite (buffer, sizeof (char), size, timingFile);
-			}*/
+			seg = track -> timingData.cur;
+
+			if (seg) {
+				size = track -> timingData.ptr - seg -> data;
+				fwrite (seg -> data, sizeof (char), size, timingFile);
+			}
+
+			fprintf (timingFile, "]\n");
 		}
 
 		fclose (timingFile);

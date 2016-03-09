@@ -57,8 +57,10 @@ struct BKTKTrack
 	BKDivider       divider;
 	BKTKContext   * ctx;
 	BKTrack         renderTrack;
-	BKTKInterpreter interpreter;
 	BKInt           waveform;
+	BKTKInterpreter interpreter;
+	BKByteBuffer    timingData;
+	BKInt           lineno;
 };
 
 struct BKTKContext
@@ -75,10 +77,18 @@ struct BKTKContext
 	BKInt       stepTicks;
 };
 
+enum BKTKContextOption
+{
+	BKTKContextOptionTimingShift     = 16,
+	BKTKContextOptionTimingDataSecs  = 1 << 16,
+	BKTKContextOptionTimingDataTicks = 2 << 16, // next field is at 2
+	BKTKContextOptionTimingDataMask  = 3 << 16,
+};
+
 /**
  * Initialize context
  */
-extern BKInt BKTKContextInit (BKTKContext * ctx);
+extern BKInt BKTKContextInit (BKTKContext * ctx, BKUInt flags);
 
 /**
  * Create context from compiler

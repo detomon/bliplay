@@ -29,6 +29,7 @@ BKInt BKTKTrackAlloc (BKTKTrack ** track)
 
 	(*track) -> byteCode = BK_BYTE_BUFFER_INIT;
 	(*track) -> groups = BK_ARRAY_INIT (sizeof (BKTKGroup *));
+	(*track) -> timingData = BK_BYTE_BUFFER_INIT;
 
 	return res;
 }
@@ -142,7 +143,7 @@ static void BKTKSampleDispose (BKTKSample * sample)
 	}
 }
 
-BKInt BKTKContextInit (BKTKContext * ctx)
+BKInt BKTKContextInit (BKTKContext * ctx, BKUInt flags)
 {
 	BKInt res;
 
@@ -150,6 +151,7 @@ BKInt BKTKContextInit (BKTKContext * ctx)
 		return res;
 	}
 
+	ctx -> object.flags = flags;
 	ctx -> instruments = BK_ARRAY_INIT (sizeof (BKTKInstrument *));
 	ctx -> waveforms = BK_ARRAY_INIT (sizeof (BKTKWaveform *));
 	ctx -> samples = BK_ARRAY_INIT (sizeof (BKTKSample *));
@@ -293,6 +295,7 @@ static BKInt BKTKContextCreateTracks (BKTKContext * ctx, BKTKCompiler * compiler
 
 		BKSetAttr (&track -> renderTrack, BK_VOLUME, BK_MAX_VOLUME);
 
+		track -> object.object.flags |= ctx -> object.flags;
 		track -> interpreter.opcode = track -> byteCode.first -> data;
 		track -> interpreter.opcodePtr = track -> interpreter.opcode;
 		track -> ctx = ctx;
@@ -367,12 +370,68 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 	}
 }
 
+static void writeTimingData (BKTKTrack * track, char const * data, ...)
+{
+	va_list args;
+	char buffer [1024];
+	BKInt size;
+
+	buffer [0] = '\0';
+
+	va_start (args, data);
+	size = vsnprintf (buffer, sizeof (buffer), data, args);
+	va_end (args);
+
+	if (size >= 0) {
+		BKByteBufferAppendBytes (&track -> timingData, buffer, size);
+	}
+}
+
+static void writeTimingLine (BKTKTrack * track)
+{
+	BKTKInterpreter * interpreter = & track -> interpreter;
+	BKEnum type = track -> object.object.flags & BKTKContextOptionTimingDataMask;
+	float tickTime = 0;
+
+	if (type == BKTKContextOptionTimingDataSecs) {
+		BKContext * ctx = track -> ctx -> renderContext;
+		BKTime masterTick;
+		BKInt sampleRate;
+
+		BKGetPtr (ctx, BK_CLOCK_PERIOD, & masterTick, sizeof (masterTick));
+		BKGetAttr (ctx, BK_SAMPLE_RATE, & sampleRate);
+		tickTime = (float) BKTimeGetTime (masterTick);
+		tickTime += (float) BKTimeGetFrac (masterTick) / BK_FINT20_UNIT;
+		tickTime = tickTime / sampleRate * interpreter -> lineTime;
+	}
+	else if (type == BKTKContextOptionTimingDataTicks) {
+		tickTime = interpreter -> lineTime;
+	}
+
+	if (interpreter -> lineno != track -> lineno + 1) {
+		writeTimingData (track, "l:%.5g:%u\n", tickTime, interpreter -> lineno);
+	}
+	else {
+		writeTimingData (track, "l:%.5g\n", tickTime);
+	}
+}
+
 static BKEnum dividerCallback (BKCallbackInfo * info, BKTKTrack * track)
 {
 	BKInt ticks;
+	BKTKInterpreter * interpreter = &track -> interpreter;
 
 	BKTKInterpreterAdvance (&track -> interpreter, track, &ticks);
 	info -> divider = ticks;
+
+	if (track -> object.object.flags & BKTKContextOptionTimingDataMask) {
+		if ((interpreter -> object.flags & BKTKInterpreterFlagHasRepeated) == 0) {
+			if (interpreter -> lineno != track -> lineno) {
+				writeTimingLine (track);
+				track -> lineno = interpreter -> lineno;
+			}
+		}
+	}
 
 	return 0;
 }
@@ -433,16 +492,24 @@ void BKTKContextDetach (BKTKContext * ctx)
 	ctx -> renderContext = NULL;
 }
 
+static void BKTKTrackReset (BKTKTrack * track)
+{
+	BKDividerReset (&track -> divider);
+	BKTKInterpreterReset (&track -> interpreter);
+	BKTrackReset (&track -> renderTrack);
+	track -> lineno = 0;
+
+	BKByteBufferDispose (&track -> timingData);
+	track -> timingData = BK_BYTE_BUFFER_INIT;
+}
+
 void BKTKContextReset (BKTKContext * ctx)
 {
 	BKTKTrack * track;
 
 	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i);
-
-		BKDividerReset (&track -> divider);
-		BKTKInterpreterReset (&track -> interpreter);
-		BKTrackReset (&track -> renderTrack);
+		BKTKTrackReset (track);
 	}
 
 	BKStringEmpty (&ctx -> error);
@@ -450,6 +517,8 @@ void BKTKContextReset (BKTKContext * ctx)
 
 static void BKTKContextDispose (BKTKContext * ctx)
 {
+	BKTKContextDetach (ctx);
+
 	for (BKUSize i = 0; i < ctx -> instruments.len; i ++) {
 		BKTKInstrumentDispose (*(BKTKInstrument **) BKArrayItemAt (&ctx -> instruments, i));
 	}

@@ -121,7 +121,7 @@ struct BKTKInterpreter {
 	BKTKTickEvent   events [BK_INTR_MAX_EVENTS];
 	BKInt           time;
 	BKInt           lineTime;
-	BKInt           lineno, lastLineno;
+	BKInt           lineno;
 };
 
 /**
