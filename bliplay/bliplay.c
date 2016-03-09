@@ -393,7 +393,7 @@ static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 }
 #endif /* BK_USE_PLAYER */
 
-static BKInt check_tracks_running (BKTKContext * ctx)
+static BKInt check_tracks_running (BKTKContext const * ctx)
 {
 	BKTKTrack * track;
 	BKSize numActive = 0;
@@ -472,7 +472,7 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 }
 
 #if BK_USE_PLAYER
-static void print_time (BKTKContext * ctx)
+static void print_time (BKTKContext const * ctx)
 {
 	int frames = BKTimeGetTime (ctx -> renderContext -> currentTime) * 100 / ctx -> renderContext -> sampleRate;
 	int frac   = frames % 100;
@@ -486,7 +486,7 @@ static void print_time (BKTKContext * ctx)
 }
 #endif /* BK_USE_PLAYER */
 
-static BKInt count_slots (BKArray * array)
+static BKInt count_slots (BKArray const * array)
 {
 	BKInt count = 0;
 	BKTKObject const * object;
@@ -532,7 +532,7 @@ static void waveform_get_name (char name [], BKSize size, BKEnum waveform, BKInt
 	strcpy (name, waveformName);
 }
 
-static void print_track_info (BKTKContext * ctx)
+static void print_track_waveform (BKTKTrack const * track, BKInt index)
 {
 	BKEnum waveform;
 	BKTKTrack * track;
@@ -557,7 +557,7 @@ static void print_track_info (BKTKContext * ctx)
 	}
 }
 
-static void print_info (BKTKContext * ctx)
+static void print_info (BKTKContext const * ctx)
 {
 	print_message ("      step ticks: %d\n", ctx -> stepTicks);
 	print_message ("     instruments: %d\n", count_slots (& ctx -> instruments));
