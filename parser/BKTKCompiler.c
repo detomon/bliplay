@@ -1485,6 +1485,11 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 		return -1;
 	}
 
+	if (BKByteBufferAppendInt32 (&track -> byteCode, BKIntrRepeatStart) != 0) {
+		printError (compiler, tree, "Error: allocation failed");
+		return -1;
+	}
+
 	for (node = tree -> subNode; node; node = node -> nextNode) {
 		if (node -> type == BKTKTypeComment) {
 			continue;
