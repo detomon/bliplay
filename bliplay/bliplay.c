@@ -902,8 +902,6 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			print_error ("No such file: %s\n", path.str);
 			return -1;
 		}
-
-		set_color (stderr, 2);
 	}
 
 	// path set by option
@@ -954,7 +952,6 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 
 	if (make_context (ctx, inputFile) != 0) {
 		print_error ("Failed to load file: %s\n", filename);
-		set_color (stderr, 0);
 		fclose (inputFile);
 		return 1;
 	}
@@ -969,8 +966,6 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		}
 	}
 #endif
-
-	set_color (stderr, 0);
 
 	if (inputFile != stdin) {
 		fclose (inputFile);
