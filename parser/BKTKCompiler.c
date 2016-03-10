@@ -1486,7 +1486,9 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 		return -1;
 	}
 
-	if (BKByteBufferAppendInt32 (&track -> byteCode, BKIntrRepeatStart) != 0) {
+	cmd = BKInstrMaskArg1Make (BKIntrRepeatStart, 0);
+
+	if (BKByteBufferAppendInt32 (&track -> byteCode, cmd) != 0) {
 		printError (compiler, tree, "Error: allocation failed");
 		return -1;
 	}
@@ -1660,6 +1662,13 @@ BKInt BKTKCompilerCompile (BKTKCompiler * compiler, BKTKParserNode const * tree)
 		printError (compiler, tree, "Error: allocation failed");
 		res = BK_ALLOCATION_ERROR;
 		goto cleanup;
+	}
+
+	cmd = BKInstrMaskArg1Make (BKIntrRepeatStart, 0);
+
+	if (BKByteBufferAppendInt32 (&globalTrack -> byteCode, cmd) != 0) {
+		printError (compiler, tree, "Error: allocation failed");
+		return -1;
 	}
 
 	for (node = tree; node; node = node -> nextNode) {
