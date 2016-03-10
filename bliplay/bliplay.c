@@ -676,9 +676,6 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 		return res;
 	}
 
-	BKStringEmpty (&ctx -> loadPath);
-	BKStringAppend (&ctx -> loadPath, "/Users/simon/Dropbox/Blip Tokenizer/Blip Tokenizer/Samples");
-
 	if ((res = BKTKCompilerCompile (&compiler, nodeTree)) != 0) {
 		print_error ("%s (%s)", (char *) compiler.error.str, BKStatusGetName (res));
 		return res;
