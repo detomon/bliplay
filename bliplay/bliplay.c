@@ -956,7 +956,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 
 	if (make_context (ctx, inputFile) != 0) {
-		print_error ("Failed to load file: %s\n", path.str);
+		print_error ("Failed to load file: %s\n", filename);
 		set_color (stderr, 0);
 		fclose (inputFile);
 		return 1;
