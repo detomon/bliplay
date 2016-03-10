@@ -685,7 +685,7 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 					break;
 				}
 				case BK_EFFECT_VIBRATO: {
-					args [3] = BKClamp (args [3], 0, 9600);
+					args [3] = BKClamp (args [3], -9600, 9600);
 					args [3] = value2Pitch (args [3]);
 					break;
 				}
