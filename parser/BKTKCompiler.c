@@ -1071,7 +1071,7 @@ static BKInt BKTKCompilerCompileInstrument (BKTKCompiler * compiler, BKTKParserN
 		}
 
 		if (res < 0) {
-			printError (compiler, node, "Warning: invalid sequence '%s' (%s)\n",
+			printError (compiler, node, "Error: invalid sequence '%s' (%s)",
 				BKTKCompilerEscapeString (compiler, &node -> name), BKStatusGetName (res));
 		}
 
@@ -1085,8 +1085,9 @@ static BKInt BKTKCompilerCompileInstrument (BKTKCompiler * compiler, BKTKParserN
 		}
 
 		if (res < 0) {
-			printError (compiler, node, "Warning: invalid sequence '%s' (%s)\n",
+			printError (compiler, node, "Error: malformed sequence '%s'; possibly invalid sustain range (%s)",
 				BKTKCompilerEscapeString (compiler, &node -> name), BKStatusGetName (res));
+
 		}
 	}
 

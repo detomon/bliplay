@@ -677,7 +677,7 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	}
 
 	if ((res = BKTKCompilerCompile (&compiler, nodeTree)) != 0) {
-		print_error ("%s (%s)", (char *) compiler.error.str, BKStatusGetName (res));
+		print_error ((char *) compiler.error.str);
 		return res;
 	}
 
