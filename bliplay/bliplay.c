@@ -616,7 +616,7 @@ static BKInt context_init (BKTKContext * ctx, BKInt numChannels, BKInt sampleRat
 	}
 
 	if ((res = BKContextInit (&renderCtx, numChannels, sampleRate)) != 0) {
-		print_error ("Context init failed (%d)\n", res);
+		print_error ("Context init failed (%s)\n", BKStatusGetName (res));
 		return res;
 	}
 
@@ -629,12 +629,12 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	BKTKParserNode * nodeTree;
 
 	if ((res = BKTKParserInit (&parser)) != 0) {
-		print_error ("BKTKParserInit failed (%d)\n", res);
+		print_error ("BKTKParserInit failed (%s)\n", BKStatusGetName (res));
 		return res;
 	}
 
 	if ((res = BKTKTokenizerInit (&tok)) != 0) {
-		print_error ("BKTKTokenizerInit failed (%d)\n", res);
+		print_error ("BKTKTokenizerInit failed (%s)\n", BKStatusGetName (res));
 		return res;
 	}
 
@@ -672,7 +672,7 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	nodeTree = BKTKParserGetNodeTree (&parser);
 
 	if ((res = BKTKCompilerInit (&compiler)) != 0) {
-		print_error ("BKTKCompilerInit failed (%d)\n", res);
+		print_error ("BKTKCompilerInit failed (%s)\n", BKStatusGetName (res));
 		return res;
 	}
 
@@ -680,22 +680,22 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	BKStringAppend (&ctx -> loadPath, "/Users/simon/Dropbox/Blip Tokenizer/Blip Tokenizer/Samples");
 
 	if ((res = BKTKCompilerCompile (&compiler, nodeTree)) != 0) {
-		print_error ("%s (%d)", (char *) compiler.error.str, res);
+		print_error ("%s (%s)", (char *) compiler.error.str, BKStatusGetName (res));
 		return res;
 	}
 
 	BKDispose (&parser);
 
 	if ((res = BKTKContextCreate (ctx, &compiler)) != 0) {
-		print_error ("Creating context failed (%d)\n", res);
-		print_error ("%s\n", (char *) ctx -> error.str);
+		print_error ("Creating context failed (%s)\n", BKStatusGetName (res));
+		print_error ((char *) ctx -> error.str);
 		return res;
 	}
 
 	BKDispose (&compiler);
 
 	if ((res = BKTKContextAttach (ctx, &renderCtx)) != 0) {
-		print_error ("Attaching context failed (%d)\n");
+		print_error ("Attaching context failed (%s)\n", BKStatusGetName (res));
 		return res;
 	}
 

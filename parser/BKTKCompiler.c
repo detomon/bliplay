@@ -1071,8 +1071,8 @@ static BKInt BKTKCompilerCompileInstrument (BKTKCompiler * compiler, BKTKParserN
 		}
 
 		if (res < 0) {
-			printError (compiler, node, "Warning: invalid sequence '%s' (%d)\n",
-				BKTKCompilerEscapeString (compiler, &node -> name), res);
+			printError (compiler, node, "Warning: invalid sequence '%s' (%s)\n",
+				BKTKCompilerEscapeString (compiler, &node -> name), BKStatusGetName (res));
 		}
 
 		if (type >= 0) {
@@ -1085,8 +1085,8 @@ static BKInt BKTKCompilerCompileInstrument (BKTKCompiler * compiler, BKTKParserN
 		}
 
 		if (res < 0) {
-			printError (compiler, node, "Warning: invalid sequence '%s' (%d)\n",
-				BKTKCompilerEscapeString (compiler, &node -> name), res);
+			printError (compiler, node, "Warning: invalid sequence '%s' (%s)\n",
+				BKTKCompilerEscapeString (compiler, &node -> name), BKStatusGetName (res));
 		}
 	}
 
@@ -1188,7 +1188,7 @@ static BKInt BKTKCompilerCompileWaveform (BKTKCompiler * compiler, BKTKParserNod
 				res = BKDataSetFrames (&(*waveform) -> data, sequence, length, 1, 1);
 
 				if (res != 0) {
-					printError (compiler, tree, "Error: failed to set waveform (%d)", res);
+					printError (compiler, tree, "Error: failed to set waveform (%s)", BKStatusGetName (res));
 					res = -1;
 					goto cleanup;
 
@@ -1281,7 +1281,7 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 				res = BKDataSetData (&(*sample) -> data, data -> str, (BKUInt) data -> len, arg1, value);
 
 				if (res != 0) {
-					printError (compiler, tree, "Error: failed to set waveform (%d)", res);
+					printError (compiler, tree, "Error: failed to set waveform (%s)", BKStatusGetName (res));
 					res = -1;
 					goto cleanup;
 				}
