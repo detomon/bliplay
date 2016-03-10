@@ -716,7 +716,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	flags = FLAG_INFO;
 #endif
 
-	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:t:vy", options, & longoptind)) != -1) {
+	while ((opt = getopt_long (argc, (void *) argv, "d:f:hil:no:pr:t:vy", options, &longoptind)) != -1) {
 		switch (opt) {
 			case 'd': {
 				BKStringEmpty (&loadPath);
@@ -814,7 +814,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 
 	if (outputFilename) {
 		// output file already exists
-		if (stat (outputFilename, & st) == 0) {
+		if (stat (outputFilename, &st) == 0) {
 			if (!S_ISREG (st.st_mode)) {
 				print_error ("Output file already exists and is not a file: %s\n", outputFilename);
 				return -1;
@@ -853,7 +853,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		}
 
 		if (outputType == OUTPUT_TYPE_WAVE) {
-			if (BKWaveFileWriterInit (& waveWriter, outputFile, numChannels, sampleRate) < 0) {
+			if (BKWaveFileWriterInit (&waveWriter, outputFile, numChannels, sampleRate) < 0) {
 				return -1;
 			}
 		}
@@ -880,18 +880,18 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 
 	// use stdin
-	if (BKStringCompare (& path, "-") == 0) {
+	if (BKStringCompare (&path, "-") == 0) {
 		inputFile = stdin;
 	}
 	// use path
 	else {
-		if (stat ((char *) path.str, & st) < 0) {
+		if (stat ((char *) path.str, &st) < 0) {
 			print_error ("No such file: %s\n", path.str);
 			return -1;
 		}
 
 		if (S_ISDIR (st.st_mode)) {
-			if (BKStringAppend (& path, "/DATA.blip") < 0) {
+			if (BKStringAppend (&path, "/DATA.blip") < 0) {
 				return -1;
 			}
 		}
@@ -908,7 +908,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 
 	// path set by option
 	if (loadPath.len) {
-		if (stat ((char *) loadPath.str, & st) < 0) {
+		if (stat ((char *) loadPath.str, &st) < 0) {
 			print_error ("No such path for loading: %s\n", loadPath.str);
 			return -1;
 		}
@@ -918,7 +918,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			return -1;
 		}
 
-		BKStringReplaceInRange (& ctx -> loadPath, &loadPath, 0, ctx -> loadPath.len);
+		BKStringReplaceInRange (&ctx -> loadPath, &loadPath, 0, ctx -> loadPath.len);
 		BKStringDispose (&loadPath);
 
 		BKStringEmpty (&loadPath);
@@ -937,19 +937,19 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	if ((flags & FLAG_TIMING_UNIT_MASK) && outputFilename) {
 		BKString path = BK_STRING_INIT;
 
-		if (BKStringAppend (& path, outputFilename) != 0) {
+		if (BKStringAppend (&path, outputFilename) != 0) {
 			print_error ("Allocation error\n");
 			return -1;
 		}
 
-		if (BKStringAppend (& path, ".txt") != 0) {
+		if (BKStringAppend (&path, ".txt") != 0) {
 			print_error ("Allocation error\n");
 			return -1;
 		}
 
 		timingFile = fopen ((char *) path.str, "w");
 
-		BKStringDispose (& path);
+		BKStringDispose (&path);
 	}
 
 	if (make_context (ctx, inputFile) != 0) {
@@ -963,7 +963,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	if ((flags & FLAG_NO_SOUND) == 0) {
 		char const * error = NULL;
 
-		if (init_sdl (ctx, & error) < 0) {
+		if (init_sdl (ctx, &error) < 0) {
 			print_error ("Could not initialize SDL: %s\n", error);
 			return -1;
 		}
@@ -979,7 +979,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	if (flags & FLAG_HAS_SEEK_TIME) {
 		speed = ctx -> stepTicks;
 
-		if (parse_seek_time (seekTimeString, & seekTime, speed) != 0) {
+		if (parse_seek_time (seekTimeString, &seekTime, speed) != 0) {
 			return -1;
 		}
 	}
@@ -987,7 +987,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	if (flags & FLAG_HAS_END_TIME) {
 		speed = ctx -> stepTicks;
 
-		if (parse_seek_time (endTimeString, & endTime, speed) != 0) {
+		if (parse_seek_time (endTimeString, &endTime, speed) != 0) {
 			return -1;
 		}
 	}
@@ -1031,7 +1031,7 @@ static void write_timing_data (void)
 		);
 
 		for (BKUSize i = 0; i < ctx.tracks.len; i ++) {
-			track = *(BKTKTrack **) BKArrayItemAt (& ctx.tracks, i);
+			track = *(BKTKTrack **) BKArrayItemAt (&ctx.tracks, i);
 
 			if (!track) {
 				continue;
@@ -1068,8 +1068,8 @@ static void cleanup (void)
 {
 	if (outputFile) {
 		if (outputType == OUTPUT_TYPE_WAVE) {
-			BKWaveFileWriterTerminate (& waveWriter);
-			BKDispose (& waveWriter);
+			BKWaveFileWriterTerminate (&waveWriter);
+			BKDispose (&waveWriter);
 		}
 
 		if (outputFile != stdout) {
@@ -1077,7 +1077,7 @@ static void cleanup (void)
 		}
 	}
 
-	BKDispose (& ctx);
+	BKDispose (&ctx);
 #if BK_USE_PLAYER
 	SDL_CloseAudio ();
 #endif
@@ -1119,8 +1119,8 @@ static BKInt runloop (BKTKContext * ctx)
 	fd_set fds, fdsc;
 	struct timeval timeout;
 
-	FD_ZERO (& fds);
-	FD_SET (STDIN_FILENO, & fds);
+	FD_ZERO (&fds);
+	FD_SET (STDIN_FILENO, &fds);
 	nfds = STDIN_FILENO + 1;
 
 	set_noecho (1);
@@ -1129,11 +1129,11 @@ static BKInt runloop (BKTKContext * ctx)
 	SDL_PauseAudio (0);
 
 	do {
-		FD_COPY (& fds, & fdsc);
+		FD_COPY (&fds, &fdsc);
 		timeout.tv_sec  = 0;
 		timeout.tv_usec = updateUSecs;
 
-		res = select (nfds, & fdsc, NULL, NULL, & timeout);
+		res = select (nfds, &fdsc, NULL, NULL, &timeout);
 
 		if (res < 0) {
 			return -1;
@@ -1194,12 +1194,12 @@ int main (int argc, char * argv [])
 		colorNormal = "\033[0m";
 	}
 
-	if (handle_options (& ctx, argc, argv) != 0) {
+	if (handle_options (&ctx, argc, argv) != 0) {
 		return 1;
 	}
 
 	if (flags & FLAG_INFO) {
-		print_info (& ctx);
+		print_info (&ctx);
 	}
 
 	if (flags & FLAG_INFO_EXPLICITE) {
@@ -1208,16 +1208,16 @@ int main (int argc, char * argv [])
 
 	if (flags & FLAG_HAS_SEEK_TIME) {
 		print_notice ("=> Fast forward to %s\n", seekTimeString);
-		seek_context (& ctx, seekTime);
+		seek_context (&ctx, seekTime);
 	}
 
 	if (flags & FLAG_NO_SOUND) {
-		if (write_output (& ctx) < 0) {
+		if (write_output (&ctx) < 0) {
 			return 2;
 		}
 	}
 	else {
-		if (runloop (& ctx) < 0) {
+		if (runloop (&ctx) < 0) {
 			return 3;
 		}
 	}
