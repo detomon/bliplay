@@ -170,8 +170,16 @@ static int getchar_nocanon (unsigned tcflags)
 static int string_begins_with (char const * str, char const * head)
 {
 	char const * sc, * hc;
+	BKSize sl, hl;
+
+	sl = strlen (str);
+	hl = strlen (head);
 
 	if (str == NULL || head == NULL) {
+		return 0;
+	}
+
+	if (!sl || !hl || hl > sl) {
 		return 0;
 	}
 
@@ -199,14 +207,14 @@ static int string_ends_with (char const * str, char const * tail)
 	sl = strlen (str);
 	tl = strlen (tail);
 
-	if (sl == 0 || tl == 0 || tl > sl) {
+	if (!sl || !tl || tl > sl) {
 		return 0;
 	}
 
 	sc = & str [sl - 1];
 	tc = & tail [tl - 1];
 
-	for (; tc > tail; tc --, sc --) {
+	for (; tc >= tail; tc --, sc --) {
 		if (* tc != * sc) {
 			return 0;
 		}
