@@ -114,6 +114,7 @@ typedef union
 		signed int idx1:12;
 		signed int idx2:12;
 	} grp;
+	uint32_t value;
 } BKInstrMask;
 
 struct BKTKTickEvent

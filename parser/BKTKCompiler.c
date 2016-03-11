@@ -285,7 +285,7 @@ BK_INLINE uint32_t BKInstrMaskArg1Make (BKUInt cmd, BKInt arg1)
 		.arg1 = {cmd, arg1},
 	};
 
-	return *(uint32_t *) &mask;
+	return mask.value;
 }
 
 BK_INLINE uint32_t BKInstrMaskArg2Make (BKUInt cmd, BKInt arg1, BKInt arg2)
@@ -294,7 +294,7 @@ BK_INLINE uint32_t BKInstrMaskArg2Make (BKUInt cmd, BKInt arg1, BKInt arg2)
 		.arg2 = {cmd, arg1, arg2},
 	};
 
-	return *(uint32_t *) &mask;
+	return mask.value;
 }
 
 BK_INLINE uint32_t BKInstrMaskGrpMake (BKUInt cmd, BKUInt idx1, BKUInt idx2, BKUInt type)
@@ -303,7 +303,7 @@ BK_INLINE uint32_t BKInstrMaskGrpMake (BKUInt cmd, BKUInt idx1, BKUInt idx2, BKU
 		.grp = {cmd, type, idx1, idx2},
 	};
 
-	return *(uint32_t *) &mask;
+	return mask.value;
 }
 
 BK_INLINE BKInstrMask BKReadIntrMask (void ** opcode)
