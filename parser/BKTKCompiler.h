@@ -40,14 +40,15 @@ enum BKTKFlag
 
 struct BKTKCompiler
 {
-	BKObject    object;
-	BKHashTable instruments;
-	BKHashTable waveforms;
-	BKHashTable samples;
-	BKArray     tracks;
-	BKString    auxString;
-	BKString    error;
-	BKInt       lineno;
+	BKObject     object;
+	BKHashTable  instruments;
+	BKHashTable  waveforms;
+	BKHashTable  samples;
+	BKArray      tracks;
+	BKString     auxString;
+	BKString     error;
+	BKInt        lineno;
+	BKTKFileInfo info;
 };
 
 /**

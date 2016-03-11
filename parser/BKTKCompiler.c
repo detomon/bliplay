@@ -570,7 +570,7 @@ BKInt BKTKCompilerInit (BKTKCompiler * compiler)
 	return 0;
 }
 
-static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode const * node, BKByteBuffer * byteCode, BKInt cmd)
+static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode const * node, BKByteBuffer * byteCode, BKInt cmd, BKInt level)
 {
 	BKInt arg;
 	BKInt args [8];
@@ -629,8 +629,16 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 
 			break;
 		}
-			// single arguments "n" or "n/m"
-		case BKIntrStepTicks:
+		case BKIntrStepTicks: {
+			parseTicksFormat (nodeArgString (node, 0), args);
+			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg2Make (cmd, args [0], args [1]));
+
+			if (level == 0 && !compiler -> info.stepTicks) {
+				compiler -> info.stepTicks = args [0];
+			}
+			break;
+		}
+		// single arguments "n" or "n/m"
 		case BKIntrStepTicksTrack:
 		case BKIntrArpeggioSpeed:
 		case BKIntrReleaseTicks:
@@ -765,6 +773,11 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			}
 
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg2Make (cmd, args [0], args [1]));
+
+			if (level == 0 && !compiler -> info.tickRate.factor) {
+				compiler -> info.tickRate.factor = args [0];
+				compiler -> info.tickRate.divisor = args [1];
+			}
 			break;
 		}
 		case BKIntrInstrument: {
@@ -988,6 +1001,7 @@ static BKInt BKTKCompilerCompileInstrument (BKTKCompiler * compiler, BKTKParserN
 
 	(*instrument) -> object.index = (BKUInt) BKHashTableSize (&compiler -> instruments) - 1;
 	(*instrument) -> object.offset = tree -> offset;
+	BKStringAppendString (&(*instrument) -> name, &auxString);
 
 	for (node = tree -> subNode; node; node = node -> nextNode) {
 		if (node -> type == BKTKTypeComment) {
@@ -1155,6 +1169,7 @@ static BKInt BKTKCompilerCompileWaveform (BKTKCompiler * compiler, BKTKParserNod
 
 	(*waveform) -> object.index = (BKUInt) BKHashTableSize (&compiler -> waveforms) - 1;
 	(*waveform) -> object.offset = tree -> offset;
+	BKStringAppendString (&(*waveform) -> name, &auxString);
 
 	for (node = tree -> subNode; node; node = node -> nextNode) {
 		BKInt arg;
@@ -1253,6 +1268,7 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 	(*sample) -> object.index = (BKUInt) BKHashTableSize (&compiler -> samples) - 1;
 	(*sample) -> object.offset = tree -> offset;
 	(*sample) -> path = BK_STRING_INIT;
+	BKStringAppendString (&(*sample) -> name, &auxString);
 
 	for (node = tree -> subNode; node; node = node -> nextNode) {
 		BKInt arg1, arg2;
@@ -1341,7 +1357,7 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 	}
 }
 
-static BKInt BKTKCompilerCompileGroup (BKTKCompiler * compiler, BKTKParserNode const * tree, BKTKTrack * track)
+static BKInt BKTKCompilerCompileGroup (BKTKCompiler * compiler, BKTKParserNode const * tree, BKTKTrack * track, BKInt level)
 {
 	BKInt res;
 	BKInt value;
@@ -1404,7 +1420,7 @@ static BKInt BKTKCompilerCompileGroup (BKTKCompiler * compiler, BKTKParserNode c
 			continue;
 		}
 
-		if ((res = BKTKCompilerCompileCommand (compiler, node, &group -> byteCode, value)) != 0) {
+		if ((res = BKTKCompilerCompileCommand (compiler, node, &group -> byteCode, value, level)) != 0) {
 			return res;
 		}
 	}
@@ -1419,25 +1435,36 @@ static BKInt BKTKCompilerCompileGroup (BKTKCompiler * compiler, BKTKParserNode c
 	return 0;
 }
 
-static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode const * tree)
+static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode const * tree, BKInt level)
 {
 	BKInt res;
-	BKInt value;
+	BKInt value = -1;
 	BKUInt flags;
 	BKTKParserNode const * node;
 	BKTKTrack * track;
 	BKString const * wavename;
-	BKInt waveform;
 	BKInt offset;
 	uint32_t cmd;
 	BKInt autoindex = 0;
+	BKTKWaveform * waveform = NULL;
+	BKInt waveformIdx;
 
 	wavename = nodeArgString (tree, 0);
 
-	if (!keyvalLookup (waveformNames, NUM_WAVEFORM_NAMES, wavename, &waveform, NULL)) {
-		printError (compiler, tree, "Warning: unknown waveform '%s'; using 'square'",
+	if (!BKHashTableLookup (&compiler -> waveforms, (char *) wavename -> str, (void **) &waveform)) {
+		keyvalLookup (waveformNames, NUM_WAVEFORM_NAMES, wavename, &value, NULL);
+	}
+
+	if (waveform) {
+		waveformIdx = waveform -> object.index | BK_INTR_CUSTOM_WAVEFORM_FLAG;
+	}
+	else if (value > 0) {
+		waveformIdx = value;
+	}
+	else {
+		printError (compiler, tree, "Error: undefined waveform '%s'",
 			BKTKCompilerEscapeString (compiler, wavename));
-		waveform = BK_SQUARE;
+		return -1;
 	}
 
 	offset = nodeArgInt (tree, 1, -1);
@@ -1477,9 +1504,9 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 	track -> object.object.flags |= BKTKFlagUsed | BKBitCond (BKTKFlagAutoIndex, autoindex);
 	track -> object.index  = offset;
 	track -> object.offset = tree -> offset;
-	track -> waveform      = waveform;
+	track -> waveform      = waveformIdx;
 
-	cmd = BKInstrMaskArg1Make (BKIntrWaveform, waveform);
+	cmd = BKInstrMaskArg1Make (BKIntrWaveform, waveformIdx);
 
 	if (BKByteBufferAppendInt32 (&track -> byteCode, cmd) != 0) {
 		printError (compiler, tree, "Error: allocation failed");
@@ -1501,7 +1528,7 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 		if (keyvalLookup (cmdNames, NUM_CMD_NAMES, &node -> name, &value, &flags)) {
 			switch (value) {
 				case BKIntrGroupDef: {
-					if ((res = BKTKCompilerCompileGroup (compiler, node, track)) != 0) {
+					if ((res = BKTKCompilerCompileGroup (compiler, node, track, level)) != 0) {
 						return res;
 					}
 					break;
@@ -1511,7 +1538,7 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 						printErrorUnexpectedCommand (compiler, node);
 					}
 					else {
-						if ((res = BKTKCompilerCompileCommand (compiler, node, &track -> byteCode, value)) != 0) {
+						if ((res = BKTKCompilerCompileCommand (compiler, node, &track -> byteCode, value, level)) != 0) {
 							return res;
 						}
 					}
@@ -1683,7 +1710,7 @@ BKInt BKTKCompilerCompile (BKTKCompiler * compiler, BKTKParserNode const * tree)
 
 		switch (value) {
 			case BKIntrGroupDef: {
-				if ((res = BKTKCompilerCompileGroup (compiler, node, globalTrack)) != 0) {
+				if ((res = BKTKCompilerCompileGroup (compiler, node, globalTrack, 0)) != 0) {
 					goto cleanup;
 				}
 				break;
@@ -1701,7 +1728,7 @@ BKInt BKTKCompilerCompile (BKTKCompiler * compiler, BKTKParserNode const * tree)
 				break;
 			}
 			case BKIntrTrackDef: {
-				if ((res = BKTKCompilerCompileTrack (compiler, node)) != 0) {
+				if ((res = BKTKCompilerCompileTrack (compiler, node, 1)) != 0) {
 					goto cleanup;
 				}
 				break;
@@ -1716,7 +1743,7 @@ BKInt BKTKCompilerCompile (BKTKCompiler * compiler, BKTKParserNode const * tree)
 				if (node -> flags & BKTKParserFlagIsGroup) {
 					printErrorUnexpectedCommand (compiler, node);
 				}
-				else if ((res = BKTKCompilerCompileCommand (compiler, node, &globalTrack -> byteCode, value)) != 0) {
+				else if ((res = BKTKCompilerCompileCommand (compiler, node, &globalTrack -> byteCode, value, 0)) != 0) {
 					goto cleanup;
 				}
 				break;
@@ -1780,7 +1807,9 @@ BKInt BKTKCompilerReset (BKTKCompiler * compiler)
 	BKHashTableEmpty (&compiler -> samples);
 	BKStringEmpty (&compiler -> auxString);
 	BKStringEmpty (&compiler -> error);
+
 	compiler -> lineno = 0;
+	compiler -> info = (BKTKFileInfo) {0};
 
 	// reserve global track
 	track = BKTKCompilerTrackAtOffset (compiler, 0, 1);

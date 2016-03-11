@@ -38,6 +38,7 @@ typedef struct BKString BKString;
 typedef struct BKTKOffset BKTKOffset;
 typedef struct BKTKTrack BKTKTrack;
 typedef struct BKTKCompiler BKTKCompiler;
+typedef struct BKTKFileInfo BKTKFileInfo;
 
 /**
  * Defines an offset in the given string
@@ -46,6 +47,18 @@ struct BKTKOffset
 {
 	BKInt lineno;
 	BKInt colno;
+};
+
+/**
+ * Contains basic file info
+ */
+struct BKTKFileInfo
+{
+	BKInt stepTicks;
+	struct {
+		BKInt factor;
+		BKInt divisor;
+	} tickRate;
 };
 
 /**

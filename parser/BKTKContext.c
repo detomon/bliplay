@@ -82,6 +82,8 @@ BKInt BKTKInstrumentAlloc (BKTKInstrument ** instrument)
 		return res;
 	}
 
+	(*instrument) -> name = BK_STRING_INIT;
+
 	return res;
 }
 
@@ -97,6 +99,8 @@ BKInt BKTKWaveformAlloc (BKTKWaveform ** waveform)
 		return res;
 	}
 
+	(*waveform) -> name = BK_STRING_INIT;
+
 	return res;
 }
 
@@ -111,6 +115,8 @@ BKInt BKTKSampleAlloc (BKTKSample ** sample)
 	if ((res = BKDataInit (&(*sample) -> data)) != 0) {
 		return res;
 	}
+
+	(*sample) -> name = BK_STRING_INIT;
 
 	return res;
 }
@@ -145,6 +151,7 @@ static void BKTKInstrumentDispose (BKTKInstrument * instrument)
 {
 	if (instrument) {
 		BKDispose (&instrument -> instr);
+		BKStringDispose (&instrument -> name);
 		free (instrument);
 	}
 }
@@ -153,6 +160,7 @@ static void BKTKWaveformDispose (BKTKWaveform * waveform)
 {
 	if (waveform) {
 		BKDispose (&waveform -> data);
+		BKStringDispose (&waveform -> name);
 		free (waveform);
 	}
 }
@@ -162,6 +170,7 @@ static void BKTKSampleDispose (BKTKSample * sample)
 	if (sample) {
 		BKStringDispose (&sample -> path);
 		BKDispose (&sample -> data);
+		BKStringDispose (&sample -> name);
 		free (sample);
 	}
 }
@@ -380,6 +389,17 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 	BKHashTableEmpty (&compiler -> instruments);
 	BKHashTableEmpty (&compiler -> waveforms);
 	BKHashTableEmpty (&compiler -> samples);
+
+	ctx -> info = compiler -> info;
+
+	if (!ctx -> info.stepTicks) {
+		ctx -> info.stepTicks = BK_INTR_STEP_TICKS;
+	}
+
+	if (!ctx -> info.tickRate.factor) {
+		ctx -> info.tickRate.factor = 1;
+		ctx -> info.tickRate.divisor = BK_DEFAULT_CLOCK_RATE;
+	}
 
 	BKTKCompilerReset (compiler);
 

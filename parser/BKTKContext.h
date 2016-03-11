@@ -54,18 +54,21 @@ struct BKTKInstrument
 {
 	BKTKObject   object;
 	BKInstrument instr;
+	BKString     name;
 };
 
 struct BKTKWaveform
 {
 	BKTKObject object;
 	BKData     data;
+	BKString   name;
 };
 
 struct BKTKSample
 {
 	BKTKObject object;
 	BKString   path;
+	BKString   name;
 	BKInt      pitch;
 	BKInt      repeat;
 	BKInt      sustainRange [2];
@@ -88,16 +91,15 @@ struct BKTKTrack
 
 struct BKTKContext
 {
-	BKObject    object;
-	BKContext * renderContext;
-	BKArray     instruments;  // BKTKInstrument
-	BKArray     waveforms;    // BKTKWaveform
-	BKArray     samples;      // BKTKSample
-	BKArray     tracks;       // BKTKTrack
-	BKString    loadPath;
-	BKString    error;
-	BKInt       tickRate;
-	BKInt       stepTicks;
+	BKObject     object;
+	BKContext  * renderContext;
+	BKArray      instruments;  // BKTKInstrument
+	BKArray      waveforms;    // BKTKWaveform
+	BKArray      samples;      // BKTKSample
+	BKArray      tracks;       // BKTKTrack
+	BKString     loadPath;
+	BKString     error;
+	BKTKFileInfo info;
 };
 
 enum BKTKContextOption

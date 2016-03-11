@@ -508,31 +508,36 @@ static BKInt count_slots (BKArray const * array)
 	return count;
 }
 
-static void waveform_get_name (char name [], BKSize size, BKEnum waveform, BKInt * isCustom)
+static void waveform_get_name (BKTKTrack const * track, char name [], BKSize size, BKEnum waveformIdx, BKInt * isCustom)
 {
 	char const * waveformName;
+	BKTKWaveform const * waveform;
 
-	if (waveform & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
+	if (waveformIdx & BK_INTR_CUSTOM_WAVEFORM_FLAG) {
 		if (isCustom) {
 			*isCustom = 1;
 		}
 
-		snprintf (name, size, "%u", waveform &~ BK_INTR_CUSTOM_WAVEFORM_FLAG);
+		waveformIdx &= ~BK_INTR_CUSTOM_WAVEFORM_FLAG;
+		waveform = *(BKTKWaveform **) BKArrayItemAt (&track -> ctx -> waveforms, waveformIdx);
+
+		snprintf (name, size, "%s", waveform -> name.str);
 		return;
 	}
+	else {
+		switch (waveformIdx) {
+			case BK_SQUARE:   waveformName = "square";   break;
+			case BK_TRIANGLE: waveformName = "triangle"; break;
+			case BK_NOISE:    waveformName = "noise";    break;
+			case BK_SAWTOOTH: waveformName = "sawtooth"; break;
+			case BK_SINE:     waveformName = "sine";     break;
+			case BK_SAMPLE:   waveformName = "sample";   break;
+			default:          waveformName = "unknown";  break;
+		}
 
-	switch (waveform) {
-		case BK_SQUARE:   waveformName = "square";   break;
-		case BK_TRIANGLE: waveformName = "triangle"; break;
-		case BK_NOISE:    waveformName = "noise";    break;
-		case BK_SAWTOOTH: waveformName = "sawtooth"; break;
-		case BK_SINE:     waveformName = "sine";     break;
-		case BK_SAMPLE:   waveformName = "sample";   break;
-		default:          waveformName = "unknown";  break;
-	}
-
-	if (isCustom) {
-		*isCustom = 0;
+		if (isCustom) {
+			*isCustom = 0;
+		}
 	}
 
 	strcpy (name, waveformName);
@@ -543,27 +548,16 @@ static void print_track_waveform (BKTKTrack const * track, BKInt index)
 	BKInt isCustom;
 	BKEnum waveform;
 	char name [64];
-	char const * line;
 
 	waveform = track -> waveform;
-	waveform_get_name (name, sizeof (name), waveform, &isCustom);
+	waveform_get_name (track, name, sizeof (name), waveform, &isCustom);
 
-	if (isCustom) {
-		line = "              #%d: custom %s\n";
-	}
-	else {
-		line = "              #%d: %s\n";
-	}
-
-	print_message (line, index, name);
-
+	print_message ("         #%d: %s\n", index, name);
 }
 
-static void print_track_info (BKTKContext const * ctx)
+static void print_tracks (BKTKContext const * ctx)
 {
 	BKTKTrack * track;
-
-	track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, 0);
 
 	for (BKInt i = 1; i < ctx -> tracks.len; i ++) {
 		track = *(BKTKTrack **) BKArrayItemAt (& ctx -> tracks, i);
@@ -574,16 +568,59 @@ static void print_track_info (BKTKContext const * ctx)
 	}
 }
 
+static void print_instruments (BKTKContext const * ctx)
+{
+	BKTKInstrument const * instrument;
+
+	for (BKInt i = 0; i < ctx -> instruments.len; i ++) {
+		instrument = *(BKTKInstrument **) BKArrayItemAt (& ctx -> instruments, i);
+
+		if (instrument) {
+			print_message ("         #%d: %s\n", i, instrument -> name.str);
+		}
+	}
+}
+
+static void print_waveforms (BKTKContext const * ctx)
+{
+	BKTKWaveform const * waveform;
+
+	for (BKInt i = 0; i < ctx -> waveforms.len; i ++) {
+		waveform = *(BKTKWaveform **) BKArrayItemAt (& ctx -> waveforms, i);
+
+		if (waveform) {
+			print_message ("         #%d: %s\n", i, waveform -> name.str);
+		}
+	}
+}
+
+static void print_samples (BKTKContext const * ctx)
+{
+	BKTKSample const * sample;
+
+	for (BKInt i = 0; i < ctx -> samples.len; i ++) {
+		sample = *(BKTKSample **) BKArrayItemAt (& ctx -> samples, i);
+
+		if (sample) {
+			print_message ("         #%d: %s\n", i, sample -> name.str);
+		}
+	}
+}
+
 static void print_info (BKTKContext const * ctx)
 {
-	print_message ("      step ticks: %d\n", ctx -> stepTicks);
-	print_message ("     instruments: %d\n", count_slots (& ctx -> instruments));
-	print_message ("custom waveforms: %d\n", count_slots (& ctx -> waveforms));
-	print_message ("         samples: %d\n", count_slots (& ctx -> samples));
-	print_message ("          tracks: %d\n", ctx -> tracks.len - 1);
-	print_track_info (ctx);
-	print_message ("     sample rate: %d\n", ctx -> renderContext -> sampleRate);
-	print_message ("        channels: %d\n\n", ctx -> renderContext -> numChannels);
+	print_message ("instruments: %d\n", count_slots (& ctx -> instruments));
+	print_instruments (ctx);
+	print_message ("  waveforms: %d\n", count_slots (& ctx -> waveforms));
+	print_waveforms (ctx);
+	print_message ("    samples: %d\n", count_slots (& ctx -> samples));
+	print_samples (ctx);
+	print_message ("     tracks: %d\n", count_slots (& ctx -> tracks) - 1);
+	print_tracks (ctx);
+	print_message (" step ticks: %d\n", ctx -> info.stepTicks);
+	print_message ("  tick rate: %d/%d\n", ctx -> info.tickRate.factor, ctx -> info.tickRate.divisor);
+	print_message ("sample rate: %d\n", ctx -> renderContext -> sampleRate);
+	print_message ("   channels: %d\n\n", ctx -> renderContext -> numChannels);
 }
 
 static BKInt should_overwrite_output (char const * filename)
@@ -978,7 +1015,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 
 	if (flags & FLAG_HAS_SEEK_TIME) {
-		speed = ctx -> stepTicks;
+		speed = ctx -> info.stepTicks;
 
 		if (parse_seek_time (seekTimeString, &seekTime, speed) != 0) {
 			return -1;
@@ -986,7 +1023,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 
 	if (flags & FLAG_HAS_END_TIME) {
-		speed = ctx -> stepTicks;
+		speed = ctx -> info.stepTicks;
 
 		if (parse_seek_time (endTimeString, &endTime, speed) != 0) {
 			return -1;
@@ -1044,7 +1081,7 @@ static void write_timing_data (void)
 				fprintf (timingFile, "\n");
 			}
 
-			waveform_get_name (name, sizeof (name), waveform, NULL);
+			waveform_get_name (track, name, sizeof (name), waveform, NULL);
 			fprintf (timingFile, "[track:%s:%d\n", name, track -> object.index);
 
 			for (seg = track -> timingData.first; seg != track -> timingData.cur; seg = seg -> next) {

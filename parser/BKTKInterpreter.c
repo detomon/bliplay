@@ -680,7 +680,7 @@ void BKTKInterpreterReset (BKTKInterpreter * interpreter)
 	interpreter -> time            = 0;
 	interpreter -> lineTime        = 0;
 	interpreter -> lineno          = 0;
-	interpreter -> stepTickCount   = 24;
+	interpreter -> stepTickCount   = BK_INTR_STEP_TICKS;
 }
 
 BKClass const BKTKInterpreterClass =

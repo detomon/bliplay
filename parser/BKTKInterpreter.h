@@ -29,9 +29,10 @@
 #include "BKTrack.h"
 #include "BKTKTokenizer.h"
 
-#define BK_INTR_CUSTOM_WAVEFORM_FLAG (1 << 15)
+#define BK_INTR_CUSTOM_WAVEFORM_FLAG (1 << 24)
 #define BK_INTR_STACK_SIZE 16
 #define BK_INTR_MAX_EVENTS 8
+#define BK_INTR_STEP_TICKS 24
 
 typedef struct BKTKInterpreter BKTKInterpreter;
 typedef struct BKTKTickEvent BKTKTickEvent;
