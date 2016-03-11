@@ -1253,9 +1253,16 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 	}
 
 	if (*sample) {
-		printError (compiler, tree, "Error: sample '%s' already defined on line %u:%u but redefined",
-			BKTKCompilerEscapeString (compiler, name),
-			(*sample) -> object.offset.lineno, (*sample) -> object.offset.colno);
+		if (autoindex) {
+			printError (compiler, tree, "Error: sample '%s' already defined with autoindex on line %u:%u but redefined",
+				BKTKCompilerEscapeString (compiler, name),
+				(*sample) -> object.offset.lineno, (*sample) -> object.offset.colno);
+		}
+		else {
+			printError (compiler, tree, "Error: sample '%s' already defined on line %u:%u but redefined",
+				BKTKCompilerEscapeString (compiler, name),
+				(*sample) -> object.offset.lineno, (*sample) -> object.offset.colno);
+		}
 		res = -1;
 		goto cleanup;
 	}
