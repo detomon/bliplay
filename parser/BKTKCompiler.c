@@ -448,7 +448,8 @@ static BKInt parseDataParams (BKString const * arg)
  */
 static BKString const * nodeArgString (BKTKParserNode const * node, BKUSize offset)
 {
-	static BKString empty = BK_STRING_INIT;
+	// BK_STRING_INIT not working with 'static' in GCC
+	static BKString empty = {(uint8_t *) "", 0, 0};
 
 	if (offset >= node -> argCount) {
 		return &empty;
