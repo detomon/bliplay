@@ -46,8 +46,8 @@ $ make
 4. Playing files
 ----------------
 
-Files can be played like this:
+Some example files are located in `examples`. Use the following command to play them:
 
 ```Shell
-bliplay$ ./bliplay examples/hyperion-star-racer.blip
+$ bliplay/bliplay examples/hyperion-star-racer.blip
 ```
