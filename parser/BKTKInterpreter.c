@@ -394,7 +394,6 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				BKTKTrack * track;
 
 				value0 = cmdMask.arg1.arg1;
-				interpreter -> stepTickCount = value0;
 
 				for (BKUSize i = 0; i < ctx -> ctx -> tracks.len; i ++) {
 					track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, i);
