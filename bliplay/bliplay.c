@@ -666,7 +666,7 @@ static BKInt context_init (BKTKContext * ctx, BKInt numChannels, BKInt sampleRat
 	return res;
 }
 
-static BKInt make_context (BKTKContext * ctx, FILE * file)
+static BKInt make_context (BKTKContext * ctx, FILE * file, BKString * const loadPath)
 {
 	BKInt res = 0;
 	BKTKParserNode * nodeTree;
@@ -723,6 +723,11 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	}
 
 	BKDispose (&parser);
+
+	if ((res = BKStringReplaceInRange (&ctx -> loadPath, loadPath, 0, ctx -> loadPath.len)) != 0) {
+		print_error ("Allocation error\n");
+		return res;
+	}
 
 	if ((res = BKTKContextCreate (ctx, &compiler)) != 0) {
 		print_error ("Creating context failed (%s)\n", BKStatusGetName (res));
@@ -965,10 +970,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 	// parent directory from input file
 	else {
-		BKStringEmpty (&loadPath);
-		BKStringAppendString (&loadPath, &ctx -> loadPath);
-
-		if (BKStringDirname (&loadPath, &path) != 0) {
+		if (BKStringDirname (&path, &loadPath) != 0) {
 			return -1;
 		}
 	}
@@ -991,7 +993,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		BKStringDispose (&path);
 	}
 
-	if (make_context (ctx, inputFile) != 0) {
+	if (make_context (ctx, inputFile, &loadPath) != 0) {
 		print_error ("Failed to load file: %s\n", filename);
 		fclose (inputFile);
 		return 1;
