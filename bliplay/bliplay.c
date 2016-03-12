@@ -694,8 +694,6 @@ static BKInt make_context (BKTKContext * ctx, FILE * file)
 	}
 	while (!BKTKTokenizerIsFinished (&tok));
 
-	fclose (file);
-
 	if (BKTKTokenizerHasError (&tok)) {
 		print_error ("%s\n", tok.buffer);
 		res = -1;
