@@ -1,0 +1,280 @@
+stepticks:18
+
+[samp:bass
+	load:wav:bass.wav
+	ds:7144:13935
+	pt:400
+]
+
+[track:sample
+
+	[grp:0
+		d:bass
+		pt:-1200
+
+		a:c4;s:2;r;s:2
+		a:d#4;s:2;r;s:2
+		a:a#3;s:1;r;s:1
+		a:b3;s:1;r;s:1
+		a:g3;s:2;r;s:2
+
+		a:c4;s:2;r;s:2
+		a:d#4;s:2;r;s:2
+		a:a#3;s:1;r;s:1
+		at:6;a:a3;s:1;r;s:1
+		a:c4;s:1;r;s:1
+		at:6;a:g3;s:1;r;s:1
+	]
+
+	v:236
+	g:0
+	g:0
+	g:0
+	g:0
+
+	x
+
+]
+
+[track:sample
+
+	[grp:0
+		d:bass
+		pt:-3600
+		v:127
+
+		a:g3;s:2;r;s:2
+		a:f3;s:2;r;s:2
+		a:d#3;s:2;r;s:2
+		a:g#3;s:2;r;s:2
+
+		a:d#3;s:2;r;s:2
+		a:f3;s:2;r;s:2
+		a:b2;s:2;r;s:2
+		a:c3;s:2;r;s:2
+	]
+
+	g:0
+	g:0
+	g:0
+	g:0
+
+	x
+
+]
+
+[track:sample
+
+	[grp:0
+		d:bass
+		a:c3;s:3;r;s:1;
+		a:g3;s:3;r;s:1;
+		a:d#3;s:3;r;s:1;
+		a:a#3;s:3;r;s:1;
+	]
+
+	s:64
+	g:0
+	g:0
+	g:0
+
+	x
+
+]
+
+[track:noise
+
+	[grp:0
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;s:2
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;s:2
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;s:2
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+		s:4
+	]
+
+	[grp:1
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:88;e:vb:16:1200;e:vb:2:1200:88;v:156;a:c4;s:4;a:c5;v:127;s:4;r;s:2
+		e:vs;e:vb;pw:0
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+		s:4
+	]
+
+	[grp:2
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+		s:4
+	]
+
+	[grp:3
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:16;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:56;e:pr:12;e:vb:4:1200;v:0;a:c5;s:2;r
+		e:vs;e:vb;pw:0
+
+		s:2
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:127;e:vs:16;v:0;a:c6;a:c3;s:3;r;s:1
+
+		e:pr:12;e:vs;v:192;e:vs:16;v:0;a:c4;a:c4;s:1;r;s:1
+		e:pr:12;e:vs;v:240;e:vs:32;v:0;at:11;a:c5;a:c4;s:2;r
+
+		e:pr:12;e:vs;v:240;e:vs:16;v:96;a:c6;a:c5;s:2;r
+		pw:16;e:vs:264;e:pr:12;e:vb:4:1200;v:0;a:c5;s:12;r
+		e:vs;e:vb;pw:0
+
+		s:10
+	]
+
+	g:2
+	g:2
+	g:1
+	g:0
+
+	g:2
+	g:2
+	g:1
+	g:3
+
+	x
+]

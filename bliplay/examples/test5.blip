@@ -5,98 +5,94 @@ stepticks:14
 	a:-800:1200:-1200:0
 ]
 
-[track:square
-
-[grp
-	s:1
-]
-
-g:0
-
-]
-
 [track:triangle
 
-[grp
-	a:f#0;s:3;r
-	s:3
-	a:f#0;s:2;r
-	s:4
-	a:c#0;s:2;r
-	s:2
-	a:f#0;s:3;r
-	s:3
-	a:f#0;s:2;r
-	s:4
-	a:c#0;s:2;r
-	s:2
+	[grp
+		a:f#0;s:3;r
+		s:3
+		a:f#0;s:2;r
+		s:4
+		a:c#0;s:2;r
+		s:2
+		a:f#0;s:3;r
+		s:3
+		a:f#0;s:2;r
+		s:4
+		a:c#0;s:2;r
+		s:2
 
-	a:a0;s:3;r
-	s:3
-	a:a0;s:2;r
-	s:4
-	a:a0;s:2;r
-	s:2
+		a:a0;s:3;r
+		s:3
+		a:a0;s:2;r
+		s:4
+		a:a0;s:2;r
+		s:2
 
-	a:b0;s:3;r
-	s:3
-	a:b0;s:2;r
-	s:2
-	a:c#0;s:5;r
-	s:1
-]
+		a:b0;s:3;r
+		s:3
+		a:b0;s:2;r
+		s:2
+		a:c#0;s:5;r
+		s:1
+	]
 
-g:0
+	g:0
+
+	x
 
 ]
 
 [track:noise
 
-[grp
-	s:2;a:c#6;s:3;r
-	s:3;s:8
-]
+	[grp
+		s:2;a:c#6;s:3;r
+		s:3;s:8
+	]
 
-i:0
-g:0
+	i:0
+	g:0
+
+	x
 
 ]
 
 [track:sawtooth
 
-[grp
-	a:f#1;s:3;r
-	s:3
-	a:f#1;s:2;r
-	s:4
-	a:c#2;s:2;r
-	s:2
-	a:f#1;s:3;r
-	s:3
-	a:f#1;s:2;r
-	s:4
-	a:c#2;s:2;r
-	s:2
+	[grp
+		a:f#1;s:3;r
+		s:3
+		a:f#1;s:2;r
+		s:4
+		a:c#2;s:2;r
+		s:2
+		a:f#1;s:3;r
+		s:3
+		a:f#1;s:2;r
+		s:4
+		a:c#2;s:2;r
+		s:2
 
-	a:a1;s:3;r
-	s:3
-	a:a1;s:2;r
-	s:4
-	a:a1;s:2;r
-	s:2
+		a:a1;s:3;r
+		s:3
+		a:a1;s:2;r
+		s:4
+		a:a1;s:2;r
+		s:2
 
-	a:b1;s:3;r
-	s:3
-	a:b1;s:2;r
-	s:2
-	a:c#2;s:1;r
-	s:1
-	a:c#2;s:1;r
-	s:1
-	a:c#2;s:1;r
-	s:1
-]
+		a:b1;s:3;r
+		s:3
+		a:b1;s:2;r
+		s:2
+		a:c#2;s:1;r
+		s:1
+		a:c#2;s:1;r
+		s:1
+		a:c#2;s:1;r
+		s:1
+	]
 
-g:0
+	g:0
+
+	x
 
 ]

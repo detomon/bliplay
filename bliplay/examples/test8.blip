@@ -47,6 +47,8 @@ stepticks:18
 	i:1
 	g:1
 
+	x
+
 ]
 
 [track:square
@@ -76,6 +78,8 @@ stepticks:18
 	g:0
 	g:0
 	s:16
+
+	x
 
 ]
 
@@ -118,6 +122,8 @@ stepticks:18
 	g:0
 	g:1
 
+	x
+
 ]
 
 [track:sawtooth
@@ -148,6 +154,8 @@ stepticks:18
 	g:0
 	g:0
 	g:1
+
+	x
 
 ]
 
@@ -188,5 +196,7 @@ stepticks:18
 	g:0
 	g:0
 	g:1
+
+	x
 
 ]

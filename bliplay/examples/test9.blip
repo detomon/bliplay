@@ -96,6 +96,8 @@ stepticks:22
 	g:1
 	g:0
 
+	x
+
 ]
 
 [track:square
@@ -131,6 +133,8 @@ stepticks:22
 	pt:300;g:0;pt:0
 	pt:600;g:0;pt:0
 
+	x
+
 ]
 
 [track:triangle
@@ -161,6 +165,8 @@ stepticks:22
 	pt:700;g:0;pt:0
 	pt:300;g:0;pt:0
 	pt:200;g:1;pt:0
+
+	x
 
 ]
 
@@ -193,6 +199,8 @@ stepticks:22
 	pt:700;g:0;pt:0
 	pt:300;g:0;pt:0
 	pt:200;g:1;pt:0
+
+	x
 
 ]
 
@@ -249,5 +257,7 @@ stepticks:22
 	g:0
 	g:1
 	g:2
+
+	x
 
 ]

@@ -34,8 +34,6 @@ stepticks:32
 		r
 	]
 
-	xb
-
 	s:16
 	s:16
 
@@ -92,8 +90,6 @@ stepticks:32
 		r;s:2
 	]
 
-	xb
-
 	g:0
 	g:1
 
@@ -135,8 +131,6 @@ stepticks:32
 		r;s:2
 	]
 
-	xb
-
 	g:0
 	g:1
 
@@ -160,8 +154,6 @@ stepticks:32
 		a:c7;s:1;r
 		a:c7;s:1;r
 	]
-
-	xb
 
 	g:0
 	g:0
