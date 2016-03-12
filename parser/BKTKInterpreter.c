@@ -573,7 +573,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				BKTKStackItem * item;
 
 				value0 = cmdMask.grp.idx1;
-				value1 = cmdMask.grp.idx2 + 1;
+				value1 = cmdMask.grp.idx2;
 
 				if (interpreter -> stackPtr >= interpreter -> stackEnd) {
 					break;
@@ -589,7 +589,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				switch (cmdMask.grp.type) {
 					case BKGroupIndexTypeLocal: {
 						if (prevItem) {
-							track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, prevItem -> trackIdx + 1);
+							track = *(BKTKTrack **) BKArrayItemAt (&ctx -> ctx -> tracks, prevItem -> trackIdx);
 						}
 						else {
 							track = ctx;

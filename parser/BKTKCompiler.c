@@ -710,6 +710,7 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 		case BKIntrGroupJump: {
 			name = nodeArgString (node, 0);
 			parseGroupIndex (name, &args [0], &args [1], &args [2]);
+			args [1] ++; // 1 based index (0 is root)
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskGrpMake (BKIntrCall, args [0], args [1], args [2]));
 			// save file offset for error output
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (0, node -> offset.lineno));
@@ -1475,21 +1476,22 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 		return -1;
 	}
 
-	offset = nodeArgInt (tree, 1, -1);
+	// 1 based index (0 is root)
+	offset = nodeArgInt (tree, 1, -1) + 1;
 
-	if (offset >= 0) {
-		if (offset >= MAX_TRACKS) {
-			printError (compiler, tree, "Error: track number %d exceeds maximum of %d", offset, MAX_TRACKS - 1);
+	if (offset >= 1) {
+		if (offset > MAX_TRACKS) {
+			printError (compiler, tree, "Error: track number %d exceeds maximum of %d", offset - 1, MAX_TRACKS - 1);
 			return -1;
 		}
 	}
 	else {
-		offset = firstUnusedSlot (&compiler -> tracks) - 1;
+		offset = firstUnusedSlot (&compiler -> tracks);
 		autoindex = 1;
 	}
 
 	// offset 0 is global track
-	track = BKTKCompilerTrackAtOffset (compiler, offset + 1, 1);
+	track = BKTKCompilerTrackAtOffset (compiler, offset, 1);
 
 	if (!track) {
 		printError (compiler, tree, "Error: allocation failed");
@@ -1499,11 +1501,11 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 	if (track -> object.object.flags & BKTKFlagUsed) {
 		if (track -> object.object.flags & BKTKFlagAutoIndex) {
 			printError (compiler, tree, "Error: track number '%d' defined with autoindex at line %d:%d but redefined",
-				offset, track -> object.offset.lineno, track -> object.offset.colno);
+				offset - 1, track -> object.offset.lineno, track -> object.offset.colno);
 		}
 		else {
 			printError (compiler, tree, "Error: track number '%d' defined at line %d:%d but redefined",
-				offset, track -> object.offset.lineno, track -> object.offset.colno);
+				offset - 1, track -> object.offset.lineno, track -> object.offset.colno);
 		}
 
 		return -1;
@@ -1616,17 +1618,17 @@ static BKInt BKTKCompilerLinkByteCode (BKTKCompiler * compiler, BKByteBuffer * b
 					break;
 				}
 				case BKGroupIndexTypeTrack: {
-					groupTrack = BKTKCompilerTrackAtOffset (compiler, index2 + 1, 0);
+					groupTrack = BKTKCompilerTrackAtOffset (compiler, index2, 0);
 
 					if (!groupTrack|| !(groupTrack -> object.object.flags & BKTKFlagUsed)) {
-						BKStringAppendFormat (&compiler -> error, "Track '%d' not defined on line %d:%d\n", index2, offset.lineno, offset.colno);
+						BKStringAppendFormat (&compiler -> error, "Track '%d' not defined on line %d:%d\n", index2 - 1, offset.lineno, offset.colno);
 						return -1;
 					}
 
 					group = BKTKCompilerTrackGroupAtOffset (groupTrack, index, 0);
 
 					if (!group|| !(group -> object.object.flags & BKTKFlagUsed)) {
-						BKStringAppendFormat (&compiler -> error, "Group '%d' of track '%d' not defined on line %d:%d\n", index, index2, offset.lineno, offset.colno);
+						BKStringAppendFormat (&compiler -> error, "Group '%d' of track '%d' not defined on line %d:%d\n", index, index2 - 1, offset.lineno, offset.colno);
 						return -1;
 					}
 					break;
