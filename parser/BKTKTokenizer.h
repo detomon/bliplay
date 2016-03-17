@@ -26,14 +26,12 @@
 
 #include "BKTKBase.h"
 
-#define BKTK_NUM_TOKS 8
-
 typedef enum BKTKType BKTKType;
 typedef enum BKTKState BKTKState;
 typedef struct BKTKTokenizer BKTKTokenizer;
 typedef struct BKTKToken BKTKToken;
 
-typedef BKInt (* BKTKPutTokensFunc) (BKTKToken const * tokens, BKUSize count, void * arg);
+typedef BKInt (* BKTKPutTokenFunc) (BKTKToken const * token, void * arg);
 
 /**
  * Defines a token type
@@ -97,11 +95,9 @@ struct BKTKTokenizer
 	BKTKState  state;
 	BKUSize    bufferLen, bufferCap;
 	uint8_t  * buffer;
-	BKUInt     tokensLen;
-	BKUInt     acceptCount;
 	BKUInt     base64Len;
 	BKTKOffset offset;
-	BKTKToken  tokens [BKTK_NUM_TOKS];
+	BKTKToken  token;
 	uint32_t   base64Value;
 	BKUInt     charCount;
 	uint32_t   charValue;
@@ -130,7 +126,7 @@ extern void BKTKTokenizerReset (BKTKTokenizer * tok);
  *
  *  Call the function with `size` = 0 to terminate the tokenizer.
  */
-extern BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokensFunc putTokens, void * arg);
+extern BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokenFunc putToken, void * arg);
 
 /**
  * Check if tokenizer is finished

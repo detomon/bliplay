@@ -639,11 +639,11 @@ static BKInt should_overwrite_output (char const * filename)
 	return 0;
 }
 
-static BKInt put_tokens (BKTKToken const * tokens, size_t count, BKTKParser * parser)
+static BKInt put_token (BKTKToken const * token, BKTKParser * parser)
 {
 	BKInt res;
 
-	if ((res = BKTKParserPutTokens (parser, tokens, count)) != 0) {
+	if ((res = BKTKParserPutTokens (parser, token, 1)) != 0) {
 		return res;
 	}
 
@@ -688,7 +688,7 @@ static BKInt make_context (BKTKContext * ctx, FILE * file, BKString * const load
 		size = fread (buffer, sizeof (uint8_t), sizeof (buffer), file);
 
 		// will also be called with `chunkSize` = 0 to terminate tokenizer
-		if (BKTKTokenizerPutChars (&tok, buffer, size, (BKTKPutTokensFunc) put_tokens, &parser) != 0) {
+		if (BKTKTokenizerPutChars (&tok, buffer, size, (BKTKPutTokenFunc) put_token, &parser) != 0) {
 			break;
 		}
 	}

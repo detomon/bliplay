@@ -27,15 +27,6 @@
 #define MIN_BUFFER_FREE_SPACE 256
 #define CHAR_END 256
 
-typedef struct BKTKCharState BKTKCharState;
-
-struct BKTKCharState
-{
-	BKTKOffset offset;
-	BKTKOffset lastOffset;
-	BKInt c;
-};
-
 static BKTKType const tokenChars [257] =
 {
 	[(uint8_t) ':']    = BKTKTypeArgSep,
@@ -153,8 +144,6 @@ void BKTKTokenizerReset (BKTKTokenizer * tok)
 	tok -> offset.lineno = 1;
 	tok -> offset.colno  = 0;
 	tok -> bufferLen     = 0;
-	tok -> tokensLen     = 0;
-	tok -> acceptCount   = 0;
 	tok -> base64Len     = 0;
 }
 
@@ -165,10 +154,8 @@ static void BKTKTokenizerRelocateTokenData (BKTKTokenizer * tok, uint8_t * newBu
 {
 	BKTKToken * token;
 
-	for (BKInt i = 0; i < tok -> tokensLen; i ++) {
-		token = &tok -> tokens [i];
-		token -> data = newBuffer + (token -> data - tok -> buffer);
-	}
+	token = &tok -> token;
+	token -> data = newBuffer + (token -> data - tok -> buffer);
 }
 
 static BKInt BKTKTokenizerEnsureBufferSpace (BKTKTokenizer * tok, BKUSize additionalSize)
@@ -191,11 +178,6 @@ static BKInt BKTKTokenizerEnsureBufferSpace (BKTKTokenizer * tok, BKUSize additi
 	}
 
 	return 0;
-}
-
-static BKInt BKTKTokenizerHasChar (BKTKCharState * state)
-{
-	return state -> c != EOF;
 }
 
 static void BKTKTokenizerBufferPutChar (BKTKTokenizer * tok, BKInt c)
@@ -255,11 +237,8 @@ static void BKTKTokenizerEndBuffer (BKTKTokenizer * tok)
 {
 	// terminate current buffer segment
 	tok -> buffer [tok -> bufferLen ++] = '\0';
-
-	// align next buffer segment to pointer size
-	while (tok -> bufferLen & (sizeof (void *) - 1)) {
-		tok -> buffer [tok -> bufferLen ++] = '\0';
-	}
+	// reset buffer
+	tok -> bufferLen = 0;
 }
 
 static void BKTKTokenizerSetError (BKTKTokenizer * tok, char const * msg, ...)
@@ -273,453 +252,417 @@ static void BKTKTokenizerSetError (BKTKTokenizer * tok, char const * msg, ...)
 	tok -> bufferLen = strnlen ((char *) tok -> buffer, tok -> bufferCap);
 }
 
-static BKInt BKTKCharStatePopChar (BKTKCharState * state)
-{
-	BKInt c;
-
-	c = state -> c;
-	state -> c = EOF;
-
-	return c;
-}
-
-static void BKTKCharStatePushBack (BKTKCharState * state, BKInt c)
-{
-	state -> c      = c;
-	state -> offset = state -> lastOffset;
-}
-
-BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokensFunc putTokens, void * arg)
+static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokenFunc putToken, void * arg)
 {
 	BKInt c;
 	BKInt res = -1;
-	BKInt accept, acceptCount;
+	BKInt accept;
+	BKInt again;
 	BKTKState state;
 	BKTKType type, charType;
 	BKTKToken * token;
-	BKTKCharState charState;
+	BKTKOffset offset;
 	uint8_t const * end = &chars [size];
 
 	if (tok -> state >= BKTKStateEnd) {
 		return 0;
 	}
 
-	charState.c = -1;
-	accept = 0;
-	acceptCount = tok -> acceptCount;
-
-	// ensure space for chars and possible alignment
-	if (BKTKTokenizerEnsureBufferSpace (tok, size * sizeof (void *)) < 0) {
+	// ensure space for worst case
+	if (BKTKTokenizerEnsureBufferSpace (tok, size * 2) < 0) {
 		goto allocationError;
 	}
 
 	state = tok -> state;
-	charState.offset = tok -> offset;
+	offset = tok -> offset;
 
 	do {
-		c = BKTKCharStatePopChar (&charState);
-		charState.lastOffset = charState.offset;
-
-		if (c < 0) {
-			if (size == 0) {
-				c = -1;
-			}
-			else if (chars >= end) {
-				break;
-			}
-			else {
-				c = *chars ++;
-			}
+		if (chars < end) {
+			c = *chars ++;
+		}
+		else if (size == 0) {
+			c = -1;
+		}
+		else {
+			// need new data
+			break;
 		}
 
-		charType = BKTKTypeEnd;
-
-		if (c >= 0) {
+		if (c < 0) {
+			charType = BKTKTypeEnd;
+		}
+		else {
 			charType = tokenChars [c];
 		}
 
 		type = BKTKTypeNone;
 
 		if (charType == BKTKTypeLineBreak) {
-			charState.offset.lineno ++;
-			charState.offset.colno = 0;
+			offset.lineno ++;
+			offset.colno = 0;
 		}
 		else {
-			charState.offset.colno ++;
+			offset.colno ++;
 		}
 
-		// parser states
-		switch (state) {
-			case BKTKStateRoot: {
-				switch (charType) {
-					case BKTKTypeSpace: {
-						state = BKTKStateSpace;
-						type = BKTKTypeSpace;
-						break;
-					}
-					case BKTKTypeString: {
-						state = BKTKStateStringStart;
-						type = BKTKTypeString;
-						break;
-					}
-					case BKTKTypeData: {
-						state = BKTKStateDataStart;
-						type = BKTKTypeData;
-						break;
-					}
-					case BKTKTypeComment: {
-						state = BKTKStateCommentStart;
-						type = BKTKTypeComment;
-						break;
-					}
-					case BKTKTypeGrpOpen: {
-						type = BKTKTypeGrpOpen;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeGrpClose: {
-						type = BKTKTypeGrpClose;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeArgSep: {
-						type = BKTKTypeArgSep;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeCmdSep: {
-						type = BKTKTypeCmdSep;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeLineBreak: {
-						type = BKTKTypeLineBreak;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeOther: {
-						state = BKTKStateArg;
-						type = BKTKTypeArg;
-						break;
-					}
-					case BKTKTypeEnd: {
-						state = BKTKStateEnd;
-						type = BKTKTypeEnd;
-						break;
-					}
-					default: {
-						BKTKTokenizerSetError (tok, "Unknown token at line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-				}
+		do {
+			again = 0;
+			accept = 0;
 
-				if (type != BKTKTypeSpace) {
-					if (acceptCount >= BKTK_NUM_TOKS) {
-						if ((res = putTokens (tok -> tokens, acceptCount, arg)) != 0) {
-							BKTKTokenizerSetError (tok, "User error: %d", res);
-							goto error;
+			// parser states
+			switch (state) {
+				case BKTKStateRoot: {
+					int capture = 1;
+
+					switch (charType) {
+						case BKTKTypeSpace: {
+							state = BKTKStateSpace;
+							type = BKTKTypeSpace;
+							capture = 0;
+							break;
 						}
-
-						memmove (&tok -> tokens [0], &tok -> tokens [acceptCount], (BKTK_NUM_TOKS - acceptCount) * sizeof (BKTKToken));
-						tok -> tokensLen -= acceptCount;
-
-						if (!tok -> tokensLen) {
-							tok -> bufferLen = 0;
+						case BKTKTypeString: {
+							state = BKTKStateStringStart;
+							type = BKTKTypeString;
+							break;
 						}
-
-						acceptCount = 0;
-					}
-
-					token = &tok -> tokens [tok -> tokensLen ++];
-					token -> type          = type;
-					token -> data          = &tok -> buffer [tok -> bufferLen];
-					token -> offset.lineno = charState.offset.lineno;
-					token -> offset.colno  = charState.offset.colno;
-				}
-
-				break;
-			}
-			case BKTKStateArg: {
-				switch (charType) {
-					case BKTKTypeSpace: {
-						state = BKTKStateSpace;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeString: {
-						BKTKTokenizerSetError (tok, "Unexpected string literal on line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-					case BKTKTypeData: {
-						BKTKTokenizerSetError (tok, "Unexpected data literal on line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-					case BKTKTypeArgSep:
-					case BKTKTypeCmdSep:
-					case BKTKTypeLineBreak:
-					case BKTKTypeGrpOpen:
-					case BKTKTypeGrpClose:
-					case BKTKTypeComment: {
-						BKTKCharStatePushBack (&charState, c);
-						state = BKTKStateRoot;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeEnd: {
-						BKTKCharStatePushBack (&charState, CHAR_END);
-						state = BKTKStateRoot;
-						accept = 1;
-						break;
-					}
-					default: {
-						break;
-					}
-				}
-				break;
-			}
-			case BKTKStateStringStart:
-			case BKTKStateString: {
-				switch (charType) {
-					case BKTKTypeString: {
-						state = BKTKStateRoot;
-						accept = 1;
-						break;
-					}
-					case BKTKTypeEscape: {
-						state = BKTKStateStringEsc;
-						break;
-					}
-					case BKTKTypeEnd: {
-						token = &tok -> tokens [tok -> tokensLen - 1];
-						BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
-							token -> offset.lineno, token -> offset.colno);
-						goto error;
-						break;
-					}
-					default: {
-						state = BKTKStateString;
-						break;
-					}
-				}
-				break;
-			}
-			case BKTKStateStringEsc: {
-				switch (charType) {
-					case BKTKTypeEnd: {
-						token = &tok -> tokens [tok -> tokensLen - 1];
-						BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
-							token -> offset.lineno, token -> offset.colno);
-						goto error;
-						break;
-					}
-					default: {
-						if (escapeChars [c]) {
-							c = escapeChars [c];
-
-							if (c == 'h') {
-								tok -> charCount = 0;
-								tok -> charValue = 0;
-								state = BKTKStateStringChar;
-								break;
-							}
+						case BKTKTypeData: {
+							state = BKTKStateDataStart;
+							type = BKTKTypeData;
+							break;
 						}
-
-						state = BKTKStateString;
-						break;
-					}
-				}
-				break;
-			}
-			case BKTKStateStringChar: {
-				BKInt value;
-
-				switch (charType) {
-					case BKTKTypeEnd: {
-						token = &tok -> tokens [tok -> tokensLen - 1];
-						BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
-							token -> offset.lineno, token -> offset.colno);
-						goto error;
-						break;
-					}
-					case BKTKTypeString: {
-						BKTKTokenizerSetError (tok, "Premature end of char sequence at line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-					default: {
-						value = hexChars [c];
-
-						if (value < 0) {
-							BKTKTokenizerSetError (tok, "Invalid hex char \\x%02x at line %u:%u",
-								c, charState.offset.lineno, charState.offset.colno);
+						case BKTKTypeComment: {
+							state = BKTKStateCommentStart;
+							type = BKTKTypeComment;
+							break;
+						}
+						case BKTKTypeGrpOpen: {
+							type = BKTKTypeGrpOpen;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeGrpClose: {
+							type = BKTKTypeGrpClose;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeArgSep: {
+							type = BKTKTypeArgSep;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeCmdSep: {
+							type = BKTKTypeCmdSep;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeLineBreak: {
+							type = BKTKTypeLineBreak;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeOther: {
+							state = BKTKStateArg;
+							type = BKTKTypeArg;
+							break;
+						}
+						case BKTKTypeEnd: {
+							state = BKTKStateEnd;
+							type = BKTKTypeEnd;
+							break;
+						}
+						default: {
+							BKTKTokenizerSetError (tok, "Unknown token at line %u:%u",
+								offset.lineno, offset.colno);
 							goto error;
 							break;
 						}
+					}
 
-						tok -> charValue = (tok -> charValue << 4) | value;
+					if (capture) {
+						token = &tok -> token;
+						token -> type   = type;
+						token -> data   = &tok -> buffer [tok -> bufferLen];
+						token -> offset = offset;
+					}
 
-						if (++ tok -> charCount == 2) {
-							c = tok -> charValue;
-							state = BKTKStateString;
+					break;
+				}
+				case BKTKStateArg: {
+					switch (charType) {
+						case BKTKTypeSpace: {
+							state = BKTKStateSpace;
+							accept = 1;
+							break;
 						}
-
-						break;
+						case BKTKTypeString: {
+							BKTKTokenizerSetError (tok, "Unexpected string literal on line %u:%u",
+								offset.lineno, offset.colno);
+							goto error;
+							break;
+						}
+						case BKTKTypeData: {
+							BKTKTokenizerSetError (tok, "Unexpected data literal on line %u:%u",
+								offset.lineno, offset.colno);
+							goto error;
+							break;
+						}
+						case BKTKTypeArgSep:
+						case BKTKTypeCmdSep:
+						case BKTKTypeLineBreak:
+						case BKTKTypeGrpOpen:
+						case BKTKTypeGrpClose:
+						case BKTKTypeComment: {
+							state = BKTKStateRoot;
+							accept = 1;
+							again = 1;
+							break;
+						}
+						case BKTKTypeEnd: {
+							state = BKTKStateRoot;
+							accept = 1;
+							again = 1;
+							break;
+						}
+						default: {
+							break;
+						}
 					}
+					break;
 				}
-
-				break;
-			}
-			case BKTKStateCommentStart:
-			case BKTKStateComment: {
-				switch (charType) {
-					case BKTKTypeLineBreak: {
-						state = BKTKStateRoot;
-						accept = 1;
-						break;
+				case BKTKStateStringStart:
+				case BKTKStateString: {
+					switch (charType) {
+						case BKTKTypeString: {
+							state = BKTKStateRoot;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeEscape: {
+							state = BKTKStateStringEsc;
+							break;
+						}
+						case BKTKTypeEnd: {
+							token = &tok -> token;
+							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+								token -> offset.lineno, token -> offset.colno);
+							goto error;
+							break;
+						}
+						default: {
+							state = BKTKStateString;
+							break;
+						}
 					}
-					case BKTKTypeEnd: {
-						BKTKCharStatePushBack (&charState, CHAR_END);
-						state = BKTKStateRoot;
-						accept = 1;
-						break;
-					}
-					default: {
-						state = BKTKStateComment;
-						break;
-					}
+					break;
 				}
-				break;
-			}
-			case BKTKStateDataStart: {
-				switch (charType) {
-					case BKTKTypeString: {
-						state = BKTKStateData;
-						tok -> base64Len = 0;
-						break;
-					}
-					default: {
-						BKTKTokenizerSetError (tok, "Expected quote on line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-				}
-				break;
-			}
-			case BKTKStateData: {
-				switch (charType) {
-					case BKTKTypeString: {
-						state = BKTKStateDataEnd;
-						break;
-					}
-					case BKTKTypeEnd: {
-						BKTKTokenizerSetError (tok, "Expected quote on line %u:%u",
-							charState.offset.lineno, charState.offset.colno);
-						goto error;
-						break;
-					}
-					default: {
-						break;
-					}
-				}
-				break;
-			}
-			case BKTKStateSpace: {
-				switch (charType) {
-					case BKTKTypeSpace: {
-						break;
-					}
-					case BKTKTypeEnd: {
-						BKTKCharStatePushBack (&charState, CHAR_END);
-						state = BKTKStateRoot;
-						break;
-					}
-					default: {
-						BKTKCharStatePushBack (&charState, c);
-						state = BKTKStateRoot;
-						break;
-					}
-				}
-				break;
-			}
-			default: {
-				break;
-			}
-		}
+				case BKTKStateStringEsc: {
+					switch (charType) {
+						case BKTKTypeEnd: {
+							token = &tok -> token;
+							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+								token -> offset.lineno, token -> offset.colno);
+							goto error;
+							break;
+						}
+						default: {
+							if (escapeChars [c]) {
+								c = escapeChars [c];
 
-		// token actions
-		switch (state) {
-			case BKTKStateArg:
-			case BKTKStateString:
-			case BKTKStateComment: {
-				BKTKTokenizerBufferPutChar (tok, c);
-				break;
-			}
-			case BKTKStateData: {
-				BKTKTokenizerBufferPutBase64Char (tok, c);
-				break;
-			}
-			case BKTKStateDataEnd: {
-				BKTKTokenizerBufferEndBase64 (tok);
-				state = BKTKStateRoot;
-				accept = 1;
-				break;
-			}
-			case BKTKStateRoot: {
-				switch (type) {
-					case BKTKTypeArgSep:
-					case BKTKTypeCmdSep: {
-						BKTKTokenizerBufferPutChar (tok, c);
-						break;
+								if (c == 'h') {
+									tok -> charCount = 0;
+									tok -> charValue = 0;
+									state = BKTKStateStringChar;
+									break;
+								}
+							}
+
+							state = BKTKStateString;
+							break;
+						}
 					}
-					default: {
-						break;
-					}
+					break;
 				}
-				break;
-			}
-			case BKTKStateEnd: {
-				type = BKTKTypeEnd;
-				accept = 1;
-				break;
-			}
-			case BKTKStateError: {
-				goto error;
-				break;
-			}
-			default: {
-				break;
-			}
-		}
+				case BKTKStateStringChar: {
+					BKInt value;
 
-		if (accept) {
-			accept = 0;
-			acceptCount ++;
+					switch (charType) {
+						case BKTKTypeEnd: {
+							token = &tok -> token;
+							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+								token -> offset.lineno, token -> offset.colno);
+							goto error;
+							break;
+						}
+						case BKTKTypeString: {
+							BKTKTokenizerSetError (tok, "Premature end of char sequence at line %u:%u",
+								offset.lineno, offset.colno);
+							goto error;
+							break;
+						}
+						default: {
+							value = hexChars [c];
 
-			token = &tok -> tokens [tok -> tokensLen - 1];
-			token -> dataLen = &tok -> buffer [tok -> bufferLen] - token -> data;
-			BKTKTokenizerEndBuffer (tok);
+							if (value < 0) {
+								BKTKTokenizerSetError (tok, "Invalid hex char \\x%02x at line %u:%u",
+									c, offset.lineno, offset.colno);
+								goto error;
+								break;
+							}
 
-			if (state == BKTKStateEnd) {
-				if ((res = putTokens (tok -> tokens, acceptCount, arg)) != 0) {
+							tok -> charValue = (tok -> charValue << 4) | value;
+
+							if (++ tok -> charCount == 2) {
+								c = tok -> charValue;
+								state = BKTKStateString;
+							}
+
+							break;
+						}
+					}
+
+					break;
+				}
+				case BKTKStateCommentStart:
+				case BKTKStateComment: {
+					switch (charType) {
+						case BKTKTypeLineBreak: {
+							state = BKTKStateRoot;
+							accept = 1;
+							break;
+						}
+						case BKTKTypeEnd: {
+							state = BKTKStateRoot;
+							accept = 1;
+							again = 1;
+							break;
+						}
+						default: {
+							state = BKTKStateComment;
+							break;
+						}
+					}
+					break;
+				}
+				case BKTKStateDataStart: {
+					switch (charType) {
+						case BKTKTypeString: {
+							state = BKTKStateData;
+							tok -> base64Len = 0;
+							break;
+						}
+						default: {
+							BKTKTokenizerSetError (tok, "Expected quote on line %u:%u",
+								offset.lineno, offset.colno);
+							goto error;
+							break;
+						}
+					}
+					break;
+				}
+				case BKTKStateData: {
+					switch (charType) {
+						case BKTKTypeString: {
+							state = BKTKStateDataEnd;
+							break;
+						}
+						case BKTKTypeEnd: {
+							BKTKTokenizerSetError (tok, "Expected quote on line %u:%u",
+								offset.lineno, offset.colno);
+							goto error;
+							break;
+						}
+						default: {
+							break;
+						}
+					}
+					break;
+				}
+				case BKTKStateSpace: {
+					switch (charType) {
+						case BKTKTypeSpace: {
+							break;
+						}
+						case BKTKTypeEnd: {
+							state = BKTKStateRoot;
+							again = 1;
+							break;
+						}
+						default: {
+							state = BKTKStateRoot;
+							again = 1;
+							break;
+						}
+					}
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+
+			// token actions
+			switch (state) {
+				case BKTKStateArg:
+				case BKTKStateString:
+				case BKTKStateComment: {
+					BKTKTokenizerBufferPutChar (tok, c);
+					break;
+				}
+				case BKTKStateData: {
+					BKTKTokenizerBufferPutBase64Char (tok, c);
+					break;
+				}
+				case BKTKStateDataEnd: {
+					BKTKTokenizerBufferEndBase64 (tok);
+					state = BKTKStateRoot;
+					accept = 1;
+					break;
+				}
+				case BKTKStateRoot: {
+					switch (type) {
+						case BKTKTypeArgSep:
+						case BKTKTypeCmdSep: {
+							BKTKTokenizerBufferPutChar (tok, c);
+							break;
+						}
+						default: {
+							break;
+						}
+					}
+					break;
+				}
+				case BKTKStateEnd: {
+					type = BKTKTypeEnd;
+					accept = 1;
+					break;
+				}
+				case BKTKStateError: {
+					goto error;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+
+			if (accept) {
+				token = &tok -> token;
+				token -> dataLen = &tok -> buffer [tok -> bufferLen] - token -> data;
+				BKTKTokenizerEndBuffer (tok);
+
+				if ((res = putToken (&tok -> token, arg)) != 0) {
 					BKTKTokenizerSetError (tok, "User error: %d", res);
 					goto error;
 				}
 			}
 		}
+		while (again);
 	}
-	while (BKTKTokenizerHasChar (&charState) || chars < end);
+	while (chars < end);
 
 	tok -> state = state;
-	tok -> offset = charState.offset;
-	tok -> acceptCount = acceptCount;
+	tok -> offset = offset;
 
 	return 0;
 
@@ -732,6 +675,30 @@ BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize
 		tok -> state = BKTKStateError;
 		return res;
 	}
+}
+
+/**
+ * Splits input chars into smaller chunks for better buffer usage
+ */
+BKInt BKTKTokenizerPutChars (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokenFunc putToken, void * arg)
+{
+	int res;
+	size_t chunkSize;
+	size_t const maxSize = 1024;
+
+	do {
+		chunkSize = size > maxSize ? maxSize : size;
+
+		if ((res = BKTKTokenizerPutCharsChunk (tok, chars, chunkSize, putToken, arg)) != 0) {
+			break;
+		}
+
+		chars += chunkSize;
+		size -= chunkSize;
+	}
+	while (size);
+
+	return 0;
 }
 
 BKClass const BKTKTokenizerClass =
