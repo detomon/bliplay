@@ -781,7 +781,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			case 'h':
 			case 'v': {
 				print_help ();
-				exit (0);
+				exit (1);
 				break;
 			}
 			case 'i': {
