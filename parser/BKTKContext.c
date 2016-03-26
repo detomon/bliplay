@@ -240,7 +240,7 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 			}
 
 			if (BKWaveFileReaderReadHeader (&reader, &numChannels, &sampleRate, &numFrames) != 0) {
-				printError (ctx, "Error: allocation error");
+				printError (ctx, "Error: failed to read WAVE header");
 				goto allocationError;
 			}
 
@@ -252,7 +252,7 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 			}
 
 			if (BKWaveFileReaderReadFrames (&reader, frames) != 0) {
-				printError (ctx, "Error: allocation error");
+				printError (ctx, "Error: failed to read WAVE data");
 				goto allocationError;
 			}
 
