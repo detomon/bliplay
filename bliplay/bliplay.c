@@ -349,7 +349,7 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 			break;
 		}
 		case OUTPUT_TYPE_WAVE: {
-			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames);
+			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames, 0);
 			break;
 		}
 	}
