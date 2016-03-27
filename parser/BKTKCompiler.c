@@ -122,7 +122,7 @@ static struct keyval const cmdNames [] =
 	{"stt",         BKIntrStepTicksTrack},
 	{"t",           BKIntrTicks},
 	{"tickrate",    BKIntrTickRate},
-	{"tk",          BKIntrTickRate},
+	{"tr",          BKIntrTickRate},
 	{"track",       BKIntrTrackDef, BKTKParserFlagIsGroup},
 	{"tstepticks",  BKIntrStepTicksTrack},
 	{"v",           BKIntrVolume},
