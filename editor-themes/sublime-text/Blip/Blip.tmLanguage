@@ -47,6 +47,10 @@
 			<string>#note-values</string>
 		</dict>
 		<dict>
+			<key>include</key>
+			<string>#group-values</string>
+		</dict>
+		<dict>
 			<key>captures</key>
 			<dict>
 				<key>1</key>
@@ -70,7 +74,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(no|noi|noise|sam|sample|saw|sawtooth|si|sin|sine|sm|sq|sqr|square|sw|tr|tri|triangle)\b</string>
+			<string>(no(|i|ise)|s(ample|aw|awtooth|i|in|ine|m|q|qr|quare|w)|t(ri|riangle))\b</string>
 			<key>name</key>
 			<string>constant.other.argument.waveform.blip</string>
 		</dict>
@@ -84,7 +88,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a|adsr|anv|as|at|d|data|dc|dcnv|dn|dr|ds|e|g|i|info|load|m|mstepticks|mt|p|pnv|pt|pw|r|raw|rt|s|st|stepticks|t|tickrate|title|tk|v|vm|vnv|w|x|xb|z)\b</string>
+			<string>(a(|dsr|nv|s|t)|d(|ata|c(|nv)|n|r|s)|e|g(|rp)|i(|nstr)|load|m(|t)|no|p(|al|nv|r|s|t|w)|r(|ep|t)|s(|amp(|le))|st|stepticks|stt|t(|ickrate|r(|ack)|stepticks)|v(|b|m|nv|s)|w(|ave)|x(|b)|z)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
 		</dict>
@@ -170,6 +174,26 @@
 					<string>([+-]?[0-9]+)(\/[+-]?[0-9]+)?\b</string>
 					<key>name</key>
 					<string>constant.numeric.blip</string>
+				</dict>
+			</array>
+		</dict>
+		<key>group-values</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.constant.blip</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>([+-]?[0-9]+)(\/[+-]?[0-9]+)?([tg]([0-9]+))?\b</string>
+					<key>name</key>
+					<string>constant.numeric.group.blip</string>
 				</dict>
 			</array>
 		</dict>
