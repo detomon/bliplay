@@ -8,7 +8,18 @@ EXTRA_DIST = \
 	LICENSE \
 	VERSION \
 	autogen.sh \
-	editor-themes
+	editor-themes \
+	examples/bone-eater.blip \
+	examples/cave-xii.blip \
+	examples/dont-eat-flashcards.blip \
+	examples/gameboy-start.blip \
+	examples/generic-boss-appears.blip \
+	examples/ghost-bouncer.blip \
+	examples/hyperion-star-racer.blip \
+	examples/killer-squid.blip \
+	examples/short-fused-bombs.blip \
+	examples/template.blip \
+	examples/wysiwyg.blip.blip
 
 EXTRA_INSTALL = \
 	editor_themes
