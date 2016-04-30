@@ -1,9 +1,9 @@
-Changes in bliplay 3.0b4:
-  Release date: 2016-03-11
+Changes in bliplay 3.0:
+  Release date: 2016-04-30
 
 * Rewritten parser and interpreter
 * Updated Blip language syntax
-* Use BlipKit version 0.14
+* Use BlipKit version 0.14.3
 * Updated example files
 * Output more file info
 
