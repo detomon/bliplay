@@ -349,7 +349,7 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 			break;
 		}
 		case OUTPUT_TYPE_WAVE: {
-			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames, 0);
+			BKWaveFileWriterAppendFrames (& waveWriter, frames, numFrames);
 			break;
 		}
 	}
@@ -899,7 +899,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		}
 
 		if (outputType == OUTPUT_TYPE_WAVE) {
-			if (BKWaveFileWriterInit (&waveWriter, outputFile, numChannels, sampleRate) < 0) {
+			if (BKWaveFileWriterInit (&waveWriter, outputFile, numChannels, sampleRate, 0) < 0) {
 				return -1;
 			}
 		}
