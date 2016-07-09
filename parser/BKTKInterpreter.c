@@ -337,6 +337,11 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				BKSetAttr (track, BK_PITCH, value0);
 				break;
 			}
+			case BKIntrPulseKernel: {
+				value0 = cmdMask.arg1.arg1;
+				BKSetPtr (track -> unit.ctx, BK_PULSE_KERNEL, (void *) BKBufferPulseKernels [value0], sizeof (void *));
+				break;
+			}
 			case BKIntrAttackTicks: {
 				value0 = cmdMask.arg2.arg1;
 				value1 = cmdMask.arg2.arg2;

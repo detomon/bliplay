@@ -110,7 +110,9 @@ static struct keyval const cmdNames [] =
 	{"m",           BKIntrMute},
 	{"mt",          BKIntrMuteTicks},
 	{"p",           BKIntrPanning},
+	{"pk",          BKIntrPulseKernel},
 	{"pt",          BKIntrPitch},
+	{"pulsekernel", BKIntrPulseKernel},
 	{"pw",          BKIntrPhaseWrap},
 	{"r",           BKIntrRelease},
 	{"rt",          BKIntrReleaseTicks},
@@ -210,6 +212,15 @@ static struct keyval const repeatNames [] =
 	{"rep", BK_REPEAT},
 };
 
+/**
+ * Pulse kernels
+ */
+static struct keyval const pulseNames [] =
+{
+	{"harm", BK_PULSE_KERNEL_HARM},
+	{"sinc", BK_PULSE_KERNEL_SINC},
+};
+
 #define NUM_WAVEFORM_NAMES (sizeof (waveformNames) / sizeof (struct keyval))
 #define NUM_CMD_NAMES (sizeof (cmdNames) / sizeof (struct keyval))
 #define NUM_EFFECT_NAMES (sizeof (effectNames) / sizeof (struct keyval))
@@ -217,6 +228,7 @@ static struct keyval const repeatNames [] =
 #define NUM_ENVELOPE_NAMES (sizeof (envelopeNames) / sizeof (struct keyval))
 #define NUM_MISC_NAMES (sizeof (miscNames) / sizeof (struct keyval))
 #define NUM_REPEAT_NAMES (sizeof (repeatNames) / sizeof (struct keyval))
+#define NUM_PULSE_NAMES (sizeof (pulseNames) / sizeof (struct keyval))
 
 /**
  * Convert string to signed integer like `atoi`
@@ -734,7 +746,18 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, args [0]));
 			break;
 		}
-			// commands without arguments
+		case BKIntrPulseKernel: {
+			name = nodeArgString (node, 0);
+
+			if (!keyvalLookup (pulseNames, NUM_PULSE_NAMES, name, &args [0], NULL)) {
+				printError (compiler, node, "Warning: expected pulse kernel name: 'harm', 'sinc'");
+				return -1;
+			}
+
+			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, args [0]));
+			break;
+		}
+		// commands without arguments
 		case BKIntrRelease:
 		case BKIntrMute:
 		case BKIntrRepeatStart:

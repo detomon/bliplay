@@ -80,6 +80,7 @@ enum BKInstruction
 	BKIntrWaveform           = 37,
 	BKIntrWaveformDef        = 38,
 	BKIntrLineNo             = 39,
+	BKIntrPulseKernel        = 40,
 };
 
 enum BKTKInterpreterFlag
