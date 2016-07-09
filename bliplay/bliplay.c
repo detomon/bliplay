@@ -1104,6 +1104,12 @@ static void write_timing_data (void)
 
 static void cleanup (void)
 {
+#if BK_USE_PLAYER
+	if ((flags & FLAG_NO_SOUND) == 0) {
+		SDL_CloseAudio ();
+	}
+#endif
+
 	if (outputFile) {
 		if (outputType == OUTPUT_TYPE_WAVE) {
 			BKWaveFileWriterTerminate (&waveWriter);
@@ -1116,9 +1122,6 @@ static void cleanup (void)
 	}
 
 	BKDispose (&ctx);
-#if BK_USE_PLAYER
-	SDL_CloseAudio ();
-#endif
 }
 
 static BKInt write_output (BKTKContext * ctx)
@@ -1200,6 +1203,8 @@ static BKInt runloop (BKTKContext * ctx)
 	set_noecho (0);
 
 	printf ("\n");
+
+	SDL_PauseAudio (1);
 #else
 	do {
 		if (check_tracks_running (ctx) == 0) {
@@ -1208,10 +1213,6 @@ static BKInt runloop (BKTKContext * ctx)
 	}
 	while (1);
 #endif /* BK_USE_PLAYER */
-
-#if BK_USE_PLAYER
-	SDL_PauseAudio (1);
-#endif
 
 	return 0;
 }
