@@ -1,3 +1,11 @@
+Changes in bliplay 3.1:
+  Release date: 2016-07-10
+
+* Use new BlipKit version 0.15
+* Added command `pk`/`pulsekernel` to set used pulse kernel
+  * `pk:sinc`: Previously used pulse kernel based on `sinc` function. Tends to have more high frequencies.
+  * `pk:harm`: Newly added pulse kernel based on harmonic overtones; now used by default. Tends to have less high frequencies.
+
 Changes in bliplay 3.0:
   Release date: 2016-04-30
 
