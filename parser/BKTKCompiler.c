@@ -1422,11 +1422,11 @@ static BKInt BKTKCompilerCompileGroup (BKTKCompiler * compiler, BKTKParserNode c
 
 	if (group -> object.object.flags & BKTKFlagUsed) {
 		if (group -> object.object.flags & BKTKFlagAutoIndex) {
-			printError (compiler, tree, "Error: group number '%d' defined with autoindex at line %d:%d but redefined",
+			printError (compiler, tree, "Error: group number '%d' defined with autoindex on line %d:%d but redefined",
 				offset, group -> object.offset.lineno, group -> object.offset.colno);
 		}
 		else {
-			printError (compiler, tree, "Error: group number '%d' defined at line %d:%d but redefined",
+			printError (compiler, tree, "Error: group number '%d' defined on line %d:%d but redefined",
 				offset, group -> object.offset.lineno, group -> object.offset.colno);
 		}
 
@@ -1523,11 +1523,11 @@ static BKInt BKTKCompilerCompileTrack (BKTKCompiler * compiler, BKTKParserNode c
 
 	if (track -> object.object.flags & BKTKFlagUsed) {
 		if (track -> object.object.flags & BKTKFlagAutoIndex) {
-			printError (compiler, tree, "Error: track number '%d' defined with autoindex at line %d:%d but redefined",
+			printError (compiler, tree, "Error: track number '%d' defined with autoindex on line %d:%d but redefined",
 				offset - 1, track -> object.offset.lineno, track -> object.offset.colno);
 		}
 		else {
-			printError (compiler, tree, "Error: track number '%d' defined at line %d:%d but redefined",
+			printError (compiler, tree, "Error: track number '%d' defined on line %d:%d but redefined",
 				offset - 1, track -> object.offset.lineno, track -> object.offset.colno);
 		}
 

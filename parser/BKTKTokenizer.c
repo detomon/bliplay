@@ -372,7 +372,7 @@ static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * ch
 							break;
 						}
 						default: {
-							BKTKTokenizerSetError (tok, "Unknown token at line %u:%u",
+							BKTKTokenizerSetError (tok, "Unknown token on line %u:%u",
 								offset.lineno, offset.colno);
 							goto error;
 							break;
@@ -444,7 +444,7 @@ static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * ch
 						}
 						case BKTKTypeEnd: {
 							token = &tok -> token;
-							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+							BKTKTokenizerSetError (tok, "Premature end of string starting on line %u:%u",
 								token -> offset.lineno, token -> offset.colno);
 							goto error;
 							break;
@@ -460,7 +460,7 @@ static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * ch
 					switch (charType) {
 						case BKTKTypeEnd: {
 							token = &tok -> token;
-							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+							BKTKTokenizerSetError (tok, "Premature end of string starting on line %u:%u",
 								token -> offset.lineno, token -> offset.colno);
 							goto error;
 							break;
@@ -489,13 +489,13 @@ static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * ch
 					switch (charType) {
 						case BKTKTypeEnd: {
 							token = &tok -> token;
-							BKTKTokenizerSetError (tok, "Premature end of string starting at line %u:%u",
+							BKTKTokenizerSetError (tok, "Premature end of string starting on line %u:%u",
 								token -> offset.lineno, token -> offset.colno);
 							goto error;
 							break;
 						}
 						case BKTKTypeString: {
-							BKTKTokenizerSetError (tok, "Premature end of char sequence at line %u:%u",
+							BKTKTokenizerSetError (tok, "Premature end of char sequence on line %u:%u",
 								offset.lineno, offset.colno);
 							goto error;
 							break;
@@ -504,7 +504,7 @@ static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * ch
 							value = hexChars [c];
 
 							if (value < 0) {
-								BKTKTokenizerSetError (tok, "Invalid hex char \\x%02x at line %u:%u",
+								BKTKTokenizerSetError (tok, "Invalid hex char \\x%02x on line %u:%u",
 									c, offset.lineno, offset.colno);
 								goto error;
 								break;
