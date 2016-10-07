@@ -1,0 +1,61 @@
+% ------------------------------------------------------------------------------
+% Wavforms
+%
+% TODO...
+% ------------------------------------------------------------------------------
+
+% Set speed
+st:12
+
+% Define waveform 'wave1'
+[wave:wave1
+	s:255:0:127:0:64:32:0:0:0:0:0
+]
+
+% Define waveform 'wave2'
+[wave:wave2
+	s:255:0:127:0:64:32
+]
+
+% Define waveform 'wave3'
+[wave:wave3
+	s:255:255:0:0:127:127:0:0
+]
+
+% Define waveform 'wave4'
+[wave:wave4
+	% Break long lines with trailing colon ':'
+	s:-255:-163:-154:-100:45:127:9:-163:-163:-27:63:72:63:9:-100:-154:-127:
+	-91:-91:-91:-91:-127:-154:-100:45:127:9:-163:-163:9:127:45
+]
+
+% Define instrument 'instr1'
+[instr:instr1
+	adsr:2:8:192:25
+	a:<:0:>:-1200
+]
+
+% Set instrument 'instr1'
+i:instr1
+
+% Define note group #0
+[grp:0
+	a:c3;  s:2; r; s:2
+	a:c2;  s:2; r; s:2
+	a:a#2; s:2; r; s:2
+	a:g2;  s:2; r; s:2
+]
+
+% Define group #1 which calls group #0 with different pitches and waveforms
+[grp:1
+	w:wave1; pt:0;    g:0
+	w:wave4; pt:-700; g:0
+	w:wave3; pt:-500; g:0
+	w:wave2; pt:300;  g:0
+]
+
+% Play group #1 4 times
+g:1
+g:1
+g:1
+g:1

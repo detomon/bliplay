@@ -1,0 +1,17 @@
+stepticks:18
+
+[track:square
+
+	[grp
+		dc:8
+		e:vs;v:255
+		a:c5;s:1
+		a:c6
+		e:vs:160;v:0
+		s:15
+		e:vs
+	]
+
+	g:0
+
+]

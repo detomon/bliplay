@@ -1,0 +1,60 @@
+% ------------------------------------------------------------------------------
+% INSTRUMENTS
+%
+% The name "instrument" is somewhat missleading, as an instrument does not
+% define the waveform itself. Instead, instruments define envelopes over certain
+% track attributes. The following envelope types are defined:
+% Volume, Panning, Pitch and Duty Cycle
+%
+% Each envelope has an attack phase which is played when a note is set,
+% a sustain phase which is repeated as long as the note is set, and a release
+% phase which played when the note is released.
+%
+% +--------+-------------+---------+
+% | Attack | < Sustain > | Release |
+% +--------+-------------+---------+
+%
+% There are two types of envelopes:
+% Sequence envelopes are made of multiple values which are played for 4 ticks
+% each.
+% Interpolated envelopes additionally have a step size for each value (Sequence
+% envelopes have a fixed step size of 4 ticks). The attribute value is also
+% interpolated between two steps.
+% ------------------------------------------------------------------------------
+
+% Set speed.
+st:20
+
+% Set waveform.
+w:square
+
+% Set volume to 75%.
+v:192
+
+% Define instrument 'arpeggio'.
+[instr:arpeggio
+	% Define volume envelope.
+	%
+	% Repeat the first value '255' as long as the not is set, then set the
+	% the volume to the following values.
+	v:<:255:>:192:178:127:64:32:16:0
+
+	% Define arpeggio envelope.
+	%
+	% Play the note one octave higher for the first 8 ticks (4 ticks * 2) then
+	% repeat the chord 0:500:-500 as long as the not is set. Finally use the
+	% following values.
+	a:1200:1200:<:0:500:-500:>:0:-1200:0:-1200:0:-1200
+]
+
+% Set instrument 'arpeggio'.
+i:arpeggio
+
+% Play some notes.
+a:c4;s:4;r;s:4
+a:c3;s:4;r;s:4
+a:a#3;s:4;r;s:4
+a:g3;s:4;r;s:4
+
+% Disable instrument by passing no argument.
+i
