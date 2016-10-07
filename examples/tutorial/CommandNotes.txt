@@ -1,0 +1,120 @@
+
+These are just notes I made while looking through the source code
+to help get started in understanding how bliplay functions.
+									      - Doyousketch2
+
+===============================================================
+
+
+BKInstructions  =
+{
+	Noop               =  
+	Arpeggio           =  a:g#2   g sharp on 2nd octave.  Notes range from c0 to c8.
+	ArpeggioSpeed      =  a1
+	Attack             =  adsr:60:30:128:300
+	AttackTicks        =  at:11
+	Call               =  
+	DutyCycle          =  dc:2   dc:<:0:>:4   defines width of square wave.   16 duty cycle phases.  value of 8 = 50%.
+	Effect             =  e    e:vs:16    e:vb    e:vb:54:2400    e:vb:54:-2400
+	End                =  x
+	GroupDef           =  [grp    [grp:10
+	GroupJump          =  g:0
+	Instrument         =  i:20
+	InstrumentDef      =  [instr:0
+	Jump               =  
+	MasterVolume       =  v:255
+	Mute               =  
+	MuteTicks          =  
+	Panning            =  e:pr:24
+	PhaseWrap          =  pw:0
+	Pitch              =  pt:0
+	Release            =  r
+	ReleaseTicks       =  rt:36
+	Repeat             =  
+	RepeatStart        =  
+	Return             =  
+	Sample             =  s:255:0:255:0:0:0:0:0
+	SampleDef          =  [samp:bass    load:wav:bass.wav
+	SampleRange        =  
+	SampleRepeat       =  
+	SampleSustainRange = 	
+	Step               =  s:255:0:255:0:0:0:0:0
+	StepTicks          =  stepticks:24
+	StepTicksTrack     =  
+	TickRate           =  
+	Ticks              =  
+	TrackDef           =  [track:square   :triangle   :sawtooth   :noise  :sine
+	Volume             =  v:255:220:188:172:156:132:112:92:64:52:28:24:0
+	Waveform           =  w:1
+	WaveformDef        =  [wave:0
+	LineNo             =  
+	PulseKernel        =  
+};
+
+
+d:bass
+pt:400
+pt:-1200
+pnv:<:20:>:-64:40:64
+vnv:0:<:255:>:1:255:20:64:80:0
+
+
+triangle waveform is the only waveform which ignores the volume attribute
+===============================================================
+
+tokenChars  =
+{
+	:    = Argument Seperator,
+	;    = Command Seperator,
+	[    = Group Open,
+	]    = Group Close,
+	"    = String,
+	!    = Data,
+	%    = Comment,
+	     = Space,
+	\xa0 = Space, // no-break space
+	\\   = Escape,
+
+	\a   = Space,
+	\b   = Space,
+	\f   = Space,
+	\n   = LineBreak,
+	\r   = LineBreak,
+	\t   = Space,
+	\v   = Space,
+
+[CHAR_END]    = End,
+};
+
+
+===============================================================
+
+
+escapeChars  =
+{
+	a = '\a',
+	b = '\b',
+	f = '\f',
+	n = '\n',
+	r = '\r',
+	t = '\t',
+	v = '\v',
+
+	x = 'h',
+};
+
+
+===============================================================
+
+
+base64Chars  =
+{
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+	'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+	'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+	'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+	'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+	'w', 'x', 'y', 'z', '0', '1', '2', '3',
+	'4', '5', '6', '7', '8', '9', '+', '/',
+};

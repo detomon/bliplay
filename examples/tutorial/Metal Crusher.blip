@@ -1,0 +1,37 @@
+% ------------------------------------------------------------------------------
+% PHASE WRAP
+%
+% Use the command 'pw' to reset the noise phase after the specified number of
+% phases. Using powers of 2 (2^n) will retain the note, although the octave may
+% change. Values other than powers of 2 affect the pitch.
+% ------------------------------------------------------------------------------
+
+% Intro of Metal Crusher
+% Original track is (c) by Toby Fox
+% https://tobyfox.bandcamp.com/track/metal-crusher
+
+% BPM ≈ 116 (116.129)
+st:31
+
+w:noise
+
+v:192
+pw:64 % Phase wrap
+pt:50 % Pitch up by 1/4 tone to match original key
+
+a:d6;s:2;rt:12;s:1
+rt:12;a:d6;s:1;r
+rt:12;a:d5;s:1;r;s:1
+rt:12;a:d5;s:1;r;s:1
+
+a:a#4;s:1;rt:12;s:2
+rt:12;a:a#4;s:1;r
+a:d4;s:3;r;s:1
+
+a:d3;s:1;rt:12;s:2
+rt:12;a:a#3;s:1;r
+rt:12;a:e3;s:1;r;s:1
+rt:12;a:d3;s:1;r;s:1
+
+a:g3;s:4;r
+s:4

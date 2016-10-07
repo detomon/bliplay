@@ -1,0 +1,24 @@
+% ------------------------------------------------------------------------------
+% Samples
+%
+% TODO...
+% ------------------------------------------------------------------------------
+
+% The following samples are available:
+%
+% bass.wav, crotales.wav, drum1.wav, drum2.wav, hat1.wav, hat2.wav, hat3.wav,
+% hat4.wav, hat5.wav, lead1.wav, lead2.wav, organ1.wav, organ2.wav, pika.wav,
+% pluck.wav, snare1.wav, xylo.wav
+
+% Define sample 'pika'
+[sample:pika
+	load:wav:"pika.wav"
+]
+
+% Set sample 'pika'
+d:pika
+
+e:pr:48
+a:c4;s:2;r;s:2
+a:c4;s:2;r;s:2
+a:d4;a:e4;s:4;a:c4;s:4;r;s:4
