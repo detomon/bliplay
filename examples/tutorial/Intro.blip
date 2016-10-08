@@ -1,0 +1,109 @@
+% ------------------------------------------------------------------------------
+% POWER ON!
+%
+% This is the interactive bliplay sound player
+% It plays chiptune music from text commands
+%
+% When the "Play" button is pressed, the data is sent to the server and
+% rendered to an audio file.
+%
+% The default file format is MP3. However, converting the audio data to MP3 on
+% the server is not that fast. WAVE files are way faster to render but are also
+% huge due to the fact that they are not compressed. You have the option to
+% change the audio format below. Choose "WAV" if you have a decent line.
+%
+% The maximum output time is limited to 10 minutes. If this limit is exceeded,
+% the audio file is truncated.
+%
+% The rendering program is a console program which can be obtained here:
+% https://github.com/detomon/bliplay
+% ------------------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------------------
+% All examples are editable. "Play" renders the current code.
+% Click the right arrow above to show the next examples.
+% ------------------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------------------
+% SYNTAX
+%
+% The code uses commands and groups of commands.
+% Commands begin with a keyword and are followed by zero or more arguments
+% separated by colons ':'. A command is terminated either by a line break or a
+% semicolon ';' (useful when separating multiple commands on the same line).
+%
+% White space, including spaces, tabs and empty lines, before or after arguments
+% are ignored.
+% ------------------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------------------
+% POSITION CURSORS
+%
+% As you surely have noticed there is a yellow marker on the left side when
+% the code is playing. This indicates the current play position. In this
+% example, only one track is used. In later examples multiple tracks are used,
+% each with its own position cursor.
+% ------------------------------------------------------------------------------
+
+
+% Set speed.
+%
+% This sets the number of 'ticks' for one 'step'. A 'tick' is by default 1/240th
+% of a second. The 'step' command 's' (used further below) sets the time to wait
+% before the next command is executed.
+%
+% BPM can be calculated with: BPM = 240 * 60 / st / 4
+st:18 % 200 BPM
+
+% Set waveform.
+%
+% Custom waveforms can also be defined which are introduced in later examples.
+% Predefined waveforms are: square, triangle, noise, sawtooth, sine. For
+% historical reasons, the triangle waveform is the only waveform which ignores
+% the volume attribute
+w:square
+
+% Set duty cycle of the square wave.
+%
+% The duty cycle defines the width of the square wave's wave crest. There are
+% 16 duty cycle phases. A value of 8 accords to 50%.
+dc:8
+
+% Set note C on octave 5.
+%
+% Notes range from c0 to c8.
+a:c5
+
+% Wait 1 step.
+%
+% The number of step ticks was set to 18, so this is 1 * 18 = 18 ticks.
+s:1
+
+% Set note C on octave 6.
+a:c6
+
+% Enable volume slide effect.
+%
+% This slides the current volume to a new value of 0 within the given duration.
+% Effect durations can be given in number of ticks or as a fraction of steps.
+% In this case, the slide goes for 9 steps.
+e:vs:9/1;v:0
+
+% Wait 9 steps.
+%
+% As the volume slide effect is in progress with the same length, it will end
+% exactly when the next command after the step is executed.
+s:9
+
+% Release note.
+r
+
+% The volume is now 0.
+%
+% Reset volume to maximum, but first disable volume slide effect or the volume
+% will slide up again when setting a new value. Effects are disabled by omitting
+% the values
+e:vs;v:255
