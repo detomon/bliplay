@@ -35,14 +35,14 @@ v:192
 [instr:arpeggio
 	% Define volume envelope.
 	%
-	% Repeat the first value '255' as long as the not is set, then set the
+	% Repeat the first value '255' as long as the note is set, then set the
 	% the volume to the following values.
 	v:<:255:>:192:178:127:64:32:16:0
 
 	% Define arpeggio envelope.
 	%
 	% Play the note one octave higher for the first 8 ticks (4 ticks * 2) then
-	% repeat the chord 0:500:-500 as long as the not is set. Finally use the
+	% repeat the chord 0:500:-500 as long as the note is set. Finally use the
 	% following values.
 	a:1200:1200:<:0:500:-500:>:0:-1200:0:-1200:0:-1200
 ]

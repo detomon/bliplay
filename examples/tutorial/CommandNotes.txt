@@ -1,120 +1,253 @@
 
 These are just notes I made while looking through the source code
-to help get started in understanding how bliplay functions.
-									      - Doyousketch2
+to help get started in understanding how Bliplay functions.
+                                          - Doyousketch2
+
+===============================================================
+
+ * Command lookup table
+
+    a           Attack              a:g#2   g sharp on 2nd octave.
+    as          ArpeggioSpeed
+    at          AttackTicks         at:11
+    d           Set Sample          d:bass
+    dc          DutyCycle           dc:2
+    dn          SampleRange
+    dr          SampleRepeat
+    ds          SampleSustainRange
+    e           Effect              e    e:vs:16    e:vb
+    g           GroupJump           g:0
+    grp         GroupDef, grp       [grp    [grp:10
+    i           Instrument          i:20
+    instr       InstrDef, grp       [instr:0
+    m           Mute                m
+    mt          MuteTicks
+    p           Panning
+    pt          Pitch               pt:400   pt:-1200
+    pk          PulseKernel
+    pulsekernel "
+    pw          PhaseWrap           pw:0
+    r           Release             r
+    rt          ReleaseTicks        rt:36
+    s           Step                s:255:0:255:0:0:0:0:0
+    samp        SampleDef, grp      [samp:bass    load:wav:bass.wav
+    sample      "
+    st          StepTicks           st:20
+    stepticks   "                   stepticks:24
+    stt         StepTicksTrack
+    t           Ticks
+    tr          TickRate
+    tickrate    "
+    track       TrackDef, grp      [track:square
+    tstepticks  StepTicksTrack
+    v           Volume             v:255
+    vm          MasterVolume       
+    w           Waveform          w:1
+    wave        WaveformDef, grp  [wave:0
+    x           Repeat            
+    xb          RepeatStart       
+    z           End               z
+
+
+
+
+
+pt:50    % Pitch up by 1/4 tone to match original key
 
 ===============================================================
 
 
-BKInstructions  =
-{
-	Noop               =  
-	Arpeggio           =  a:g#2   g sharp on 2nd octave.  Notes range from c0 to c8.
-	ArpeggioSpeed      =  a1
-	Attack             =  adsr:60:30:128:300
-	AttackTicks        =  at:11
-	Call               =  
-	DutyCycle          =  dc:2   dc:<:0:>:4   defines width of square wave.   16 duty cycle phases.  value of 8 = 50%.
-	Effect             =  e    e:vs:16    e:vb    e:vb:54:2400    e:vb:54:-2400
-	End                =  x
-	GroupDef           =  [grp    [grp:10
-	GroupJump          =  g:0
-	Instrument         =  i:20
-	InstrumentDef      =  [instr:0
-	Jump               =  
-	MasterVolume       =  v:255
-	Mute               =  
-	MuteTicks          =  
-	Panning            =  e:pr:24
-	PhaseWrap          =  pw:0
-	Pitch              =  pt:0
-	Release            =  r
-	ReleaseTicks       =  rt:36
-	Repeat             =  
-	RepeatStart        =  
-	Return             =  
-	Sample             =  s:255:0:255:0:0:0:0:0
-	SampleDef          =  [samp:bass    load:wav:bass.wav
-	SampleRange        =  
-	SampleRepeat       =  
-	SampleSustainRange = 	
-	Step               =  s:255:0:255:0:0:0:0:0
-	StepTicks          =  stepticks:24
-	StepTicksTrack     =  
-	TickRate           =  
-	Ticks              =  
-	TrackDef           =  [track:square   :triangle   :sawtooth   :noise  :sine
-	Volume             =  v:255:220:188:172:156:132:112:92:64:52:28:24:0
-	Waveform           =  w:1
-	WaveformDef        =  [wave:0
-	LineNo             =  
-	PulseKernel        =  
-};
+ * Effect names =
+
+    pr   Portamento       e:pr:24
+    ps   Panning_slide
+    tr   Tremolo
+    vb   Vibrato          e:vb:54:2400   e:vb:54:-2400
+    vs   Volume_slide
 
 
-d:bass
-pt:400
-pt:-1200
-pnv:<:20:>:-64:40:64
-vnv:0:<:255:>:1:255:20:64:80:0
+ * Envelope names =
+
+    a     PitchSeq
+    adsr  AttackDecaySustainRelease   adsr:60:30:128:300
+    anv   PitchEnv
+    dc    DutyCycleSeq    dc:<:0:>:4
+    dcnv  DutyCycleEnv
+    p     PanningSeq
+    pnv   PanningEnv      pnv:<:20:>:-64:40:64
+    v     VolumeSeq       v:255:220:188:172:156:132:112:92:64:52:28:24:0
+    vnv   VolumeEnv       vnv:0:<:255:>:1:255:20:64:80:0
+
+
+ * Miscellaneous =
+
+    data  Data
+    dr    SampleRepeat
+    ds    SampleSustainRange
+    load  Load
+    pt    Pitch
+    s     Sequence
+
+
+ * Repeat modes =
+
+    no
+    pal
+    rep
+
+
+ * Pulse kernel names = 
+
+    harm
+    sinc
+
+
+ * Waveform alternative names =
+
+    no       NOISE
+    noi      
+    noise    
+
+    sm       SAMPLE
+    sam      
+    sample   
+
+    sw       SAWTOOTH
+    saw      
+    sawtooth 
+
+    si       SINE
+    sin      
+    sine     
+
+    sq       SQUARE
+    sqr      
+    square   
+
+    tr       TRIANGLE
+    tri      
+    triangle 
+
+
+[track:square   :triangle   :sawtooth   :noise  :sine   :custom   :sample
+
+adsr is used to define custom waveform
+
+Duty cycle defines width of square wave.   16 duty cycle phases.  value of 8 = 50%.
+
+
+===============================================================
+
+
+PHASE WARP
+Use the command 'pw' to reset noise phase after specified number of phases. 
+Using powers of 2 (2^n) will retain the note, although the octave may
+change. Values other than powers of 2 affect the pitch.
+
+
+Interpreter
+    AttackEvent =   play note
+    Step     =   proceed to next line of code
+    Attack   =   speed of initial note impulse
+    Decay    =   drop-off from beginning of note
+    Sustain  =   how long to hold note after initial "pluck"
+    Release  =   eventual plummet down to end of note
+    Mute     =   silence track
+    Arpeggio    =   play note sequence
+    Stopped     =   
+    Repeated    =   
 
 
 triangle waveform is the only waveform which ignores the volume attribute
+
+
 ===============================================================
+
+
+note Names  =
+
+    a, a#, b, c, c#, d, d#, e, f, f#, g, g#, h
+
+Notes range from c0 to c8.
+
 
 tokenChars  =
-{
-	:    = Argument Seperator,
-	;    = Command Seperator,
-	[    = Group Open,
-	]    = Group Close,
-	"    = String,
-	!    = Data,
-	%    = Comment,
-	     = Space,
-	\xa0 = Space, // no-break space
-	\\   = Escape,
 
-	\a   = Space,
-	\b   = Space,
-	\f   = Space,
-	\n   = LineBreak,
-	\r   = LineBreak,
-	\t   = Space,
-	\v   = Space,
+    :     =  Argument Seperator,
+    ;     =  Command Seperator,
+    [     =  Group Open,
+    ]     =  Group Close,
+    "     =  String,
+    !     =  Data,
+    %     =  Comment,
+          =  Space,
+    \xa0  =  Space, // no-break space
+    \\    =  Escape,
 
-[CHAR_END]    = End,
-};
+    \a   =  Space,
+    \b   =  Space,
+    \f   =  Space,
+    \n   =  LineBreak,
+    \r   =  LineBreak,
+    \t   =  Space,
+    \v   =  Space,
 
-
-===============================================================
-
-
-escapeChars  =
-{
-	a = '\a',
-	b = '\b',
-	f = '\f',
-	n = '\n',
-	r = '\r',
-	t = '\t',
-	v = '\v',
-
-	x = 'h',
-};
+[CHAR_END]   = End,
 
 
 ===============================================================
 
+
+structure of Instrument
+
+    Object     object
+    Instrument instr
+    String     name
+
+structure of Waveform
+
+    Object   object
+    Data     data
+    String   name
+
+structure of Sample
+
+    Object   object
+    String   path
+    String   name
+    #        pitch
+    #        repeat
+    #,#      sustainRange
+    Data     data
+
+
+===============================================================
+===============================================================
+
+I believe the rest are just used internally, to encode data.
+So they won't be used in programming .blip tunes
+
+===============================================================
+===============================================================
 
 base64Chars  =
-{
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-	'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-	'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-	'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-	'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-	'w', 'x', 'y', 'z', '0', '1', '2', '3',
-	'4', '5', '6', '7', '8', '9', '+', '/',
-};
+
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '+', '/',
+
+escapeChars  =
+
+    a = '\a'
+    b = '\b'
+    f = '\f'
+    n = '\n'
+    r = '\r'
+    t = '\t'
+    v = '\v'
+    x = 'h'
