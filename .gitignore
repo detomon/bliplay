@@ -9,6 +9,7 @@
 .svn
 /aclocal.m4
 /ar-lib
+/bliplay/bliplay
 /compile
 /config.guess
 /config.h
@@ -18,6 +19,7 @@
 /depcomp
 /install-sh
 /missing
+/nbproject
 /stamp-h1
 /test-driver
 Makefile
