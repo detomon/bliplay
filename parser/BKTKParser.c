@@ -386,25 +386,11 @@ static void BKTKParserDispose (BKTKParser * parser)
 		BKTKParserFreeNodes (node -> subNode);
 	}
 
-	if (parser -> stack) {
-		free (parser -> stack);
-	}
-
-	if (parser -> buffer) {
-		free (parser -> buffer);
-	}
-
-	if (parser -> argLengths) {
-		free (parser -> argLengths);
-	}
-
-	if (parser -> argCursors) {
-		free (parser -> argCursors);
-	}
-
-	if (parser -> argTypes) {
-		free (parser -> argTypes);
-	}
+	free (parser -> stack);
+	free (parser -> buffer);
+	free (parser -> argLengths);
+	free (parser -> argCursors);
+	free (parser -> argTypes);
 
 	BKBlockPoolDispose (&parser -> blockPool);
 	BKBlockPoolDispose (&parser -> argsPool);

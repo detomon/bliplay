@@ -282,10 +282,7 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 			fclose (file);
 		}
 
-		if (frames) {
-			free (frames);
-		}
-
+		free (frames);
 		BKStringDispose (&dir);
 		BKStringDispose (&path);
 

@@ -128,13 +128,8 @@ static BKInt BKTKWriterInit (BKTKWriter * writer, uint8_t const * indent, BKTKWr
 
 static void BKTKWriterDispose (BKTKWriter * writer)
 {
-	if (writer -> buffer) {
-		free (writer -> buffer);
-	}
-
-	if (writer -> indentBuffer) {
-		free (writer -> indentBuffer);
-	}
+	free (writer -> buffer);
+	free (writer -> indentBuffer);
 }
 
 static BKInt BKTKWriterFlushBuffer (BKTKWriter * writer)

@@ -134,9 +134,7 @@ BKInt BKTKTokenizerInit (BKTKTokenizer * tok)
 
 static void BKTKTokenizerDispose (BKTKTokenizer * tok)
 {
-	if (tok -> buffer) {
-		free (tok -> buffer);
-	}
+	free (tok -> buffer);
 }
 
 void BKTKTokenizerReset (BKTKTokenizer * tok)
