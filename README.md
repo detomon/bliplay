@@ -1,6 +1,8 @@
 bliplay
 =======
 
+[![Build Status](https://api.travis-ci.org/detomon/bliplay.svg?branch=master)](https://travis-ci.org/detomon/bliplay)
+
 **bliplay** is a plaintext-based chiptune sound player.
 See the interactive player at <https://play.blipkit.audio> for examples and syntax description.
 Some example files also are located in [examples](examples).
