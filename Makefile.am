@@ -25,4 +25,4 @@ EXTRA_INSTALL = \
 	editor_themes
 
 editor_themesdir = "$(HOME)/Library/Application Support/Sublime Text 2/Packages"
-editor_themes_DATA = editor-themes/sublime-text
+editor_themes_DATA = editor-themes/SublimeText
