@@ -28,7 +28,6 @@ AM_CFLAGS="$AM_CFLAGS -Wall \
 	-Wmissing-declarations \
 	-Wstrict-prototypes \
 	-Wformat-security \
-	-Wmissing-format-attribute \
 	-Winline"
 
 CHECK_COMPILE_FLAG([-std=c11], [AM_CFLAGS])
