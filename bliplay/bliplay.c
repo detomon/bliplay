@@ -78,10 +78,11 @@ enum FLAG
 	FLAG_INFO              = 1 << 4,
 	FLAG_INFO_EXPLICITE    = 1 << 5,
 	FLAG_YES               = 1 << 6,
-	FLAG_TIMING_UNIT_SHIFT = 7,
-	FLAG_TIMING_UNIT_SECS  = 1 << 7,
-	FLAG_TIMING_UNIT_TICKS = 2 << 7,
-	FLAG_TIMING_UNIT_MASK  = 3 << 7, // next flag is at 9
+	FLAG_FROM_STDIN        = 1 << 7,
+	FLAG_TIMING_UNIT_SHIFT = 16,
+	FLAG_TIMING_UNIT_SECS  = 1 << 16,
+	FLAG_TIMING_UNIT_TICKS = 2 << 16,
+	FLAG_TIMING_UNIT_MASK  = 3 << 16, // next flag is at 18
 };
 
 static BKInt            istty;
@@ -620,7 +621,7 @@ static void print_info (BKTKContext const * ctx)
 	print_message (" step ticks: %d\n", ctx -> info.stepTicks);
 	print_message ("  tick rate: %d/%d\n", ctx -> info.tickRate.factor, ctx -> info.tickRate.divisor);
 	print_message ("sample rate: %d\n", ctx -> renderContext -> sampleRate);
-	print_message ("   channels: %d\n\n", ctx -> renderContext -> numChannels);
+	print_message ("   channels: %d\n", ctx -> renderContext -> numChannels);
 }
 
 static BKInt should_overwrite_output (char const * filename)
@@ -1010,7 +1011,10 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 	}
 #endif
 
-	if (inputFile != stdin) {
+	if (inputFile == stdin) {
+		flags |= FLAG_FROM_STDIN;
+	}
+	else {
 		fclose (inputFile);
 	}
 
@@ -1155,17 +1159,23 @@ static BKInt runloop (BKTKContext * ctx)
 #if BK_USE_PLAYER
 	int c;
 	int res;
-	int nfds;
+	int nfds = 0;
 	int flag = 1;
 	fd_set fds, fdsc;
 	struct timeval timeout;
 
 	FD_ZERO (&fds);
-	FD_SET (STDIN_FILENO, &fds);
-	nfds = STDIN_FILENO + 1;
+
+	if (!(flags & FLAG_FROM_STDIN)) {
+		if (istty) {
+			FD_SET (STDIN_FILENO, &fds);
+			nfds = STDIN_FILENO + 1;
+		}
+
+		print_notice ("Press [q] to quit\n");
+	}
 
 	set_noecho (1);
-	print_notice ("Press [q] to quit\n");
 
 	SDL_PauseAudio (0);
 
@@ -1202,7 +1212,9 @@ static BKInt runloop (BKTKContext * ctx)
 
 	set_noecho (0);
 
-	printf ("\n");
+	if (!(flags & FLAG_PRINT_NO_TIME)) {
+		printf ("\n");
+	}
 
 	SDL_PauseAudio (1);
 #else
@@ -1239,6 +1251,7 @@ int main (int argc, char * argv [])
 
 	if (flags & FLAG_INFO) {
 		print_info (&ctx);
+		printf ("\n");
 	}
 
 	if (flags & FLAG_INFO_EXPLICITE) {
@@ -1246,8 +1259,12 @@ int main (int argc, char * argv [])
 	}
 
 	if (flags & FLAG_HAS_SEEK_TIME) {
-		print_notice ("=> Fast forward to %s\n", seekTimeString);
+		print_notice ("Fast forward to %s\n", seekTimeString);
 		seek_context (&ctx, seekTime);
+	}
+
+	if (!istty) {
+		flags |= FLAG_PRINT_NO_TIME;
 	}
 
 	if (flags & FLAG_NO_SOUND) {
