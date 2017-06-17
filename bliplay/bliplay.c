@@ -27,8 +27,8 @@
 #include "config.h"
 #endif
 
-#ifndef BK_USE_PLAYER
-#define BK_USE_PLAYER 1
+#ifndef BK_USE_SDL
+#define BK_USE_SDL 1
 #endif
 
 #include <getopt.h>
@@ -41,7 +41,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#if defined(BK_USE_PLAYER) && defined(BK_SDL_VERSION)
+#if defined(BK_USE_SDL) && defined(BK_SDL_VERSION)
 #	if BK_SDL_VERSION == 2
 #		include <SDL2/SDL.h>
 #	else
@@ -104,7 +104,7 @@ static BKWaveFileWriter waveWriter;
 static char             seekTimeString [64];
 static char             endTimeString [64];
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 static int              updateUSecs = 91200;
 #endif
 
@@ -129,7 +129,7 @@ struct option const options [] =
 	{NULL,           0,                 NULL, 0},
 };
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 static int set_noecho (int nocanon)
 {
 	struct termios oldtc, newtc;
@@ -166,7 +166,7 @@ static int getchar_nocanon (unsigned tcflags)
 
 	return c;
 }
-#endif /* BK_USE_PLAYER */
+#endif /* BK_USE_SDL */
 
 static int string_begins_with (char const * str, char const * head)
 {
@@ -356,7 +356,7 @@ static void output_chunk (BKFrame const frames [], BKInt numFrames)
 	}
 }
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 static void fill_audio (BKTKContext * ctx, Uint8 * stream, int len)
 {
 	BKUInt numChannels = ctx -> renderContext -> numChannels;
@@ -365,7 +365,7 @@ static void fill_audio (BKTKContext * ctx, Uint8 * stream, int len)
 	BKContextGenerate (ctx -> renderContext, (BKFrame *) stream, numFrames);
 	output_chunk ((BKFrame *) stream, numFrames * numChannels);
 }
-#endif /* BK_USE_PLAYER */
+#endif /* BK_USE_SDL */
 
 static BKInt push_frames (BKFrame inFrames [], BKUInt size, void * info)
 {
@@ -377,7 +377,7 @@ static void seek_context (BKTKContext * ctx, BKTime time)
 	BKContextGenerateToTime (ctx -> renderContext, time, push_frames, NULL);
 }
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 {
 	SDL_Init (SDL_INIT_AUDIO);
@@ -398,7 +398,7 @@ static BKInt init_sdl (BKTKContext * ctx, char const ** error)
 
 	return 0;
 }
-#endif /* BK_USE_PLAYER */
+#endif /* BK_USE_SDL */
 
 static BKInt check_tracks_running (BKTKContext const * ctx)
 {
@@ -478,7 +478,7 @@ static BKInt parse_seek_time (char const * string, BKTime * outTime, BKInt speed
 	return 0;
 }
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 static void print_time (BKTKContext const * ctx)
 {
 	int frames = BKTimeGetTime (ctx -> renderContext -> currentTime) * 100 / ctx -> renderContext -> sampleRate;
@@ -491,7 +491,7 @@ static void print_time (BKTKContext const * ctx)
 	printf ("\r%s%4d:%02d.%02d%s", colorGreen, mins, secs, frac, colorNormal);
 	fflush (stdout);
 }
-#endif /* BK_USE_PLAYER */
+#endif /* BK_USE_SDL */
 
 static BKInt count_slots (BKArray const * array)
 {
@@ -759,7 +759,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 
 	opterr = 0;
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 	flags = FLAG_INFO;
 #endif
 
@@ -905,7 +905,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			}
 		}
 	}
-#if !BK_USE_PLAYER
+#if !BK_USE_SDL
 	else if ((flags & FLAG_INFO) == 0) {
 		print_error ("SDL support disabled. Output file must be given\n");
 		return -1;
@@ -1000,7 +1000,7 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		return 1;
 	}
 
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 	if ((flags & FLAG_NO_SOUND) == 0) {
 		char const * error = NULL;
 
@@ -1108,7 +1108,7 @@ static void write_timing_data (void)
 
 static void cleanup (void)
 {
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 	if ((flags & FLAG_NO_SOUND) == 0) {
 		SDL_CloseAudio ();
 	}
@@ -1156,7 +1156,7 @@ static BKInt write_output (BKTKContext * ctx)
 
 static BKInt runloop (BKTKContext * ctx)
 {
-#if BK_USE_PLAYER
+#if BK_USE_SDL
 	int c;
 	int res;
 	int nfds = 0;
@@ -1224,7 +1224,7 @@ static BKInt runloop (BKTKContext * ctx)
 		}
 	}
 	while (1);
-#endif /* BK_USE_PLAYER */
+#endif /* BK_USE_SDL */
 
 	return 0;
 }

@@ -45,6 +45,12 @@ Next execute `configure` in the base directory:
 ./configure
 ```
 
+Use the `--without-sdl` option if you don't want to link against SDL.
+
+```sh
+./configure --without-sdl
+```
+
 Then execute `make` to build the program in the `bliplay` directory:
 
 ```sh

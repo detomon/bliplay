@@ -30,20 +30,26 @@ AM_CFLAGS="$AM_CFLAGS -Wall \
 	-Wformat-security \
 	-Winline"
 
+# Use C11 standard.
 CHECK_COMPILE_FLAG([-std=c11], [AM_CFLAGS])
 
+# Checks for header files.
 AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h unistd.h])
 
-AC_ARG_ENABLE([player],
-	[  --disable-player        do not link against SDL library; only enable file output],
-	[with_player=${enableval}],
-	[with_player=yes])
+AC_ARG_WITH([sdl],
+	AS_HELP_STRING([--without-sdl], [do not link against SDL library]))
 
-if test "x${with_player}" = xyes; then
-	AC_DEFINE(BK_USE_PLAYER, 1, [Define to 1 if configure had option --enable-player])
+# Set default of with_sdl to yes.
+AS_IF([test "x$with_sdl" = "x"],
+	[with_sdl=yes],
+	[])
+
+# Check for option with_sdl.
+if test "x$with_sdl" = xyes; then
+	AC_DEFINE(BK_USE_SDL, 1, [Define to 1 if configure had option --with-sdl])
 	AC_CHECK_HEADERS([termios.h])
 else
-	AC_DEFINE(BK_USE_PLAYER, 0, [Define to 1 if configure had option --enable-player])
+	AC_DEFINE(BK_USE_SDL, 0, [Define to 0 if configure had option --without-sdl])
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -71,7 +77,8 @@ AC_CONFIG_SUBDIRS([BlipKit])
 # Run tests.
 CHECK_SIGNED_SHIFT()
 
-if test "x${with_player}" = xyes; then
+# Check for SDL.
+if test "x$with_sdl" = xyes; then
 	CHECK_SDL()
 fi
 

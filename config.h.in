@@ -3,8 +3,8 @@
 /* Defines SDL version */
 #undef BK_SDL_VERSION
 
-/* Define to 1 if configure had option --enable-player */
-#undef BK_USE_PLAYER
+/* Define to 0 if configure had option --without-sdl */
+#undef BK_USE_SDL
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
