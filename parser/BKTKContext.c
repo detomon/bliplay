@@ -207,6 +207,10 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 	BKString dir = BK_STRING_INIT;
 	BKString path = BK_STRING_INIT;
 	BKArray * samples = &ctx -> samples;
+	BKHashTable sampleFiles = BK_HASH_TABLE_INIT;
+
+	// prevent error if table empty
+	memset (&reader, 0, sizeof (reader));
 
 	BKStringAppendString (&dir, &ctx -> loadPath);
 
@@ -221,53 +225,81 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 		*(BKTKSample **) BKArrayItemAt (samples, sample -> object.index) = sample;
 
 		if (sample -> path.len) {
+			//BKInt result;
+			//BKData ** dataRef;
+
 			BKStringEmpty (&path);
 			BKStringAppendString (&path, &dir);
 			BKStringAppendPathSegment (&path, &sample -> path);
 
-			file = fopen ((char *) path.str, "rb");
+			/*result = BKHashTableLookupOrInsert (&sampleFiles, (char const *) path.str, (void ***) &dataRef);
 
-			if (!file) {
-				printError (ctx, "Error: opening file failed: '%s' on line %u:%u",
-					sample -> path.str, sample -> object.offset.lineno, sample -> object.offset.colno);
-				res = BK_FILE_ERROR;
-				goto cleanup;
-			}
-
-			if (BKWaveFileReaderInit (&reader, file) != 0) {
-				printError (ctx, "Error: allocation error");
-				goto cleanup;
-			}
-
-			if (BKWaveFileReaderReadHeader (&reader, &numChannels, &sampleRate, &numFrames) != 0) {
-				printError (ctx, "Error: failed to read WAVE header");
-				goto allocationError;
-			}
-
-			frames = malloc (numFrames * numChannels * sizeof (BKFrame));
-
-			if (!frames) {
+			if (result < 0) {
 				printError (ctx, "Error: allocation error");
 				goto allocationError;
+			}*/
+
+			// check if file already loaded
+			/*if (*dataRef) {
+				frames      = (*dataRef)->frames;
+				numFrames   = (*dataRef)->numFrames;
+				numChannels = (*dataRef)->numChannels;
+
+				printf("%p %d %d\n", frames, numFrames, numChannels);
+
+				if (BKDataSetFrames (&sample -> data, frames, numFrames, numChannels, 1)) {
+					printError (ctx, "Error: allocation error");
+					goto allocationError;
+				}
 			}
+			else {*/
+				file = fopen ((char *) path.str, "rb");
 
-			if (BKWaveFileReaderReadFrames (&reader, frames) != 0) {
-				printError (ctx, "Error: failed to read WAVE data");
-				goto allocationError;
-			}
+				if (!file) {
+					printError (ctx, "Error: opening file failed: '%s' on line %u:%u",
+						sample -> path.str, sample -> object.offset.lineno, sample -> object.offset.colno);
+					res = BK_FILE_ERROR;
+					goto cleanup;
+				}
 
-			if (BKDataSetFrames (&sample -> data, frames, numFrames, numChannels, 1)) {
-				printError (ctx, "Error: allocation error");
-				goto allocationError;
-			}
+				if (BKWaveFileReaderInit (&reader, file) != 0) {
+					printError (ctx, "Error: allocation error");
+					goto cleanup;
+				}
 
-			BKDispose (&reader);
+				if (BKWaveFileReaderReadHeader (&reader, &numChannels, &sampleRate, &numFrames) != 0) {
+					printError (ctx, "Error: failed to read WAVE header");
+					goto allocationError;
+				}
 
-			free (frames);
-			frames = NULL;
+				frames = malloc (numFrames * numChannels * sizeof (BKFrame));
 
-			fclose (file);
-			file = NULL;
+				if (!frames) {
+					printError (ctx, "Error: allocation error");
+					goto allocationError;
+				}
+
+				if (BKWaveFileReaderReadFrames (&reader, frames) != 0) {
+					printError (ctx, "Error: failed to read WAVE data");
+					goto allocationError;
+				}
+
+				if (BKDataSetFrames (&sample -> data, frames, numFrames, numChannels, 1)) {
+					printError (ctx, "Error: allocation error");
+					goto allocationError;
+				}
+
+				BKDispose (&reader);
+
+				free (frames);
+				frames = NULL;
+
+				fclose (file);
+				file = NULL;
+
+				// insert into hash table
+				//*dataRef = &sample -> data;
+			//}
 		}
 
 		if (sample -> sustainRange [0] || sample -> sustainRange [1]) {
@@ -285,6 +317,8 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 		free (frames);
 		BKStringDispose (&dir);
 		BKStringDispose (&path);
+		BKHashTableDispose (&sampleFiles);
+		BKDispose (&reader);
 
 		return res;
 	}

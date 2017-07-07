@@ -95,7 +95,7 @@ struct BKTKContext
 	BKContext  * renderContext;
 	BKArray      instruments;  // BKTKInstrument
 	BKArray      waveforms;    // BKTKWaveform
-	BKArray      samples;      // BKTKSample
+	BKArray      samples;      // BKTKSample; may contain shared BKData!
 	BKArray      tracks;       // BKTKTrack
 	BKString     loadPath;
 	BKString     error;
