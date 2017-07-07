@@ -1249,7 +1249,7 @@ int main (int argc, char * argv [])
 		return 1;
 	}
 
-	if (flags & FLAG_INFO) {
+	if (flags & FLAG_INFO && outputFile != stdout) {
 		print_info (&ctx);
 		printf ("\n");
 	}
