@@ -900,7 +900,10 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		}
 
 		if (outputType == OUTPUT_TYPE_WAVE) {
-			if (BKWaveFileWriterInit (&waveWriter, outputFile, numChannels, sampleRate, 0) < 0) {
+			int res = BKWaveFileWriterInit (&waveWriter, outputFile, numChannels, sampleRate, 0);
+
+			if (res != 0) {
+				print_error ("Could not initialize WAVE writer: %s\n", BKStatusGetName (res));
 				return -1;
 			}
 		}
