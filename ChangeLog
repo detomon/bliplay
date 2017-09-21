@@ -1,3 +1,8 @@
+Changes in bliplay 3.1.2:
+  Release date: 2017-09-21
+
+* Fix build issue on Mint Linux 18.1 64bit
+
 Changes in bliplay 3.1.1:
   Release date: 2017-01-22
 
