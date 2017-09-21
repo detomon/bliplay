@@ -843,8 +843,9 @@ static BKInt BKTKParserPutToken (BKTKParser * parser, BKTKToken const * token)
 	}
 
 	unexpectedError: {
+		BKStringEscape (&parser -> escapedName, (char *) token -> data);
 		BKTKParserSetError (parser, "Unexpected token '%s' on line %u:%u",
-			BKStringEscape (&parser -> escapedName, (char *) token -> data) -> str,
+			parser -> escapedName.str,
 			token -> offset.lineno, token -> offset.colno);
 		goto error;
 	}
