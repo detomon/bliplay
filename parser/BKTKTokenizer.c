@@ -139,10 +139,13 @@ static void BKTKTokenizerDispose (BKTKTokenizer * tok)
 
 void BKTKTokenizerReset (BKTKTokenizer * tok)
 {
+	tok -> state         = BKTKStateRoot;
 	tok -> offset.lineno = 1;
 	tok -> offset.colno  = 0;
 	tok -> bufferLen     = 0;
 	tok -> base64Len     = 0;
+	tok -> charCount     = 0;
+	tok -> charValue     = 0;
 }
 
 /**
