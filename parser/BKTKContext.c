@@ -123,56 +123,41 @@ BKInt BKTKSampleAlloc (BKTKSample ** sample)
 
 static void BKTKGroupDispose (BKTKGroup * group)
 {
-	if (group) {
-		BKByteBufferDispose (&group -> byteCode);
-		free (group);
-	}
+	BKByteBufferDispose (&group -> byteCode);
 }
 
 static void BKTKTrackDispose (BKTKTrack * track)
 {
 	BKTKGroup * group;
 
-	if (track) {
-		for	(BKUSize i = 0; i < track -> groups.len; i ++) {
-			group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, i);
-			BKTKGroupDispose (group);
-		}
-
-		BKByteBufferDispose (&track -> byteCode);
-		BKDispose (&track -> renderTrack);
-		BKDividerDetach (&track -> divider);
-		BKDispose (&track -> interpreter);
-		free (track);
+	for (BKUSize i = 0; i < track -> groups.len; i ++) {
+		group = *(BKTKGroup **) BKArrayItemAt (&track -> groups, i);
+		BKTKGroupDispose (group);
 	}
+
+	BKByteBufferDispose (&track -> byteCode);
+	BKDispose (&track -> renderTrack);
+	BKDividerDetach (&track -> divider);
+	BKDispose (&track -> interpreter);
 }
 
 static void BKTKInstrumentDispose (BKTKInstrument * instrument)
 {
-	if (instrument) {
-		BKDispose (&instrument -> instr);
-		BKStringDispose (&instrument -> name);
-		free (instrument);
-	}
+	BKDispose (&instrument -> instr);
+	BKStringDispose (&instrument -> name);
 }
 
 static void BKTKWaveformDispose (BKTKWaveform * waveform)
 {
-	if (waveform) {
-		BKDispose (&waveform -> data);
-		BKStringDispose (&waveform -> name);
-		free (waveform);
-	}
+	BKDispose (&waveform -> data);
+	BKStringDispose (&waveform -> name);
 }
 
 static void BKTKSampleDispose (BKTKSample * sample)
 {
-	if (sample) {
-		BKStringDispose (&sample -> path);
-		BKDispose (&sample -> data);
-		BKStringDispose (&sample -> name);
-		free (sample);
-	}
+	BKStringDispose (&sample -> path);
+	BKDispose (&sample -> data);
+	BKStringDispose (&sample -> name);
 }
 
 BKInt BKTKContextInit (BKTKContext * ctx, BKUInt flags)
@@ -594,19 +579,19 @@ static void BKTKContextDispose (BKTKContext * ctx)
 	BKTKContextDetach (ctx);
 
 	for (BKUSize i = 0; i < ctx -> instruments.len; i ++) {
-		BKTKInstrumentDispose (*(BKTKInstrument **) BKArrayItemAt (&ctx -> instruments, i));
+		BKDispose (*(BKTKInstrument **) BKArrayItemAt (&ctx -> instruments, i));
 	}
 
 	for (BKUSize i = 0; i < ctx -> waveforms.len; i ++) {
-		BKTKWaveformDispose (*(BKTKWaveform **)BKArrayItemAt (&ctx -> waveforms, i));
+		BKDispose (*(BKTKWaveform **)BKArrayItemAt (&ctx -> waveforms, i));
 	}
 
 	for (BKUSize i = 0; i < ctx -> samples.len; i ++) {
-		BKTKSampleDispose (*(BKTKSample **)BKArrayItemAt (&ctx -> samples, i));
+		BKDispose (*(BKTKSample **)BKArrayItemAt (&ctx -> samples, i));
 	}
 
 	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
-		BKTKTrackDispose (*(BKTKTrack **)BKArrayItemAt (&ctx -> tracks, i));
+		BKDispose (*(BKTKTrack **)BKArrayItemAt (&ctx -> tracks, i));
 	}
 
 	BKArrayDispose (&ctx -> instruments);
