@@ -1,6 +1,6 @@
 AM_CFLAGS = @BK_STD_CFLAGS@ -I$(srcdir)/BlipKit/src
 
-SUBDIRS = BlipKit parser bliplay
+SUBDIRS = BlipKit parser bliplay test
 DIST_SUBDIRS = parser bliplay editor-themes
 
 EXTRA_DIST = \

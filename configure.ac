@@ -71,6 +71,7 @@ AC_CONFIG_FILES([
 	Makefile
 	parser/Makefile
 	bliplay/Makefile
+	test/Makefile
 ])
 
 AC_CONFIG_SUBDIRS([BlipKit])
