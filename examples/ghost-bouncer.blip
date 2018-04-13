@@ -604,7 +604,7 @@ stepticks:24
 		i:1;v:63;rt:12;a:c6;s:1;r
 		v:105;rt:12;a:c6;s:1;r
 		i:0;v:56;rt:12;a:c6;s:2;r
-		i:1;pw:16;rt:24;v:255;a:g0:a:g2;s:2;r;pw:0
+		i:1;pw:16;rt:24;v:255;a:g0:g2;s:2;r;pw:0
 		i:0;v:255;a:c6;s:2;r
 		i:1;v:70;rt:12;a:c6;s:1;r
 		s:1
@@ -618,7 +618,7 @@ stepticks:24
 		v:63;rt:12;a:c6;s:1;r
 		i:1;v:105;rt:12;a:c6;s:1;r
 		v:56;rt:12;a:c6;s:2;r
-		pw:16;rt:24;v:255;a:g0:a:g2;s:2;r;pw:0
+		pw:16;rt:24;v:255;a:g0:g2;s:2;r;pw:0
 		i:0;v:255;a:c6;s:2;r
 		i:1;v:70;rt:12;a:c6;s:1;r
 		s:1
@@ -674,7 +674,7 @@ stepticks:24
 		i:1;at:12;v:78;a:c6;s:2;r
 		i:0;v:255;a:c6;s:2;r
 		s:4
-		i:1;pw:16;rt:24;v:178;a:g0:a:g2;s:2;r;pw:0
+		i:1;pw:16;rt:24;v:178;a:g0:g2;s:2;r;pw:0
 		i:0;v:255;a:c6;s:2;r
 		i:0
 		v:70;rt:12;a:c6;s:1;r

@@ -1058,7 +1058,7 @@ stepticks:15
 		a:f3;a:f1;s:2;r;s:2
 
 		a:d#3;a:d#0;s:3;r;s:1
-		a:d#3;a:d#1:2;r;s:2
+		a:d#3;a:d#1;s:2;r;s:2
 		a:d#3;a:d#0;s:3;r;s:1
 		a:d#3;a:d#1;s:2;r;s:2
 
@@ -1133,7 +1133,7 @@ stepticks:15
 		a:a#0;s:3;r;s:1
 		e:pr:8
 
-		p:-60;e:pr:64;a:60;a:f3;a:f0:f1;s:8;r;e:pr:8;p:0
+		p:-60;e:pr:64;a:f3;a:f0:f1;s:8;r;e:pr:8;p:0
 		a:f3;a:f0;s:3;r;s:1
 		a:f3;a:f1;s:2;r;s:2
 
