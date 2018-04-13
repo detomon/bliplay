@@ -153,22 +153,16 @@ static struct keyval const effectNames [] =
  */
 static struct keyval const waveformNames [] =
 {
-	{"no",       BK_NOISE},
 	{"noi",      BK_NOISE},
 	{"noise",    BK_NOISE},
-	{"sam",      BK_SAMPLE},
 	{"sample",   BK_SAMPLE},
 	{"saw",      BK_SAWTOOTH},
 	{"sawtooth", BK_SAWTOOTH},
-	{"si",       BK_SINE},
 	{"sin",      BK_SINE},
 	{"sine",     BK_SINE},
-	{"sm",       BK_SAMPLE},
-	{"sq",       BK_SQUARE},
+	{"smp",      BK_SAMPLE},
 	{"sqr",      BK_SQUARE},
 	{"square",   BK_SQUARE},
-	{"sw",       BK_SAWTOOTH},
-	{"tr",       BK_TRIANGLE},
 	{"tri",      BK_TRIANGLE},
 	{"triangle", BK_TRIANGLE},
 };
