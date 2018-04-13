@@ -598,10 +598,12 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			BKUSize i;
 
 			if (node -> argCount < 1) {
-				printError (compiler, node, "Warning: attack command needs at least one argument");
+				printError (compiler, node, "Error: attack command needs at least one argument");
+				goto error;
 			}
 			else if (node -> argCount > BK_MAX_ARPEGGIO) {
-				printError (compiler, node, "Warning: some notes are ignores (more than %u)", BK_MAX_ARPEGGIO);
+				printError (compiler, node, "Error: too many arpeggio notes (%u)", BK_MAX_ARPEGGIO);
+				goto error;
 			}
 
 			args [0] = 0;
@@ -610,8 +612,9 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			arg = parseNote (name, &args [0], &args [1]);
 
 			if (arg < 2) {
-				printError (compiler, node, "Warning: note '%s' has no valid format",
+				printError (compiler, node, "Error: note '%s' has no valid format",
 					BKTKCompilerEscapeString (compiler, name));
+				goto error;
 			}
 
 			note = args [0] * 100 + args [1];
@@ -625,8 +628,9 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 					arg = parseNote (name, &args [0], &args [1]);
 
 					if (arg < 2) {
-						printError (compiler, node, "Warning: note '%s' has no valid format",
+						printError (compiler, node, "Error: note '%s' has no valid format",
 							BKTKCompilerEscapeString (compiler, name));
+						goto error;
 					}
 
 					note2 = args [0] * 100 + args [1] - note;
@@ -674,8 +678,8 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			name = nodeArgString (node, 0);
 
 			if (!keyvalLookup (repeatNames, NUM_REPEAT_NAMES, name, &arg, NULL)) {
-				printError (compiler, node, "Warning: expected repeat mode: 'no', 'rep', 'pal'");
-				return 0;
+				printError (compiler, node, "Error: expected repeat mode: 'no', 'rep', 'pal'");
+				goto error;
 			}
 
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, arg));
@@ -685,8 +689,8 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			name = nodeArgString (node, 0);
 
 			if (!keyvalLookup (effectNames, NUM_EFFECT_NAMES, name, &args [0], NULL)) {
-				printError (compiler, node, "Warning: expected effect name: 'pr', 'ps', 'tr', 'vb', 'vs'");
-				return 0;
+				printError (compiler, node, "Error: expected effect name: 'pr', 'ps', 'tr', 'vb', 'vs'");
+				goto error;
 			}
 
 			parseTicksFormat (nodeArgString (node, 1), &args [1]);
@@ -744,8 +748,8 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			name = nodeArgString (node, 0);
 
 			if (!keyvalLookup (pulseNames, NUM_PULSE_NAMES, name, &args [0], NULL)) {
-				printError (compiler, node, "Warning: expected pulse kernel name: 'harm', 'sinc'");
-				return -1;
+				printError (compiler, node, "Error: expected pulse kernel name: 'harm', 'sinc'");
+				goto error;
 			}
 
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, args [0]));
@@ -1335,8 +1339,10 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 				str = nodeArgString (node, 0);
 
 				if (strcmp ((char *) str -> str, "wav") != 0) {
-					printError (compiler, node, "Warning: unknown file format '%s'; only 'wav' is supported at the moment",
+					printError (compiler, node, "Error: unknown file format '%s'; only 'wav' is supported at the moment",
 						BKTKCompilerEscapeString (compiler, str));
+					res = -1;
+					goto cleanup;
 					break;
 				}
 
@@ -1354,7 +1360,7 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 				name = nodeArgString (node, 0);
 
 				if (!keyvalLookup (repeatNames, NUM_REPEAT_NAMES, name, &arg1, NULL)) {
-					printError (compiler, node, "Warning: expected repeat mode: 'no', 'rep', 'pal'");
+					printError (compiler, node, "Error: expected repeat mode: 'no', 'rep', 'pal'");
 					res = -1;
 					goto cleanup;
 				}
