@@ -320,6 +320,9 @@ BK_INLINE BKInstrMask BKReadIntrMask (void ** opcode)
 	return mask;
 }
 
+/**
+ * TODO: should this be an error?
+ */
 static void printErrorUnexpectedCommand (BKTKCompiler * compiler, BKTKParserNode const * node)
 {
 	char const * type = (node -> flags & BKTKParserFlagIsGroup) ? "group" : "command";

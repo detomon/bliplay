@@ -1232,6 +1232,8 @@ static BKInt runloop (BKTKContext * ctx)
 	return 0;
 }
 
+#include <sys/mman.h>
+
 // undef SDL main
 #ifdef main
 #undef main
@@ -1256,6 +1258,30 @@ int main (int argc, char * argv [])
 		print_info (&ctx);
 		printf ("\n");
 	}
+
+
+
+	/*for (int i = 0; i < ctx.tracks.len; i++) {
+		BKTKTrack const* track = *(BKTKTrack **) BKArrayItemAt(&ctx.tracks, i);
+		BKByteBuffer const* buffer = &track->byteCode;
+
+		char name[256];
+		snprintf(name, sizeof(name), "_bin/%02u.bin", i);
+		FILE* file = fopen(name, "w+");
+
+		size_t size = BKByteBufferSize(buffer);
+		ftruncate(fileno(file), size);
+
+		void* data = malloc(size);
+		BKByteBufferCopy(buffer, data);
+		fwrite(data, sizeof(char), size, file);
+		free(data);
+
+		fclose(file);
+	}*/
+
+
+
 
 	if (flags & FLAG_INFO_EXPLICITE) {
 		return 0;
