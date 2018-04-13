@@ -624,9 +624,11 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, note));
 
 			if (node -> argCount > 1) {
-				BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (BKIntrArpeggio, (BKInt) node -> argCount - 1));
+				BKInt argCount = BKMin(node -> argCount, BK_MAX_ARPEGGIO);
 
-				for (i = 1; i < node -> argCount; i ++) {
+				BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (BKIntrArpeggio, argCount - 1));
+
+				for (i = 1; i < argCount; i ++) {
 					name = nodeArgString (node, i);
 					arg = parseNote (name, &args [0], &args [1]);
 
