@@ -94,6 +94,10 @@ bliplay/bliplay -o killer-squid.wav examples/killer-squid.blip
 
 Script which uses a spreadsheet in order to render and play the files dynamically. By [@mgarcia-org](https://github.com/mgarcia-org/).
 
+### [bliplay-wasm](https://github.com/detomon/bliplay-wasm) (WIP)
+
+A WebAssembly implementation of the player.
+
 ## License
 
 This program is distributed under the MIT license. See `LICENSE`.
