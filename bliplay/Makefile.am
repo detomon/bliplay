@@ -10,7 +10,7 @@ bliplay_SOURCES = \
 
 bliplay_CFLAGS = $(AM_CFLAGS) -DPROGRAM_NAME=\"bliplay\"
 bliplay_LDADD = \
-	$(srcdir)/../utility/libutility.a \
 	$(srcdir)/../parser/libbliparser.a \
+	$(srcdir)/../utility/libutility.a \
 	$(srcdir)/../BlipKit/src/libblipkit.a \
 	@SDL_CFLAGS@ -lm
