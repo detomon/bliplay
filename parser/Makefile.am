@@ -1,4 +1,6 @@
-AM_CFLAGS = @AM_CFLAGS@ -I$(srcdir)/../BlipKit/src
+AM_CFLAGS = @AM_CFLAGS@ \
+	-I$(srcdir)/../utility \
+	-I$(srcdir)/../BlipKit/src
 
 lib_LIBRARIES = libbliparser.a
 

@@ -1,15 +1,32 @@
 BLIPLAY = $(top_builddir)/bliplay/bliplay
 EXAMPLES = $(top_builddir)/examples
 
+AM_CFLAGS = @AM_CFLAGS@ \
+	-I$(srcdir)/../utility \
+	-I$(srcdir)/../BlipKit/src
+
+BK_LDADD = \
+	$(srcdir)/../utility/libutility.a \
+	$(srcdir)/../BlipKit/src/libblipkit.a \
+	-lm
+
+check_PROGRAMS = \
+	fft
+
+fft_SOURCES = fft.c
+fft_LDADD = $(BK_LDADD)
+
+# Enable malloc debugging where available
 TESTS_ENVIRONMENT = \
 	export bliplay=$(BLIPLAY); \
 	export examples_dir=$(EXAMPLES); \
-	# Enable malloc debugging where available
+	top_builddir=$(top_builddir); \
 	export MallocScribble=1; \
 	export MallocPreScribble=1; \
 	export MallocGuardEdges=1;
 
 TESTS = \
+	fft \
 	test-1.sh \
 	test-2.sh \
 	test-3.sh \
