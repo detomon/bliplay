@@ -301,7 +301,7 @@ char * BKStrdup (char const * str)
 		size_t len = strlen (str);
 
 		if ((newStr = malloc (len + 1))) {
-			strncpy (newStr, str, len + 1);
+			memcpy (newStr, str, len + 1);
 		}
 	}
 

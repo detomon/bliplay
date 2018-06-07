@@ -776,7 +776,8 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			}
 			case 'f': {
 				flags |= FLAG_HAS_SEEK_TIME;
-				strncpy (seekTimeString, optarg, 64);
+				strncpy (seekTimeString, optarg, sizeof(seekTimeString) - 1);
+				seekTimeString[sizeof(seekTimeString) - 1] = '\0';
 				break;
 			}
 			case 'h':
@@ -791,7 +792,8 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 			}
 			case 'l': {
 				flags |= FLAG_HAS_END_TIME;
-				strncpy (endTimeString, optarg, 64);
+				strncpy (endTimeString, optarg, sizeof(endTimeString) - 1);
+				endTimeString[sizeof(endTimeString) - 1] = '\0';
 				break;
 			}
 			case 'n': {
