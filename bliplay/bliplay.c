@@ -861,6 +861,54 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 		return -1;
 	}
 
+#if !BK_USE_SDL
+	if (!outputFilename) {
+		if ((flags & FLAG_INFO) == 0) {
+			print_error ("SDL support disabled. Output file must be given\n");
+			return -1;
+		}
+	}
+#endif
+
+	if (outputFilename) {
+		opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTKContextOptionTimingShift;
+	}
+
+	if (context_init (ctx, numChannels, sampleRate, opts) != 0) {
+		return 1;
+	}
+
+	BKStringEmpty (&path);
+
+	if (BKStringAppend (&path, filename) != 0) {
+		return -1;
+	}
+
+	// use stdin
+	if (BKStringCompare (&path, "-") == 0) {
+		inputFile = stdin;
+	}
+	// use path
+	else {
+		if (stat ((char *) path.str, &st) < 0) {
+			print_error ("No such file: %s\n", path.str);
+			return -1;
+		}
+
+		if (S_ISDIR (st.st_mode)) {
+			if (BKStringAppend (&path, "/DATA.blip") < 0) {
+				return -1;
+			}
+		}
+
+		inputFile = fopen ((char *) path.str, "rb");
+
+		if (inputFile == NULL) {
+			print_error ("No such file: %s\n", path.str);
+			return -1;
+		}
+	}
+
 	if (outputFilename) {
 		// output file already exists
 		if (stat (outputFilename, &st) == 0) {
@@ -908,51 +956,6 @@ static BKInt handle_options (BKTKContext * ctx, int argc, char * argv [])
 				print_error ("Could not initialize WAVE writer: %s\n", BKStatusGetName (res));
 				return -1;
 			}
-		}
-	}
-#if !BK_USE_SDL
-	else if ((flags & FLAG_INFO) == 0) {
-		print_error ("SDL support disabled. Output file must be given\n");
-		return -1;
-	}
-#endif
-
-	if (outputFilename) {
-		opts = ((flags & FLAG_TIMING_UNIT_MASK) >> FLAG_TIMING_UNIT_SHIFT) << BKTKContextOptionTimingShift;
-	}
-
-	if (context_init (ctx, numChannels, sampleRate, opts) != 0) {
-		return 1;
-	}
-
-	BKStringEmpty (&path);
-
-	if (BKStringAppend (&path, filename) != 0) {
-		return -1;
-	}
-
-	// use stdin
-	if (BKStringCompare (&path, "-") == 0) {
-		inputFile = stdin;
-	}
-	// use path
-	else {
-		if (stat ((char *) path.str, &st) < 0) {
-			print_error ("No such file: %s\n", path.str);
-			return -1;
-		}
-
-		if (S_ISDIR (st.st_mode)) {
-			if (BKStringAppend (&path, "/DATA.blip") < 0) {
-				return -1;
-			}
-		}
-
-		inputFile = fopen ((char *) path.str, "rb");
-
-		if (inputFile == NULL) {
-			print_error ("No such file: %s\n", path.str);
-			return -1;
 		}
 	}
 
