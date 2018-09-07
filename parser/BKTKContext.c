@@ -206,8 +206,20 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 		goto allocationError;
 	}
 
+	// move samples
 	while (BKHashTableIteratorNext (&itor, &key, (void **) &sample)) {
 		*(BKTKSample **) BKArrayItemAt (samples, sample -> object.index) = sample;
+	}
+
+	BKHashTableEmpty (&compiler -> samples);
+
+	for (BKUSize i = 0; i < ctx -> samples.len; i ++) {
+		BKTKSample ** sampleRef = (BKTKSample **) BKArrayItemAt (&ctx -> samples, i);
+		BKTKSample * sample = *sampleRef;
+
+		if (!sample) {
+			continue;
+		}
 
 		if (sample -> path.len) {
 			//BKInt result;
@@ -317,17 +329,27 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 static BKInt BKTKContextCreateTracks (BKTKContext * ctx, BKTKCompiler * compiler)
 {
 	BKInt res = 0;
-	BKTKTrack * track;
-	BKTKTrack ** trackRef;
 
 	if (BKArrayResize (&ctx -> tracks, compiler -> tracks.len)) {
 		printError (ctx, "Error: allocation error");
 		goto allocationError;
 	}
 
+	// move tracks
 	for (BKUSize i = 0; i < compiler -> tracks.len; i ++) {
-		trackRef = BKArrayItemAt (&compiler -> tracks, i);
-		track = *trackRef;
+		BKTKTrack ** trackRef = BKArrayItemAt (&compiler -> tracks, i);
+		BKTKTrack * track = *trackRef;
+
+		if (track) {
+			*(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i) = track;
+		}
+	}
+
+	BKArrayEmpty (&compiler -> tracks);
+
+	for (BKUSize i = 0; i < ctx -> tracks.len; i ++) {
+		BKTKTrack ** trackRef = BKArrayItemAt (&ctx -> tracks, i);
+		BKTKTrack * track = *trackRef;
 
 		if (!track) {
 			continue;
@@ -347,8 +369,6 @@ static BKInt BKTKContextCreateTracks (BKTKContext * ctx, BKTKCompiler * compiler
 		track -> interpreter.opcode = track -> byteCode.first -> data;
 		track -> interpreter.opcodePtr = track -> interpreter.opcode;
 		track -> ctx = ctx;
-
-		*(BKTKTrack **) BKArrayItemAt (&ctx -> tracks, i) = track;
 	}
 
 	cleanup: {
@@ -382,6 +402,8 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 		*(BKTKInstrument **) BKArrayItemAt (instruments, instrument -> object.index) = instrument;
 	}
 
+	BKHashTableEmpty (&compiler -> instruments);
+
 	BKHashTableIteratorInit (&itor, &compiler -> waveforms);
 
 	if (BKArrayResize (waveforms, BKHashTableSize (&compiler -> waveforms)) != 0) {
@@ -393,6 +415,8 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 		*(BKTKWaveform **) BKArrayItemAt (waveforms, waveform -> object.index) = waveform;
 	}
 
+	BKHashTableEmpty (&compiler -> waveforms);
+
 	if ((res = BKTKContextLoadSamples (ctx, compiler)) != 0) {
 		goto cleanup;
 	}
@@ -400,11 +424,6 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 	if ((res = BKTKContextCreateTracks (ctx, compiler)) != 0) {
 		goto cleanup;
 	}
-
-	BKArrayEmpty (&compiler -> tracks);
-	BKHashTableEmpty (&compiler -> instruments);
-	BKHashTableEmpty (&compiler -> waveforms);
-	BKHashTableEmpty (&compiler -> samples);
 
 	ctx -> info = compiler -> info;
 
