@@ -90,7 +90,6 @@ BKInt BKTKParserInit (BKTKParser * parser)
 	}
 
 	BKTKParserReset (parser);
-	parser -> escapedName = BK_STRING_INIT;
 
 	return 0;
 
@@ -368,6 +367,9 @@ void BKTKParserReset (BKTKParser * parser)
 	parser -> bufferLen = 0;
 	parser -> itemCount = 0;
 	parser -> argCount  = 0;
+
+	BKStringDispose (&parser -> escapedName);
+	parser -> escapedName = BK_STRING_INIT;
 
 	item = BKTKParserStackPushRoot (parser);
 	item -> node -> type = BKTKTypeGrpOpen;
