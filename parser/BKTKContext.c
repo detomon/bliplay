@@ -487,10 +487,11 @@ static BKEnum dividerCallback (BKCallbackInfo * info, BKTKTrack * track)
 		if ((interpreter -> object.flags & BKTKInterpreterFlagHasRepeated) == 0) {
 			if (interpreter -> lineno != track -> lineno) {
 				writeTimingLine (track);
-				track -> lineno = interpreter -> lineno;
 			}
 		}
 	}
+
+	track -> lineno = interpreter -> lineno;
 
 	return 0;
 }
