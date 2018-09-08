@@ -67,7 +67,7 @@ BKInt BKStringAppend (BKString * str, char const * chars)
 BKInt BKStringAppendLen (BKString * str, char const * chars, BKUSize len)
 {
 	if (str -> len + len >= str -> cap) {
-		if (BKStringReserve (str, len) != 0) {
+		if (BKStringReserve (str, len) != BK_SUCCESS) {
 			return BK_ALLOCATION_ERROR;
 		}
 	}
@@ -106,7 +106,7 @@ BKInt BKStringAppendFormatArgs (BKString * str, char const * format, va_list arg
 
 	va_copy (args2, args);
 
-	if ((res = BKStringReserve (str, 64)) != 0) {
+	if ((res = BKStringReserve (str, 64)) != BK_SUCCESS) {
 		goto error;
 	}
 
@@ -115,11 +115,11 @@ BKInt BKStringAppendFormatArgs (BKString * str, char const * format, va_list arg
 	length = vsnprintf ((char *) buf, cap, (char *) format, args2);
 
 	if (length < 0) {
-		res = -1;
+		res = BK_ALLOCATION_ERROR;
 		goto error;
 	}
 	else if (length >= cap) {
-		if ((res = BKStringReserve (str, length)) != 0) {
+		if ((res = BKStringReserve (str, length)) != BK_SUCCESS) {
 			goto error;
 		}
 
@@ -130,7 +130,7 @@ BKInt BKStringAppendFormatArgs (BKString * str, char const * format, va_list arg
 		length = vsnprintf ((char *) buf, cap, (char *) format, args2);
 
 		if (length < 0) {
-			res = -1;
+			res = BK_ALLOCATION_ERROR;
 			goto error;
 		}
 	}
@@ -192,7 +192,7 @@ BKInt BKStringReplaceInRange (BKString * str, BKString const * substr, BKUSize o
 	lenDiff = substr -> len - length;
 
 	if (lenDiff > 0) {
-		if ((res = BKStringReserve (str, lenDiff)) != 0) {
+		if ((res = BKStringReserve (str, lenDiff)) != BK_SUCCESS) {
 			return res;
 		}
 	}
@@ -208,18 +208,14 @@ BKInt BKStringReplaceInRange (BKString * str, BKString const * substr, BKUSize o
 
 BKInt BKStringDirname (BKString const * str, BKString * dirname)
 {
-	BKInt res = 0;
+	BKInt res = BK_SUCCESS;
 	uint8_t const * c;
 	BKUSize size;
 
 	if (!str -> len) {
 		BKStringEmpty (dirname);
 
-		if ((res = BKStringAppend (dirname, ".")) != 0) {
-			return res;
-		}
-
-		return 0;
+		return BKStringAppend (dirname, ".");
 	}
 
 	c = str -> str + str -> len - 1;
@@ -243,22 +239,24 @@ BKInt BKStringDirname (BKString const * str, BKString * dirname)
 	BKStringEmpty (dirname);
 
 	if (size) {
-		BKStringAppendLen (dirname, (char *) str -> str, size + 1);
+		res = BKStringAppendLen (dirname, (char *) str -> str, size + 1);
 	}
 	// dirname is empty
 	else {
-		BKStringAppendChar (dirname, (str -> str [0] == '/') ? '/' : '.');
+		res = BKStringAppendChar (dirname, (str -> str [0] == '/') ? '/' : '.');
 	}
 
-	return 0;
+	return res;
 }
 
 BKInt BKStringAppendPathSegment (BKString * str, BKString const * segment)
 {
+	BKInt res = BK_SUCCESS;
+
 	if (str -> len) {
 		if (str -> str [str -> len - 1] != '/') {
-			if (BKStringAppendChar (str, '/') != 0) {
-				return BK_ALLOCATION_ERROR;
+			if ((res = BKStringAppendChar (str, '/')) != BK_SUCCESS) {
+				return res;
 			}
 		}
 	}
@@ -268,10 +266,14 @@ BKInt BKStringAppendPathSegment (BKString * str, BKString const * segment)
 
 BKInt BKStringEscape (BKString * buffer, char const * str)
 {
+	BKInt res = BK_SUCCESS;
 	BKUSize len = strlen ((char *) str);
 
 	BKStringEmpty (buffer);
-	BKStringReserve (buffer, len + (len >> 2));
+
+	if ((res = BKStringReserve (buffer, len + (len >> 2))) != BK_SUCCESS) {
+		return res;
+	}
 
 	for (BKUSize i = 0; i < len; i ++) {
 		uint8_t c = str [i];
@@ -279,18 +281,18 @@ BKInt BKStringEscape (BKString * buffer, char const * str)
 
 		if (e) {
 			if (e > 1) {
-				BKStringAppendFormat (buffer, "\\%c", e);
+				return BKStringAppendFormat (buffer, "\\%c", e);
 			}
 			else {
-				BKStringAppendFormat (buffer, "\\x%02x", c);
+				return BKStringAppendFormat (buffer, "\\x%02x", c);
 			}
 		}
 		else {
-			BKStringAppendChar (buffer, c);
+			return BKStringAppendChar (buffer, c);
 		}
 	}
 
-	return 0;
+	return BK_SUCCESS;
 }
 
 char * BKStrdup (char const * str)
@@ -306,4 +308,19 @@ char * BKStrdup (char const * str)
 	}
 
 	return newStr;
+}
+
+BKUSize BKStrnlen (char const * str, BKUSize maxSize)
+{
+	BKUSize size = 0;
+
+	if (str) {
+		for (; size < maxSize; size++) {
+			if (!str[size]) {
+				break;
+			}
+		}
+	}
+
+	return size;
 }

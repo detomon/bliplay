@@ -80,7 +80,9 @@ extern BKInt BKStringReserve (BKString * str, BKUSize size);
  *
  * @param str The string to append a byte to.
  * @param c The byte to append.
- * @return 0 on success.
+ * @retval BK_SUCCESS
+ * @retval BK_ALLOCATION_ERROR
+
  */
 BK_INLINE BKInt BKStringAppendChar (BKString * str, uint8_t c);
 
@@ -232,20 +234,30 @@ BK_INLINE void BKStringEmpty (BKString * str);
  */
 extern char * BKStrdup (char const * str);
 
+/**
+ * Get length of NUL-terminated string.
+ *
+ * @param str The NUL-terminated string to get the length from.
+ * @return The length of the string or `maxSize`, whichever is smaller.
+ */
+extern BKUSize BKStrnlen (char const * str, BKUSize maxSize);
+
 // --- Inline implementations
 
 BK_INLINE BKInt BKStringAppendChar (BKString * str, uint8_t c)
 {
+	BKInt res = BK_SUCCESS;
+
 	if (str -> len + 1 >= str -> cap) {
-		if (BKStringReserve (str, 1) != 0) {
-			return -1;
+		if ((res = BKStringReserve (str, 1)) != 0) {
+			return res;
 		}
 	}
 
 	str -> str [str -> len ++] = c;
 	str -> str [str -> len] = '\0';
 
-	return 0;
+	return res;
 }
 
 BK_INLINE BKInt BKStringEscapeString (BKString * buffer, BKString const * str)
