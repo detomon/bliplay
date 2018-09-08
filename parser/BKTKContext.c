@@ -168,7 +168,7 @@ BKInt BKTKContextInit (BKTKContext * ctx, BKUInt flags)
 		return res;
 	}
 
-	ctx -> object.flags = flags;
+	ctx -> object.flags |= flags;
 	ctx -> instruments = BK_ARRAY_INIT (sizeof (BKTKInstrument *));
 	ctx -> waveforms = BK_ARRAY_INIT (sizeof (BKTKWaveform *));
 	ctx -> samples = BK_ARRAY_INIT (sizeof (BKTKSample *));
