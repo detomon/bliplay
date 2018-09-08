@@ -51,5 +51,5 @@ int main (int argc, char const * argv [])
 
 	BKDispose (fft);
 
-	return 0;
+	return RESULT_PASS;
 }

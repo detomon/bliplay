@@ -331,7 +331,7 @@ static void BKTKParserSetError (BKTKParser * parser, char const * msg, ...)
 	vsnprintf ((void *) parser -> buffer, parser -> bufferCap, msg, args);
 	va_end (args);
 
-	parser -> bufferLen = strnlen ((char *) parser -> buffer, parser -> bufferCap);
+	parser -> bufferLen = BKStrnlen ((char *) parser -> buffer, parser -> bufferCap);
 }
 
 static void BKTKParserFreeNodes (BKTKParserNode * node)

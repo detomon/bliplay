@@ -250,7 +250,7 @@ static void BKTKTokenizerSetError (BKTKTokenizer * tok, char const * msg, ...)
 	vsnprintf ((void *) tok -> buffer, tok -> bufferCap, msg, args);
 	va_end (args);
 
-	tok -> bufferLen = strnlen ((char *) tok -> buffer, tok -> bufferCap);
+	tok -> bufferLen = BKStrnlen ((char *) tok -> buffer, tok -> bufferCap);
 }
 
 static BKInt BKTKTokenizerPutCharsChunk (BKTKTokenizer * tok, uint8_t const * chars, BKUSize size, BKTKPutTokenFunc putToken, void * arg)

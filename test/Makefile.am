@@ -11,7 +11,11 @@ BK_LDADD = \
 	-lm
 
 check_PROGRAMS = \
+	string \
 	fft
+
+string_SOURCES = string.c
+string_LDADD = $(BK_LDADD)
 
 fft_SOURCES = fft.c
 fft_LDADD = $(BK_LDADD)
@@ -26,6 +30,7 @@ TESTS_ENVIRONMENT = \
 	export MallocGuardEdges=1;
 
 TESTS = \
+	string \
 	fft \
 	test-1.sh \
 	test-2.sh \
