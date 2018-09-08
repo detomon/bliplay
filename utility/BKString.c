@@ -281,18 +281,22 @@ BKInt BKStringEscape (BKString * buffer, char const * str)
 
 		if (e) {
 			if (e > 1) {
-				return BKStringAppendFormat (buffer, "\\%c", e);
+				res = BKStringAppendFormat (buffer, "\\%c", e);
 			}
 			else {
-				return BKStringAppendFormat (buffer, "\\x%02x", c);
+				res = BKStringAppendFormat (buffer, "\\x%02x", c);
 			}
 		}
 		else {
-			return BKStringAppendChar (buffer, c);
+			res = BKStringAppendChar (buffer, c);
+		}
+
+		if (res != BK_SUCCESS) {
+			break;
 		}
 	}
 
-	return BK_SUCCESS;
+	return res;
 }
 
 char * BKStrdup (char const * str)
