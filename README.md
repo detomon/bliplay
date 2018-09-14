@@ -3,8 +3,8 @@
 [![Build Status](https://api.travis-ci.org/detomon/bliplay.svg?branch=master)](https://travis-ci.org/detomon/bliplay)
 
 **bliplay** is a plaintext-based chiptune sound player.
-See the interactive player at <https://play.blipkit.audio> for examples and syntax description.
-Some example files also are located in [examples](examples).
+
+See the [wiki](https://github.com/detomon/bliplay/wiki) for the syntax description or the [interactive editor](https://detomon.github.io/bliplay-wasm) to test your code. Some example files also are located in [examples](examples).
 
 1. [Checkout](#1-checkout)
 2. [Install SDL](#2-install-sdl-optional)
