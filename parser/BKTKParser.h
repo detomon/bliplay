@@ -109,7 +109,7 @@ struct BKTKParser
 	BKUSize          bufferCap;
 	uint8_t        * buffer;
 	BKUSize          argCount;
-	BKUSize          argLengthsCapacity;
+	BKUSize          argCapacity;
 	BKUSize        * argCursors;
 	BKUSize        * argLengths;
 	BKTKType       * argTypes;

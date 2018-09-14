@@ -56,26 +56,26 @@ BKInt BKTKParserInit (BKTKParser * parser)
 		goto error;
 	}
 
-	parser -> argLengthsCapacity = ARGS_LEN_INIT_SIZE;
-	parser -> argCursors = malloc (parser -> argLengthsCapacity * sizeof (*parser -> argCursors));
+	parser -> argCapacity = ARGS_LEN_INIT_SIZE;
+	parser -> argCursors = malloc (parser -> argCapacity * sizeof (*parser -> argCursors));
 
 	if (!parser -> argCursors) {
 		goto error;
 	}
 
-	parser -> argLengths = malloc (parser -> argLengthsCapacity * sizeof (*parser -> argLengths));
+	parser -> argLengths = malloc (parser -> argCapacity * sizeof (*parser -> argLengths));
 
 	if (!parser -> argLengths) {
 		goto error;
 	}
 
-	parser -> argTypes = malloc (parser -> argLengthsCapacity * sizeof (*parser -> argTypes));
+	parser -> argTypes = malloc (parser -> argCapacity * sizeof (*parser -> argTypes));
 
 	if (!parser -> argTypes) {
 		goto error;
 	}
 
-	parser -> argOffsets = malloc (parser -> argLengthsCapacity * sizeof (*parser -> argOffsets));
+	parser -> argOffsets = malloc (parser -> argCapacity * sizeof (*parser -> argOffsets));
 
 	if (!parser -> argOffsets) {
 		goto error;
@@ -200,19 +200,12 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 	BKUSize * newLengths;
 	BKUSize * newArgCursors;
 	BKTKType * newArgTypes;
+	BKTKOffset * newArgOffsets;
 	BKUSize newCapacity;
 	BKUSize const minAddCap = 16;
 
-	if (parser -> argCount + minAddCap >= parser -> argLengthsCapacity) {
+	if (parser -> argCount + minAddCap >= parser -> argCapacity) {
 		newCapacity = BKNextPow2 (parser -> argCount + minAddCap);
-		newLengths = realloc (parser -> argLengths, newCapacity * sizeof (*newLengths));
-
-		if (!newLengths) {
-			return -1;
-		}
-
-		parser -> argLengths = newLengths;
-		parser -> argLengthsCapacity = newCapacity;
 
 		newArgCursors = realloc (parser -> argCursors, newCapacity * sizeof (*newArgCursors));
 
@@ -222,6 +215,14 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 
 		parser -> argCursors = newArgCursors;
 
+		newLengths = realloc (parser -> argLengths, newCapacity * sizeof (*newLengths));
+
+		if (!newLengths) {
+			return -1;
+		}
+
+		parser -> argLengths = newLengths;
+
 		newArgTypes = realloc (parser -> argTypes, newCapacity * sizeof (*newArgTypes));
 
 		if (!newArgTypes) {
@@ -229,6 +230,16 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 		}
 
 		parser -> argTypes = newArgTypes;
+
+		newArgOffsets = realloc (parser -> argOffsets, newCapacity * sizeof (*newArgOffsets));
+
+		if (!newArgOffsets) {
+			return -1;
+		}
+
+		parser -> argOffsets = newArgOffsets;
+
+		parser -> argCapacity = newCapacity;
 	}
 
 	return 0;
