@@ -96,7 +96,7 @@ BKInt BKTKParserInit (BKTKParser * parser)
 	error: {
 		BKDispose (parser);
 
-		return -1;
+		return BK_ALLOCATION_ERROR;
 	}
 }
 
@@ -210,7 +210,7 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 		newArgCursors = realloc (parser -> argCursors, newCapacity * sizeof (*newArgCursors));
 
 		if (!newArgCursors) {
-			return -1;
+			return BK_ALLOCATION_ERROR;
 		}
 
 		parser -> argCursors = newArgCursors;
@@ -218,7 +218,7 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 		newLengths = realloc (parser -> argLengths, newCapacity * sizeof (*newLengths));
 
 		if (!newLengths) {
-			return -1;
+			return BK_ALLOCATION_ERROR;
 		}
 
 		parser -> argLengths = newLengths;
@@ -226,7 +226,7 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 		newArgTypes = realloc (parser -> argTypes, newCapacity * sizeof (*newArgTypes));
 
 		if (!newArgTypes) {
-			return -1;
+			return BK_ALLOCATION_ERROR;
 		}
 
 		parser -> argTypes = newArgTypes;
@@ -234,7 +234,7 @@ static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 		newArgOffsets = realloc (parser -> argOffsets, newCapacity * sizeof (*newArgOffsets));
 
 		if (!newArgOffsets) {
-			return -1;
+			return BK_ALLOCATION_ERROR;
 		}
 
 		parser -> argOffsets = newArgOffsets;
@@ -528,7 +528,7 @@ static BKInt BKTKParserEndCommand (BKTKParser * parser)
 		}
 
 		if (!buffer) {
-			return -1;
+			return BK_ALLOCATION_ERROR;
 		}
 
 		args       = (void *) &buffer [bufferSize];
