@@ -1,3 +1,9 @@
+Changes in bliplay 3.1.7:
+  Release date: 2018-09-15
+
+* Use new BlipKit version 0.17.2
+* Fix parser error
+
 Changes in bliplay 3.1.6:
   Release date: 2018-09-14
 

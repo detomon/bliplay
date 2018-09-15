@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([bliplay],[3.1.6],[simon@monoxid.net],[bliplay],[https://play.blipkit.audio])
+AC_INIT([bliplay],[3.1.7],[simon@monoxid.net],[bliplay],[https://play.blipkit.audio])
 
 AC_CONFIG_SRCDIR([bliplay/bliplay.c])
 AC_CONFIG_HEADER([config.h])
