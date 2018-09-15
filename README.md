@@ -4,7 +4,7 @@
 
 **bliplay** is a plaintext-based chiptune sound player.
 
-Check the [syntax description](FORMAT.md) and use the [interactive editor](https://detomon.github.io/bliplay-wasm) to test your code. Some example files also are located in [examples](examples).
+Check the [syntax description](SYNTAX.md) and use the [interactive editor](https://detomon.github.io/bliplay-wasm) to test your code. Some example files also are located in [examples](examples).
 
 1. [Checkout](#1-checkout)
 2. [Install SDL](#2-install-sdl-optional)
