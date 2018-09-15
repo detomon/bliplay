@@ -428,7 +428,7 @@ static BKInt BKTKWriterWriteCommand (BKTKWriter * writer, BKTKParserNode const *
 			return res;
 		}
 
-		if ((res = BKTKWriterWriteEscaped (writer, &node -> args [i], node -> argTypes [i])) != 0) {
+		if ((res = BKTKWriterWriteEscaped (writer, &node -> argStrings [i], node -> args [i].type)) != 0) {
 			return res;
 		}
 	}

@@ -366,7 +366,7 @@ static BKInt parseNote (BKString const * string, BKInt * outNote, BKInt * outPit
 	};
 
 	BKStringEmpty (&note);
-	res = sscanf ((char *) string -> str, "%2[a-z#]%zn%d%d", note.str, &note.len, &octave, &pitch); // d#3[+-p] => "d#", 3, p
+	res = sscanf ((char *) string -> str, "%2[a-z#]%n%d%d", note.str, &note.len, &octave, &pitch); // d#3[+-p] => "d#", 3, p
 
 	if (keyvalLookup (noteNames, NUM_NOTE_NAMES, &note, & value, NULL)) {
 		value += octave * 12;
@@ -464,7 +464,7 @@ static BKString const * nodeArgString (BKTKParserNode const * node, BKUSize offs
 		return &empty;
 	}
 
-	return &node -> args [offset];
+	return &node -> argStrings [offset];
 }
 
 BK_INLINE BKInt value2Volume (BKInt value)

@@ -30,7 +30,6 @@
 #define ARGS_POOL_SEGMENT_SIZE 64
 
 #define PTR_MASK (sizeof (void *) - 1)
-#define SIZE_ROUND_UP(size) (((size) + PTR_MASK) & ~PTR_MASK)
 
 extern BKClass const BKTKParserClass;
 
@@ -57,27 +56,9 @@ BKInt BKTKParserInit (BKTKParser * parser)
 	}
 
 	parser -> argCapacity = ARGS_LEN_INIT_SIZE;
-	parser -> argCursors = malloc (parser -> argCapacity * sizeof (*parser -> argCursors));
+	parser -> args = malloc (parser -> argCapacity * sizeof (*parser -> args));
 
-	if (!parser -> argCursors) {
-		goto error;
-	}
-
-	parser -> argLengths = malloc (parser -> argCapacity * sizeof (*parser -> argLengths));
-
-	if (!parser -> argLengths) {
-		goto error;
-	}
-
-	parser -> argTypes = malloc (parser -> argCapacity * sizeof (*parser -> argTypes));
-
-	if (!parser -> argTypes) {
-		goto error;
-	}
-
-	parser -> argOffsets = malloc (parser -> argCapacity * sizeof (*parser -> argOffsets));
-
-	if (!parser -> argOffsets) {
+	if (!parser -> args) {
 		goto error;
 	}
 
@@ -139,17 +120,14 @@ static void BKTKParserNodeTransferArgs (BKTKParserNode * target, BKTKParserNode 
 	target -> name = source -> name;
 	target -> argCount = source -> argCount;
 	target -> args = source -> args;
-	target -> argTypes = source -> argTypes;
+	target -> argStrings = source -> argStrings;
 	target -> offset = source -> offset;
-	target -> argOffsets = source -> argOffsets;
 	target -> type = source -> type;
 
 	source -> name = BK_STRING_INIT;
 	source -> argCount = 0;
 	source -> args = NULL;
-	source -> argTypes = NULL;
-	source -> offset = source -> offset;
-	source -> argOffsets = NULL;
+	source -> argStrings = NULL;
 }
 
 static BKInt BKTKParserBufferEnsureSpace (BKTKParser * parser, BKUSize addSize)
@@ -197,48 +175,17 @@ static BKInt BKTKParserStackEnsureSpace (BKTKParser * parser)
 
 static BKInt BKTKParserArgsEnsureSpace (BKTKParser * parser)
 {
-	BKUSize * newLengths;
-	BKUSize * newArgCursors;
-	BKTKType * newArgTypes;
-	BKTKOffset * newArgOffsets;
-	BKUSize newCapacity;
 	BKUSize const minAddCap = 16;
 
 	if (parser -> argCount + minAddCap >= parser -> argCapacity) {
-		newCapacity = BKNextPow2 (parser -> argCount + minAddCap);
+		BKUSize newCapacity = BKNextPow2 (parser -> argCount + minAddCap);
+		BKTKParserArg * args = realloc (parser -> args, newCapacity * sizeof (*args));
 
-		newArgCursors = realloc (parser -> argCursors, newCapacity * sizeof (*newArgCursors));
-
-		if (!newArgCursors) {
+		if (!args) {
 			return BK_ALLOCATION_ERROR;
 		}
 
-		parser -> argCursors = newArgCursors;
-
-		newLengths = realloc (parser -> argLengths, newCapacity * sizeof (*newLengths));
-
-		if (!newLengths) {
-			return BK_ALLOCATION_ERROR;
-		}
-
-		parser -> argLengths = newLengths;
-
-		newArgTypes = realloc (parser -> argTypes, newCapacity * sizeof (*newArgTypes));
-
-		if (!newArgTypes) {
-			return BK_ALLOCATION_ERROR;
-		}
-
-		parser -> argTypes = newArgTypes;
-
-		newArgOffsets = realloc (parser -> argOffsets, newCapacity * sizeof (*newArgOffsets));
-
-		if (!newArgOffsets) {
-			return BK_ALLOCATION_ERROR;
-		}
-
-		parser -> argOffsets = newArgOffsets;
-
+		parser -> args = args;
 		parser -> argCapacity = newCapacity;
 	}
 
@@ -401,9 +348,7 @@ static void BKTKParserDispose (BKTKParser * parser)
 
 	free (parser -> stack);
 	free (parser -> buffer);
-	free (parser -> argLengths);
-	free (parser -> argCursors);
-	free (parser -> argTypes);
+	free (parser -> args);
 
 	BKBlockPoolDispose (&parser -> blockPool);
 	BKBlockPoolDispose (&parser -> argsPool);
@@ -445,11 +390,6 @@ static void BKTKParserEndBuffer (BKTKParser * parser)
 {
 	// terminate buffer
 	parser -> buffer [parser -> bufferLen ++] = '\0';
-
-	// align next buffer segment to pointer size
-	while (parser -> bufferLen & PTR_MASK) {
-		parser -> buffer [parser -> bufferLen ++] = '\0';
-	}
 }
 
 /**
@@ -457,11 +397,12 @@ static void BKTKParserEndBuffer (BKTKParser * parser)
  */
 static void BKTKParserPushArg (BKTKParser * parser, BKTKToken const * token)
 {
-	parser -> argCursors [parser -> argCount] = parser -> bufferLen;
-	parser -> argLengths [parser -> argCount] = token -> dataLen;
-	parser -> argTypes [parser -> argCount]   = token -> type;
-	parser -> argOffsets [parser -> argCount] = token -> offset;
-	parser -> argCount ++;
+	BKTKParserArg * arg = &parser -> args [parser -> argCount ++];
+
+	arg -> cursor = parser -> bufferLen;
+	arg -> length = token -> dataLen;
+	arg -> type = token -> type;
+	arg -> offset = token -> offset;
 
 	memcpy (&parser -> buffer [parser -> bufferLen], token -> data, token -> dataLen);
 	parser -> bufferLen += token -> dataLen;
@@ -496,27 +437,17 @@ static void BKTKParserBeginCmd (BKTKParser * parser, BKTKToken const * token)
  */
 static BKInt BKTKParserEndCommand (BKTKParser * parser)
 {
-	uint8_t * buffer;
-	BKString * args;
-	BKTKType * argTypes;
-	BKTKOffset * argOffsets;
-	BKUSize bufferSize, argsSize, argTypesSize, argOffsetsSize;
-	BKTKParserNode * node;
-	BKUSize size;
-
 	if (!parser -> argCount) {
 		return 0;
 	}
 
-	node = BKTKParserStackLast (parser) -> node;
+	BKTKParserNode * node = BKTKParserStackLast (parser) -> node;
 
 	if (parser -> argCount) {
-		bufferSize     = SIZE_ROUND_UP (parser -> bufferLen);
-		argsSize       = (parser -> argCount - 1) * sizeof (BKString);
-		argTypesSize   = (parser -> argCount - 1) * sizeof (*parser -> argTypes);
-		argOffsetsSize = (parser -> argCount - 1) * sizeof (*parser -> argOffsets);
+		uint8_t * buffer;
 
-		size = bufferSize + argsSize + argTypesSize + argOffsetsSize;
+		BKUSize size = (parser -> argCount - 1) * (sizeof (BKTKParserArg) + sizeof (BKString))
+			+ parser -> bufferLen;
 
 		// most commands require less than ARGS_POOL_SEGMENT_SIZE bytes
 		if (size <= ARGS_POOL_SEGMENT_SIZE) {
@@ -531,40 +462,39 @@ static BKInt BKTKParserEndCommand (BKTKParser * parser)
 			return BK_ALLOCATION_ERROR;
 		}
 
-		args       = (void *) &buffer [bufferSize];
-		argTypes   = (void *) &args [parser -> argCount - 1];
-		argOffsets = (void *) &argTypes [parser -> argCount - 1];
+		BKTKParserArg * args = (void *) buffer;
+		BKString * argStrings = (void *) &args [parser -> argCount - 1];
+		buffer = (void *) &argStrings [parser -> argCount - 1];
 
-		memcpy (buffer,     parser -> buffer,          bufferSize);
-		memcpy (argTypes,   &parser -> argTypes [1],   argTypesSize);
-		memcpy (argOffsets, &parser -> argOffsets [1], argOffsetsSize);
+		memcpy (buffer, parser -> buffer, parser -> bufferLen);
+		memcpy (args, &parser -> args [1], (parser -> argCount - 1) * sizeof (BKTKParserArg));
 
 		for (BKUSize i = 1; i < parser -> argCount; i ++) {
-			args [i - 1] = (BKString) {
-				.str = &buffer [parser -> argCursors [i]],
-				.len = parser -> argLengths [i],
-				.cap = parser -> argLengths [i],
+			argStrings [i - 1] = (BKString) {
+				.str = &buffer [parser -> args [i].cursor],
+				.len = parser -> args [i].length,
 			};
 		}
 
 		if (parser -> argCount > 1) {
-			node -> args       = args;
-			node -> argTypes   = argTypes;
-			node -> argOffsets = argOffsets;
+			node -> args = args;
 		}
+
+		BKTKParserArg * firstArg = &parser -> args [0];
 
 		node -> name = (BKString) {
 			.str = buffer,
-			.len = parser -> argLengths [0],
-			.cap = parser -> argLengths [0],
+			.len = firstArg -> length,
 		};
 
-		node -> type   = parser -> argTypes [0];
-		node -> offset = parser -> argOffsets [0];
+		node -> type       = firstArg -> type;
+		node -> offset     = firstArg -> offset;
+		node -> argStrings = argStrings;
 	}
 
 	node -> argCount = parser -> argCount - 1;
 
+	// reset argument buffer
 	parser -> argCount = 0;
 	parser -> bufferLen = 0;
 	parser -> buffer [0] = '\0';

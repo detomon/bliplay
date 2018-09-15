@@ -41,8 +41,8 @@ typedef struct BKString BKString;
 struct BKString
 {
 	uint8_t * str; ///< The bytes including the terminating NUL-byte.
-	BKUSize   len; ///< The number of bytes.
-	BKUSize   cap; ///< The string capacity.
+	BKUInt    len; ///< The number of bytes.
+	BKUInt    cap; ///< The string capacity.
 };
 
 /**

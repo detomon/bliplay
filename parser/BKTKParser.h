@@ -31,6 +31,7 @@ typedef enum BKTKParserState BKTKParserState;
 typedef struct BKTKParser BKTKParser;
 typedef struct BKTKParserNode BKTKParserNode;
 typedef struct BKTKParserItem BKTKParserItem;
+typedef struct BKTKParserArg BKTKParserArg;
 
 /**
  * Defines the parsers internal state
@@ -79,11 +80,10 @@ struct BKTKParserNode
 {
 	BKUInt           flags;
 	BKString         name;
-	BKString       * args;
 	BKUSize          argCount;
-	BKTKType       * argTypes;
+	BKTKParserArg  * args;
+	BKString       * argStrings;
 	BKTKOffset       offset;
-	BKTKOffset     * argOffsets;
 	BKTKType         type;
 	BKTKParserNode * nextNode;
 	BKTKParserNode * subNode;
@@ -98,6 +98,14 @@ struct BKTKParserItem
 	BKUSize          itemCount;
 };
 
+struct BKTKParserArg
+{
+	BKUInt     cursor;
+	BKUInt     length;
+	BKTKType   type;
+	BKTKOffset offset;
+};
+
 struct BKTKParser
 {
 	BKObject         object;
@@ -110,10 +118,7 @@ struct BKTKParser
 	uint8_t        * buffer;
 	BKUSize          argCount;
 	BKUSize          argCapacity;
-	BKUSize        * argCursors;
-	BKUSize        * argLengths;
-	BKTKType       * argTypes;
-	BKTKOffset     * argOffsets;
+	BKTKParserArg  * args;
 	BKTKParserNode   rootNode;
 	BKTKParserNode * freeNodes;
 	BKTKParserState  state;
