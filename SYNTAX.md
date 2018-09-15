@@ -30,6 +30,61 @@ Comments are introduced with `%` and tell the parser to ignore content until the
 a:c4;s:4;r % a comment at the end
 ```
 
+## Table of Contents
+
+- [Attack Command `a`](#attack-command-a)
+    - [Arpeggio Sequences](#arpeggio-sequences)
+    - [Fine-tuning Notes](#fine-tuning-notes)
+- [Step Command `s`](#step-command-s)
+- [Step Ticks Command `st`](#step-ticks-command-st)
+    - [Calculating BPM](#calculating-bpm)
+- [Waveform Command `w`](#waveform-command-w)
+    - [Square Wave](#square-wave)
+    - [Triangle Wave](#triangle-wave)
+    - [Sawtooth Wave](#sawtooth-wave)
+    - [Noise](#noise)
+    - [Sine Wave](#sine-wave)
+- [Duty Cycle Command `dc`](#duty-cycle-command-dc)
+- [Release Command `r`](#release-command-r)
+- [Mute Command `m`](#mute-command-m)
+- [Volume Command `v`](#volume-command-v)
+- [Panning Command `p`](#panning-command-p)
+- [Pitch Command `pt`](#pitch-command-pt)
+- [Effect Command `e`](#effect-command-e)
+    - [Step Fractions](#step-fractions)
+    - [Volume Slide Effect `e:vs`](#volume-slide-effect-evs)
+    - [Panning Slide Effect `e:ps`](#panning-slide-effect-eps)
+    - [Portamento Effect `e:pr`](#portamento-effect-epr)
+    - [Tremolo Effect `e:tr`](#tremolo-effect-etr)
+        - [Sliding Tremolo Values](#sliding-tremolo-values)
+    - [Vibrato Effect `e:vb`](#vibrato-effect-evb)
+        - [Sliding Vibrato Values](#sliding-vibrato-values)
+- [Attack Ticks Command `at`](#attack-ticks-command-at)
+- [Release Ticks Command `rt`](#release-ticks-command-rt)
+- [Mute Ticks Command `mt`](#mute-ticks-command-mt)
+- [Phase Wrap Command `pw`](#phase-wrap-command-pw)
+- [Master Volume Command `vm`](#master-volume-command-vm)
+- [Tick Rate Command `tr`](#tick-rate-command-tr)
+- [Command Groups](#command-groups)
+    - [Calling Group from other Tracks](#calling-group-from-other-tracks)
+- [Tracks](#tracks)
+    - [Global Track](#global-track)
+- [Custom Waveforms](#custom-waveforms)
+- [Instrument Command `i`](#instrument-command-i)
+- [Instruments](#instruments)
+    - [Sequence Phases](#sequence-phases)
+    - [Interpolated Sequences](#interpolated-sequences)
+    - [Pitch Sequence](#pitch-sequence)
+    - [Volume Sequence](#volume-sequence)
+    - [Panning Sequence](#panning-sequence)
+    - [Duty Cycle Sequence](#duty-cycle-sequence)
+- [Sample Command `d`](#sample-command-d)
+- [Sample Repeat Command `dr`](#sample-repeat-command-dr)
+- [Sample Sustain Range Command `ds`](#sample-sustain-range-command-ds)
+- [Sample Range Command `dn`](#sample-range-command-dn)
+    - [Reversing Samples](#reversing-samples)
+- [Samples](#samples)
+
 ## Attack Command `a`
 
 ```blip
@@ -600,7 +655,7 @@ a:c4;s:8;r
 e:tr
 ```
 
-#### Sliding to new values
+#### Sliding Tremolo Values
 
 ```
 e:tr:<ticks>:<amount>:<slide ticks>
@@ -648,7 +703,7 @@ a:c4;s:8;r
 e:tr
 ```
 
-#### Sliding to new values
+#### Sliding Vibrato Values
 
 ```
 e:vb:<ticks>:<amount>:<slide ticks>
@@ -799,21 +854,21 @@ Groups can be *called* like functions with `g:<group>` and can call other groups
 ```blip
 % define group 0
 [grp:0
-	a:c4;s:1;r;s:1
-	a:a#3;s:1;r;s:1
-	a:g3;s:2;r;s:2
-	a:f3;s:3;r;s:1
+    a:c4;s:1;r;s:1
+    a:a#3;s:1;r;s:1
+    a:g3;s:2;r;s:2
+    a:f3;s:3;r;s:1
 
-	% call group 1
-	g:1
+    % call group 1
+    g:1
 ]
 
 % define group 1
 [grp:1
-	a:g3;s:1;r;s:1
-	a:d#4;s:1;r;s:1
-	a:f3;s:2;r;s:2
-	a:g3;s:3;r;s:1
+    a:g3;s:1;r;s:1
+    a:d#4;s:1;r;s:1
+    a:f3;s:2;r;s:2
+    a:g3;s:3;r;s:1
 ]
 
 % call group 0
@@ -856,32 +911,32 @@ Tracks are defined with `track:<wave>` and enclose commands (including [groups](
 ```blip
 % define track with square wave
 [track:square
-	[grp:0
-		a:c4;s:1;r;s:1
-		a:a#3;s:1;r;s:1
-		a:g3;s:2;r;s:2
-		a:f3;s:3;r;s:1
-	]
+    [grp:0
+        a:c4;s:1;r;s:1
+        a:a#3;s:1;r;s:1
+        a:g3;s:2;r;s:2
+        a:f3;s:3;r;s:1
+    ]
 
-	% set effect
-	e:vb:1/2:20
+    % set effect
+    e:vb:1/2:20
 
-	% play group 0
-	g:0
+    % play group 0
+    g:0
 
-	a:g3;s:1;r;s:1
-	a:d#4;s:1;r;s:1
-	a:f3;s:2;r;s:2
-	a:g3;s:3;r;s:1
+    a:g3;s:1;r;s:1
+    a:d#4;s:1;r;s:1
+    a:f3;s:2;r;s:2
+    a:g3;s:3;r;s:1
 ]
 
 % define track with triangle wave
 [track:triangle
-	% set pitch
-	pt:-2400
+    % set pitch
+    pt:-2400
 
-	% play group 0 from track 0 (the above)
-	g:0t0
+    % play group 0 from track 0 (the above)
+    g:0t0
 ]
 ```
 
@@ -906,9 +961,9 @@ The amplitude phases are defined inside the square brackets using the command `s
 ```blip
 % define waveform named 'aah'
 [wave:aah
-	% define amplitude phases
-	s:-255:-163:-154:-100:45:127:9:-163:-163:-27:63:72:63:9:-100:
-		-154:-127:-91:-91:-91:-91:-127:-154:-100:45:127:9:-163:-163:9:127:45
+    % define amplitude phases
+    s:-255:-163:-154:-100:45:127:9:-163:-163:-27:63:72:63:9:-100:
+        -154:-127:-91:-91:-91:-91:-127:-154:-100:45:127:9:-163:-163:9:127:45
 ]
 ```
 
@@ -984,13 +1039,13 @@ An instrument definition using a pitch and volume sequence may look like this:
 ```blip
 % define instrument 'lead1'
 [instr:lead1
-	% define pitch sequence with all phases
-	% { attack }{ sustain }{ release }
-	a:1200:700:<:0:-1200:>:0:0:0:1200
+    % define pitch sequence with all phases
+    % { attack }{ sustain }{ release }
+    a:1200:700:<:0:-1200:>:0:0:0:1200
 
-	% define volume sequence with only an attack phase
-	% {        attack         }
-	v:255:192:178:127:64:127:64
+    % define volume sequence with only an attack phase
+    % {        attack         }
+    v:255:192:178:127:64:127:64
 ]
 ```
 
@@ -1044,8 +1099,8 @@ A working example:
 ```blip
 % define instrument 'alarm'
 [instr:alarm
-	% define "alarm"-like pitch sequence
-	anv:0:0:<:48:400:48:0:>:96:-2400
+    % define "alarm"-like pitch sequence
+    anv:0:0:<:48:400:48:0:>:96:-2400
 ]
 
 % set instrument 'alarm'
@@ -1070,15 +1125,15 @@ This sequence changes the current pitch by a certain amount. The values are defi
 
 ```blip
 [instr:lead
-	% define pitch sequence
-	a:1200:<:0:300:700:>:-1200:-1200
+    % define pitch sequence
+    a:1200:<:0:300:700:>:-1200:-1200
 ]
 ```
 
 ```blip
 [instr:lead
-	% define pitch envelope
-	anv:24:1200:<:48:0:48:300:48:700:>:96:-1200
+    % define pitch envelope
+    anv:24:1200:<:48:0:48:300:48:700:>:96:-1200
 ]
 ```
 
@@ -1096,15 +1151,15 @@ This sequence changes the current volume. The values are multiplied with the cur
 
 ```blip
 [instr:lead
-	% define volume sequence
-	v:64:127:192:<:255:127:>:127:64:0:0:0:64:0:64:0
+    % define volume sequence
+    v:64:127:192:<:255:127:>:127:64:0:0:0:64:0:64:0
 ]
 ```
 
 ```blip
 [instr:lead
-	% define volume envelope
-	vnv:12:192:<:48:255:48:127:>:48:0:72:0:12:64:12:64:12:0
+    % define volume envelope
+    vnv:12:192:<:48:255:48:127:>:48:0:72:0:12:64:12:64:12:0
 ]
 ```
 
@@ -1112,11 +1167,11 @@ There is a convenient notation of the ADSR envelope using the syntax `adsr:<atta
 
 ```blip
 [instr:lead
-	% define ADSR envelope
-	adsr:12:8:192:96
+    % define ADSR envelope
+    adsr:12:8:192:96
 
-	% this corresponds to this envelope
-	vnv:12:255:8:192:<:1:192:>:96:0
+    % this corresponds to this envelope
+    vnv:12:255:8:192:<:1:192:>:96:0
 ]
 ```
 
@@ -1133,15 +1188,15 @@ This sequence changes the current panning value. The values are added to the cur
 
 ```blip
 [instr:lead
-	% define panning sequence
-	p:0:<:-32:-64:-32:0:32:64:32:0:>:0:0:16:-16:0
+    % define panning sequence
+    p:0:<:-32:-64:-32:0:32:64:32:0:>:0:0:16:-16:0
 ]
 ```
 
 ```blip
 [instr:lead
-	% define panning envelope
-	pnv:0:0:<:24:-64:24:64:>:96:-255
+    % define panning envelope
+    pnv:0:0:<:24:-64:24:64:>:96:-255
 ]
 ```
 
@@ -1158,15 +1213,15 @@ This sequence overrides the current duty cycle value and is only appplied when t
 
 ```blip
 [instr:lead
-	% define duty cycle sequence
-	dc:1:2:4:6:<:8:5:3:2:1:>:0:0:0:1
+    % define duty cycle sequence
+    dc:1:2:4:6:<:8:5:3:2:1:>:0:0:0:1
 ]
 ```
 
 ```blip
 [instr:lead
-	% define panning envelope
-	dcnv:0:1:<:48:1:48:8:>:96:1
+    % define panning envelope
+    dcnv:0:1:<:48:1:48:8:>:96:1
 ]
 ```
 
@@ -1291,8 +1346,8 @@ The command `load:<type>:<file>` loads an audio file. Where `<type>` is `wav` an
 ```blip
 % define sample 'bass'
 [sample:bass
-	% load wave from file 'bass.wav'
-	load:wav:bass.wav
+    % load wave from file 'bass.wav'
+    load:wav:bass.wav
 ]
 
 % enable sample 'bass'
@@ -1310,13 +1365,13 @@ The commands [`dr`](#sample-repeat-command-dr), [`ds`](#sample-sustain-range-com
 ```blip
 % define sample 'lead'
 [sample:lead
-	% load wave from file 'lead.wav'
-	load:wav:lead.wav
-	% set sample range
-	dn:4125:78964
-	% set sample sustain range
-	ds:23567:32342
-	% set sample repeat mode
-	dr:pal
+    % load wave from file 'lead.wav'
+    load:wav:lead.wav
+    % set sample range
+    dn:4125:78964
+    % set sample sustain range
+    ds:23567:32342
+    % set sample repeat mode
+    dr:pal
 ]
 ```
