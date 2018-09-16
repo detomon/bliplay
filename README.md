@@ -2,9 +2,40 @@
 
 [![Build Status](https://api.travis-ci.org/detomon/bliplay.svg?branch=master)](https://travis-ci.org/detomon/bliplay)
 
-**bliplay** is a plaintext-based chiptune sound player.
+**bliplay** is a plaintext-based chiptunes sound player.
 
-Check the [syntax description](SYNTAX.md) and use the [interactive editor](https://detomon.github.io/bliplay-wasm) to test your code. Some example files also are located in [examples](examples).
+Check out the [syntax description](SYNTAX.md). Some example files are located in [examples](examples).
+
+Alternatively, you can use the [web editor](https://detomon.github.io/bliplay-wasm) to run your code.
+
+```blip
+% set speed
+st:18
+
+% set waveform
+w:square
+
+% set duty cycle of square wave
+dc:8
+
+% set note C on octave 5
+a:c5
+
+% wait 1 step
+s:1
+
+% set note C on octave 6
+a:c6
+
+% enable volume slide effect
+e:vs:9/1; v:0
+
+% wait 9 steps
+s:9
+
+% release note
+r
+```
 
 1. [Checkout](#1-checkout)
 2. [Install SDL](#2-install-sdl-optional)
@@ -94,7 +125,7 @@ bliplay/bliplay -o killer-squid.wav examples/killer-squid.blip
 
 Script which uses a spreadsheet in order to render and play the files dynamically. By [@mgarcia-org](https://github.com/mgarcia-org/).
 
-### [bliplay-wasm](https://github.com/detomon/bliplay-wasm) (WIP)
+### [bliplay-wasm](https://github.com/detomon/bliplay-wasm)
 
 A WebAssembly implementation of the player.
 

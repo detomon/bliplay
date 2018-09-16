@@ -1,6 +1,6 @@
 # `.blip` File Format
 
-The `.blip` file format is a plain-text format intended to create chiptunes music. It consists of commands which are compiled and then executed by an interpreter. For example, the code for generating a tone would look like this:
+The `.blip` file format is a plaintext format intended to create chiptunes music. It consists of commands which are compiled and then executed by an interpreter. For example, the code for generating a tone would look like this:
 
 ```blip
 a:c4
@@ -66,7 +66,7 @@ a:c4;s:4;r % a comment at the end
 - [Master Volume Command `vm`](#master-volume-command-vm)
 - [Tick Rate Command `tr`](#tick-rate-command-tr)
 - [Command Groups](#command-groups)
-    - [Calling Group from other Tracks](#calling-group-from-other-tracks)
+    - [Calling Groups from other Tracks](#calling-group-from-other-tracks)
 - [Tracks](#tracks)
     - [Global Track](#global-track)
 - [Custom Waveforms](#custom-waveforms)
@@ -245,13 +245,13 @@ a:c1;s:4;r;s:4
 
 The followng table lists the default waveforms:
 
-| Waveform | Names | Master Volume |
+| Waveform | Names | [Master Volume](#master-volume-command-vm) |
 |---|---|---|
-| Square | `square`, `sqr` | 0.15 (38) |
-| Triangle | `triangle`, `tri` | 0.3 (76) |
-| Sawtooth | `sawtooth`, `was` | 0.15 (38)  |
-| Noise | `noise`, `noi` | 0.15 (38) |
-| Sine | `sine`, `sin` | 0.3 (76) |
+| [Square](#square-wave) | `square`, `sqr` | 0.15 (38) |
+| [Triangle](#triangle-wave) | `triangle`, `tri` | 0.3 (76) |
+| [Sawtooth](#sawtooth-wave) | `sawtooth`, `was` | 0.15 (38)  |
+| [Noise](#noise) | `noise`, `noi` | 0.15 (38) |
+| [Sine](#sine-wave) | `sine`, `sin` | 0.3 (76) |
 | [Samples](#samples) | `sample`, `smp` | 0.3 (76) |
 
 It is also possible to define [custom waveforms](#custom-waveforms). Use the command `w:<name>` to set a custom waveform:
@@ -525,7 +525,7 @@ The effect command enables and changes various effects. Time units used for the 
 This time unit is defined as fraction of a *step*. The notation may by more handy to use than *ticks*. It has the syntax: `<nominator>/<denoninator>`. For example:
 
 | Step fraction | Description |
-|---|---|---|
+|---|---|
 | `1/2` | 1/2 of a step. If `st` is set to 24 the value equals to 12 ticks. |
 | `3/2` | 2/3 of a step. If `st` is set to 24 the value equals to 36 ticks. |
 | `1/1` | 1/1 of a step which equals to 1 step. |
@@ -563,7 +563,6 @@ r
 
 % disable the effect
 e:vs
-
 ```
 
 If the effect is disable before the volume has reached its new value, the volume jumps to the target value.
@@ -594,7 +593,6 @@ r
 
 % disable the effect
 e:ps
-
 ```
 
 If the effect is disable before the panning value has reached its new value, the panning value jumps to the target value.
@@ -884,15 +882,15 @@ If the `<number>` of the group definition is omitted, the next free slot is used
 
 > A group could theoretically call itself. Although the call chain would end after 16 call as the stack is limit to 16 nested calls.
 
-### Calling Group from other Tracks
+### Calling Groups from other Tracks
 
-Calling a globally defined group `3`:
+Calling a [globally](#global-track) defined group `3`:
 
 ```blip
 g:3g
 ```
 
-Calling a group `3` defined in track `4`:
+Calling a group `3` defined in [track](#tracks) `4`:
 
 ```blip
 g:3t4
@@ -904,7 +902,7 @@ g:3t4
 [track:<wave> ...]
 ```
 
-Tracks allow to execute multiple command sequences (and therefore notes) in parallel. They are independent from each other and commands from one track do not influence other tracks, except for the global commands `st` ([step ticks](#step-ticks-command-st)) and `tr` ([tick rate](#tick-rate-command-tr)).
+Tracks allow to execute multiple command sequences (and therefore notes) in parallel. They are independent from each other and commands from one track do not influence other tracks, except for the global commands [`st`](#step-ticks-command-st) (step ticks) and [`tr`](#tick-rate-command-tr) (tick rate).
 
 Tracks are defined with `track:<wave>` and enclose commands (including [groups](#command-groups)) in square brackets `[...]`. Where `<wave>` defines the initial [waveform](#waveform-command-w).
 
@@ -944,7 +942,7 @@ Tracks can be assigned to slots (like groups) as well, using the syntax `[track:
 
 ### Global Track
 
-The global track is a separate track which contains all commands, that are not inside a `[track ...]` declaration.
+The global track is a separate track, which contains all commands, that are not inside a `[track ...]` declaration.
 
 ## Custom Waveforms
 
@@ -965,6 +963,12 @@ The amplitude phases are defined inside the square brackets using the command `s
     s:-255:-163:-154:-100:45:127:9:-163:-163:-27:63:72:63:9:-100:
         -154:-127:-91:-91:-91:-91:-127:-154:-100:45:127:9:-163:-163:9:127:45
 ]
+
+% use waveform 'aah'
+w:aah
+
+% play note
+a:c4;s:4;r
 ```
 
 ## Instrument Command `i`
@@ -973,16 +977,22 @@ The amplitude phases are defined inside the square brackets using the command `s
 i:<name>
 ```
 
-This commands sets a defined [instrument](#instruments):
+This commands sets a defined [instrument](#instruments). It can be changed at every time between notes:
 
 ```blip
 % use instrument 'lead1'
 i:lead1
 
 % play note
-a:c3;s:4;r
+a:c3;s:4;r;s:4
 
-% disable an instrument
+% use instrument 'echo'
+i: echo
+
+% play note
+a:f3;s:4;r;s:4
+
+% disable instrument
 i
 ```
 
@@ -992,7 +1002,7 @@ i
 [instr:<name> ...]
 ```
 
-Instruments define envelope sequences for certain values like volume or pitch. They are defined with `instr:<name>` and enclose the definition in square brackets `[...]`. Where `<name>` is an arbitary unique name.
+Instruments define envelopes for certain values like volume or pitch. They are defined with `instr:<name>` and enclose the definition in square brackets `[...]`. Where `<name>` is an arbitary unique name.
 
 Instruments can have multiple sequences, which are lists of values changing the value of their corresponding type. Sequences have 3 phases which consist of an arbitary number of values. Each sequence phase (value) is played for 4 *ticks*.
 
@@ -1047,6 +1057,12 @@ An instrument definition using a pitch and volume sequence may look like this:
     % {        attack         }
     v:255:192:178:127:64:127:64
 ]
+
+% use instrument 'lead1'
+i:lead1
+
+% play note
+a:c3;s:4;r
 ```
 
 The attack phase can be omitted, so that the sequence consists only of a sustain and release phase:
@@ -1084,7 +1100,7 @@ This type of sequence interpolates the phase values and creates smoother changes
 anv:0:0:      <:48:400:48:0:>: 96:-2400
 ```
 
-The spacing is not necessary, it should help to visualize the different parts.
+*The spacing is not necessary, it should help to visualize the different parts.*
 
 - `anv` the envelope type (pitch)
 - `0:0` immediately (in 0 ticks) set the pitch value to 0
@@ -1137,7 +1153,7 @@ This sequence changes the current pitch by a certain amount. The values are defi
 ]
 ```
 
-> The 2 variants overwrite each other.
+> The two variants overwrite each other.
 
 ### Volume Sequence
 
@@ -1200,7 +1216,7 @@ This sequence changes the current panning value. The values are added to the cur
 ]
 ```
 
-> The 2 variants overwrite each other.
+> The two variants overwrite each other.
 
 ### Duty Cycle Sequence
 
