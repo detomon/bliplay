@@ -62,6 +62,9 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
+# Check sizes.
+AC_CHECK_SIZEOF(size_t)
+
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
