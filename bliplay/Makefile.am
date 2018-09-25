@@ -1,4 +1,4 @@
-AM_CFLAGS = @AM_CFLAGS@ \
+AM_CFLAGS = @AM_CFLAGS@ @SDL_CFLAGS@ \
 	-I$(srcdir)/../parser \
 	-I$(srcdir)/../utility \
 	-I$(srcdir)/../BlipKit/src

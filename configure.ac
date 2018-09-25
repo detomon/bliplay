@@ -88,8 +88,7 @@ if test "x$with_sdl" = xyes; then
 	CHECK_SDL()
 fi
 
-AM_CFLAGS="$AM_CFLAGS $SDL_CFLAGS"
-
 AC_SUBST([AM_CFLAGS])
+AC_SUBST([SDL_CFLAGS])
 
 AC_OUTPUT
