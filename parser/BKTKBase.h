@@ -72,7 +72,7 @@ BK_INLINE BKUSize BKNextPow2 (BKUSize v)
 	v |= v >> 4;
 	v |= v >> 8;
 	v |= v >> 16;
-#if BK_USE_64_BIT
+#if BK_IS_64_BIT
 	v |= v >> 32;
 #endif
 	v ++;
