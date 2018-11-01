@@ -336,7 +336,7 @@ max | #
 noise, noi
 ```
 
-Noise is actually a square wave whose amplitudes are randomly high or low. Its are generated with a 16 bit linear recurrences random number generator. This means, that the noise pattern repeats after 2^16 phases.
+Noise is actually a square wave whose amplitudes are randomly high or low. Its values are generated with a 16 bit linear recurrences random number generator. This means, that the noise pattern repeats after 2^16 phases.
 
 ```
 max | #   # #   #     # # #   #   #
