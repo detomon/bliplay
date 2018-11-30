@@ -6,6 +6,7 @@
 *~
 .DS_Store
 .deps
+.dirstamp
 .svn
 /aclocal.m4
 /ar-lib
