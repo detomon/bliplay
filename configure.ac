@@ -34,6 +34,9 @@ AM_CFLAGS="$AM_CFLAGS -Wall \
 # Use C11 standard.
 CHECK_COMPILE_FLAG([-std=c11], [AM_CFLAGS])
 
+# Use link-time-optimization.
+CHECK_COMPILE_FLAG_TRY([-flhto], [AM_CFLAGS])
+
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h unistd.h])
 
