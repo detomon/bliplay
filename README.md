@@ -6,7 +6,7 @@
 
 Check out the [syntax description](SYNTAX.md). Some example files are located in [examples](examples).
 
-Alternatively, you can use the [web editor](https://detomon.github.io/bliplay-wasm/) to run your code.
+Alternatively, you can use the [web editor](https://play.blipkit.audio) to run your code.
 
 ```blip
 % set speed
