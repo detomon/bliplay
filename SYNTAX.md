@@ -987,7 +987,7 @@ i:lead1
 a:c3;s:4;r;s:4
 
 % use instrument 'echo'
-i: echo
+i:echo
 
 % play note
 a:f3;s:4;r;s:4
