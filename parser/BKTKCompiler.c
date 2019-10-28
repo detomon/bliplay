@@ -949,7 +949,7 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 				char name[8] = {0};
 				BKInt pitch = 0;
 				struct noteidx* note = BKArrayItemAt (&compiler -> notesTable, i);
-				BKString const* arg = (char*) nodeArgString (node, i);
+				BKString const* arg = nodeArgString (node, i);
 
 				sscanf ((char*) arg -> str, "%8[a-z#^.]%d", name, &pitch); // d#[+-p] => "d#", p
 				strncpy (note -> name, name, sizeof (note -> name));
