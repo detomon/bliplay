@@ -52,6 +52,7 @@ enum BKCompilerMiscCmds
 	BKTKMiscLoad,
 	BKTKMiscData,
 	BKTKMiscPitch,
+	BKTKMiscSampleRange,
 	BKTKMiscSampleRepeat,
 	BKTKMiscSampleSustainRange,
 	BKTKMiscSequence,
@@ -189,6 +190,7 @@ static struct keyval const envelopeNames [] =
 static struct keyval const miscNames [] =
 {
 	{"data", BKTKMiscData},
+	{"dn",   BKTKMiscSampleRange},
 	{"dr",   BKTKMiscSampleRepeat},
 	{"ds",   BKTKMiscSampleSustainRange},
 	{"load", BKTKMiscLoad},
@@ -1359,6 +1361,13 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 			case BKTKMiscPitch: {
 				arg1 = nodeArgInt (node, 0, 0);
 				(*sample) -> pitch = arg1 * PITCH_UNIT;
+				break;
+			}
+			case BKTKMiscSampleRange: {
+				arg1 = nodeArgInt (node, 0, 0);
+				arg2 = nodeArgInt (node, 1, 0);
+				(*sample) -> range [0] = arg1;
+				(*sample) -> range [1] = arg2;
 				break;
 			}
 			case BKTKMiscSampleRepeat: {

@@ -299,6 +299,10 @@ static BKInt BKTKContextLoadSamples (BKTKContext * ctx, BKTKCompiler * compiler)
 			//}
 		}
 
+		if (sample -> range [0] || sample -> range [1]) {
+			BKSetPtr (&sample -> data, BK_SAMPLE_RANGE, &sample -> range, sizeof (sample -> range));
+		}
+
 		if (sample -> sustainRange [0] || sample -> sustainRange [1]) {
 			BKSetPtr (&sample -> data, BK_SAMPLE_SUSTAIN_RANGE, &sample -> sustainRange, sizeof (sample -> sustainRange));
 		}

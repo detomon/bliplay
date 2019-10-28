@@ -71,6 +71,7 @@ struct BKTKSample
 	BKString   name;
 	BKInt      pitch;
 	BKInt      repeat;
+	BKInt      range [2];
 	BKInt      sustainRange [2];
 	BKData     data;
 };

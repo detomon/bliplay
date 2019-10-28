@@ -534,6 +534,10 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 					BKSetPtr (track, BK_SAMPLE, sample ? &sample -> data : NULL, sizeof (void *));
 					BKSetAttr (track, BK_SAMPLE_REPEAT, sample -> repeat);
 
+					if (sample -> range [0] != sample -> range [1]) {
+						BKSetPtr (track, BK_SAMPLE_RANGE, sample -> range, sizeof (sample -> range));
+					}
+
 					if (sample -> sustainRange [0] != sample -> sustainRange [1]) {
 						BKSetPtr (track, BK_SAMPLE_SUSTAIN_RANGE, sample -> sustainRange, sizeof (sample -> sustainRange));
 					}
