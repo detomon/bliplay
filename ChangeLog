@@ -1,3 +1,8 @@
+Changes in bliplay 3.2.0:
+  Release date: 2019-10-28
+
+* Added `octave` command (see: https://github.com/detomon/bliplay/blob/master/SYNTAX.md#octave-division)
+
 Changes in bliplay 3.1.8:
   Release date: 2018-09-20
 
