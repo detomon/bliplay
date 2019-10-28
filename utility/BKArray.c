@@ -65,3 +65,13 @@ BKInt BKArrayAppendArray (BKArray * str, BKArray const * other)
 {
 	return BKArrayAppendItems (str, other -> items, other -> len);
 }
+
+void BKArraySort (BKArray * arr, int (*compare)(void const* a, void const* b))
+{
+	qsort(arr -> items, arr -> len, arr -> itemSize, compare);
+}
+
+void * BKArraySearch (BKArray const * arr, void const* key, int (*compare)(void const* a, void const* b))
+{
+	return bsearch(key, arr -> items, arr -> len, arr -> itemSize, compare);
+}

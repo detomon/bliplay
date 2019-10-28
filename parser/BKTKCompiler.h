@@ -49,6 +49,8 @@ struct BKTKCompiler
 	BKString     error;
 	BKInt        lineno;
 	BKTKFileInfo info;
+	BKArray      notesTable;
+	BKUInt       octaveSize;
 };
 
 /**

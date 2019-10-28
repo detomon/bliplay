@@ -59,6 +59,7 @@ struct BKTKFileInfo
 		BKInt factor;
 		BKInt divisor;
 	} tickRate;
+	BKUInt octaveSize;
 };
 
 /**

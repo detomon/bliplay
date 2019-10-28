@@ -30,6 +30,8 @@
 #define MAX_TRACKS     256
 #define MAX_GROUPS     256
 #define MAX_SEQ_LENGTH 256
+#define OCTAVE_SIZE_MIN 3
+#define OCTAVE_SIZE_MAX 100
 
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
 #define PITCH_UNIT (BK_FINT20_UNIT / 100)
@@ -66,6 +68,16 @@ struct keyval
 	char const * name;
 	BKInt value;
 	BKInt flags;
+};
+
+/**
+ * Assigns note names to octave index
+ */
+struct noteidx
+{
+	char name[8];
+	BKUInt idx;
+	BKInt pitch;
 };
 
 extern BKClass const BKTKCompilerClass;
@@ -110,6 +122,7 @@ static struct keyval const cmdNames [] =
 	{"instr",       BKIntrInstrumentDef, BKTKParserFlagIsGroup},
 	{"m",           BKIntrMute},
 	{"mt",          BKIntrMuteTicks},
+	{"octave",      BKIntrOctaveDef},
 	{"p",           BKIntrPanning},
 	{"pk",          BKIntrPulseKernel},
 	{"pt",          BKIntrPitch},
@@ -248,6 +261,15 @@ static int keyvalcmp (BKString const * name, struct keyval const * item)
 	return strcmp ((void *) name -> str, item -> name);
 }
 
+/**
+ * Compare name with note index item,
+ * Used as callback for `bsearch`
+ */
+static int noteidxcmp (BKString const * name, struct noteidx const * item)
+{
+	return strcmp ((void *) name -> str, item -> name);
+}
+
 static BKInt keyvalLookup (struct keyval const table [], BKSize size, BKString const * name, BKInt * outValue, BKUInt * outFlags)
 {
 	struct keyval * item;
@@ -354,29 +376,36 @@ static void printError (BKTKCompiler * compiler, BKTKParserNode const * node, ch
  * note octave [+-pitch]
  * Examples: c#3, e2+56, a#2-26
  */
-static BKInt parseNote (BKString const * string, BKInt * outNote, BKInt * outPitch)
+static BKInt parseNote (BKTKCompiler const* compiler, BKString const * string, BKInt * outNote, BKInt * outPitch)
 {
-	char noteStr [4];
+	char noteStr [8];
 	BKInt value  = 0;
 	BKInt octave = 0;
 	BKInt pitch  = 0;
 	BKInt res;
-	BKString note = (BKString) {
+	BKString noteName = (BKString) {
 		.str = (uint8_t *) noteStr,
 		.len = 0,
-		.cap = 4,
+		.cap = 8,
 	};
 
-	BKStringEmpty (&note);
-	res = sscanf ((char *) string -> str, "%2[a-z#]%n%d%d", note.str, &note.len, &octave, &pitch); // d#3[+-p] => "d#", 3, p
+	BKStringEmpty (&noteName);
+	res = sscanf ((char *) string -> str, "%8[a-z#^.]%n%d%d", noteName.str, &noteName.len, &octave, &pitch); // d#3[+-p] => "d#", 3, p
 
-	if (keyvalLookup (noteNames, NUM_NOTE_NAMES, &note, & value, NULL)) {
-		value += octave * 12;
-		*outNote = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
-		*outPitch = pitch;
-
-		return res;
+	if (res < 2) {
+		return -1;
 	}
+
+	struct noteidx const* note = BKArraySearch (&compiler -> notesTable, &noteName, (int (*)(const void *, const void *)) noteidxcmp);
+
+	if (!note) {
+		return -1;
+	}
+
+	value = note -> idx;
+	value += octave * compiler -> octaveSize;
+	*outNote = BKClamp (value, BK_MIN_NOTE, BK_MAX_NOTE);
+	*outPitch = pitch + note -> pitch;
 
 	return 0;
 }
@@ -560,6 +589,39 @@ static BKTKGroup * BKTKCompilerTrackGroupAtOffset (BKTKTrack * track, BKUSize of
 	return group;
 }
 
+static BKInt sortNoteIdx (struct noteidx const* a, struct noteidx const* b)
+{
+	return strcmp (a -> name, b -> name);
+}
+
+static BKEnum initDefaultNotesTable (BKArray * notes, BKUInt* octaveSize, struct keyval const* noteNames, BKUInt numNotes)
+{
+	BKInt res;
+	BKInt maxValue = 0;
+
+	if ((res = BKArrayResize (notes, numNotes)) != 0) {
+		return res;
+	}
+
+	for (BKUInt i = 0; i < numNotes; i++) {
+		struct keyval const* note = &noteNames[i];
+		struct noteidx* slot = BKArrayItemAt (notes, i);
+
+		if (!slot) {
+			return BK_ALLOCATION_ERROR;
+		}
+
+		strncpy (slot -> name, (char*) note -> name, sizeof (slot -> name));
+		slot -> idx = note -> value;
+		maxValue = BKMax (maxValue, note -> value);
+	}
+
+	BKArraySort (notes, (int (*)(const void *, const void *)) sortNoteIdx);
+	*octaveSize = (maxValue + 1);
+
+	return res;
+}
+
 BKInt BKTKCompilerInit (BKTKCompiler * compiler)
 {
 	BKInt res;
@@ -574,9 +636,10 @@ BKInt BKTKCompilerInit (BKTKCompiler * compiler)
 	compiler -> samples     = BK_HASH_TABLE_INIT;
 	compiler -> auxString   = BK_STRING_INIT;
 	compiler -> error       = BK_STRING_INIT;
+	compiler -> notesTable  = BK_ARRAY_INIT (sizeof (struct noteidx));
 
 	if ((res = BKTKCompilerReset (compiler)) != 0) {
-		return -1;
+		return res;
 	}
 
 	return 0;
@@ -614,9 +677,9 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			args [0] = 0;
 			args [1] = 0;
 			name = nodeArgString (node, 0);
-			arg = parseNote (name, &args [0], &args [1]);
+			arg = parseNote (compiler, name, &args [0], &args [1]);
 
-			if (arg < 2) {
+			if (arg != 0) {
 				printError (compiler, node, "Error: note '%s' has no valid format",
 					BKTKCompilerEscapeString (compiler, name));
 				goto error;
@@ -632,9 +695,9 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 
 				for (i = 1; i < argCount; i ++) {
 					name = nodeArgString (node, i);
-					arg = parseNote (name, &args [0], &args [1]);
+					arg = parseNote (compiler, name, &args [0], &args [1]);
 
-					if (arg < 2) {
+					if (arg != 0) {
 						printError (compiler, node, "Error: note '%s' has no valid format",
 							BKTKCompilerEscapeString (compiler, name));
 						goto error;
@@ -867,6 +930,35 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 
 			BKByteBufferAppendInt32 (byteCode, BKInstrMaskArg1Make (cmd, sample -> object.index));
 
+			break;
+		}
+		case BKIntrOctaveDef: {
+			BKInt res;
+
+			if (node -> argCount < OCTAVE_SIZE_MIN || node -> argCount > OCTAVE_SIZE_MAX) {
+				printError (compiler, node, "Error: expected octave size to be between %d and %d", OCTAVE_SIZE_MIN, OCTAVE_SIZE_MAX);
+				goto error;
+			}
+
+			if ((res = BKArrayResize (&compiler -> notesTable, node -> argCount)) != 0) {
+				printError (compiler, node, "Error: allocation error");
+				goto error;
+			}
+
+			for (BKUInt i = 0; i < node -> argCount; i++) {
+				char name[8] = {0};
+				BKInt pitch = 0;
+				struct noteidx* note = BKArrayItemAt (&compiler -> notesTable, i);
+				BKString const* arg = (char*) nodeArgString (node, i);
+
+				sscanf ((char*) arg -> str, "%8[a-z#^.]%d", name, &pitch); // d#[+-p] => "d#", p
+				strncpy (note -> name, name, sizeof (note -> name));
+				note -> idx = i;
+				note -> pitch = pitch;
+			}
+
+			BKArraySort (&compiler -> notesTable, (int (*)(const void *, const void *)) sortNoteIdx);
+			compiler -> octaveSize = node -> argCount;
 			break;
 		}
 		default: {
@@ -1854,6 +1946,11 @@ BKInt BKTKCompilerReset (BKTKCompiler * compiler)
 	BKHashTableEmpty (&compiler -> samples);
 	BKStringEmpty (&compiler -> auxString);
 	BKStringEmpty (&compiler -> error);
+	BKArrayEmpty (&compiler -> notesTable);
+
+	if (initDefaultNotesTable (&compiler -> notesTable, &compiler -> octaveSize, noteNames, NUM_NOTE_NAMES) != 0) {
+		return -1;
+	}
 
 	compiler -> lineno = 0;
 	compiler -> info = (BKTKFileInfo) {0};
@@ -1873,13 +1970,14 @@ BKInt BKTKCompilerReset (BKTKCompiler * compiler)
 static void BKTKCompilerDispose (BKTKCompiler * compiler)
 {
 	BKTKCompilerReset (compiler);
-	
+
 	BKArrayDispose (&compiler -> tracks);
 	BKHashTableDispose (&compiler -> instruments);
 	BKHashTableDispose (&compiler -> waveforms);
 	BKHashTableDispose (&compiler -> samples);
 	BKStringDispose (&compiler -> auxString);
 	BKStringDispose (&compiler -> error);
+	BKArrayDispose (&compiler -> notesTable);
 }
 
 BKClass const BKTKCompilerClass =

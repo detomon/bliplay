@@ -19,7 +19,7 @@ CodeMirror.defineMode('blip', function() {
 	};
 
 	define('keyword', 'a adsr anv as at d data dc dcnv dn dr ds e g grp harm ' +
-		'i instr load m mt no noi noise p pal pk pnv pr ps pt pulsekernel pw r ' +
+		'i instr load m mt no noi noise octave p pal pk pnv pr ps pt pulsekernel pw r ' +
 		'rep rt s sam samp sample saw sawtooth si sin sinc sine sm sq sqr ' +
 		'square st stepticks stt sw t tickrate tr track tri triangle tstepticks ' +
 		'v vb vm vnv vs w wave x xb z');

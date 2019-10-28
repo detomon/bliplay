@@ -88,7 +88,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(a(|dsr|nv|s|t)|d(|ata|c(|nv)|n|r|s)|e|g(|rp)|i(|nstr)|load|m(|t)|no|p(|al|k|nv|r|s|t|ulsekernel|w)|r(|ep|t)|s(|amp(|le))|st|stepticks|stt|t(|ickrate|r(|ack)|stepticks)|v(|b|m|nv|s)|w(|ave)|x(|b)|z)\b</string>
+			<string>(a(|dsr|nv|s|t)|d(|ata|c(|nv)|n|r|s)|e|g(|rp)|i(|nstr)|load|m(|t)|no|octave|p(|al|k|nv|r|s|t|ulsekernel|w)|r(|ep|t)|s(|amp(|le))|st|stepticks|stt|t(|ickrate|r(|ack)|stepticks)|v(|b|m|nv|s)|w(|ave)|x(|b)|z)\b</string>
 			<key>name</key>
 			<string>keyword.command.blip</string>
 		</dict>

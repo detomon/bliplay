@@ -81,6 +81,7 @@ enum BKInstruction
 	BKIntrWaveformDef        = 38,
 	BKIntrLineNo             = 39,
 	BKIntrPulseKernel        = 40,
+	BKIntrOctaveDef          = 41,
 };
 
 enum BKTKInterpreterFlag
@@ -148,6 +149,7 @@ struct BKTKInterpreter {
 	BKInt           time;
 	BKInt           lineTime;
 	BKInt           lineno;
+	BKUInt          octaveSize;
 };
 
 /**

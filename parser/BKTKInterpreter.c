@@ -25,6 +25,8 @@
 #include "BKTKContext.h"
 #include "BKTKInterpreter.h"
 
+#define DEFAULT_OCTAVE_SIZE 12
+
 extern BKClass const BKTKInterpreterClass;
 
 enum {
@@ -166,9 +168,9 @@ BK_INLINE BKInstrMask BKReadIntrMask (void ** opcode)
 	return mask;
 }
 
-BK_INLINE BKInt value2Pitch (BKInt value)
+BK_INLINE BKInt value2Pitch (BKTKInterpreter const* interpreter, BKInt value)
 {
-	return (BKInt) ((int64_t) value * BK_FINT20_UNIT / 100);
+	return (BKInt) ((int64_t) value * BK_FINT20_UNIT * 12 / interpreter -> octaveSize / 100);
 }
 
 BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BKInt * outTicks)
@@ -254,7 +256,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 
 		switch (cmdMask.arg1.cmd) {
 			case BKIntrAttack: {
-				value0 = value2Pitch (cmdMask.arg1.arg1);
+				value0 = value2Pitch (interpreter, cmdMask.arg1.arg1);
 
 				if (interpreter -> object.flags & BKTKInterpreterFlagHasAttackEvent) {
 					// overwrite last note value when more than 2
@@ -283,7 +285,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 
 				for (BKInt i = 0; i < value0; i ++) {
 					argMask = BKReadIntrMask (&opcode);
-					arpeggio [i + 2] = value2Pitch (argMask.arg1.arg1);
+					arpeggio [i + 2] = value2Pitch (interpreter, argMask.arg1.arg1);
 				}
 
 				if (interpreter -> object.flags & BKTKInterpreterFlagHasAttackEvent) {
@@ -333,7 +335,7 @@ BKInt BKTKInterpreterAdvance (BKTKInterpreter * interpreter, BKTKTrack * ctx, BK
 				break;
 			}
 			case BKIntrPitch: {
-				value0 = value2Pitch (cmdMask.arg1.arg1);
+				value0 = value2Pitch (interpreter, cmdMask.arg1.arg1);
 				BKSetAttr (track, BK_PITCH, value0);
 				break;
 			}
@@ -689,6 +691,7 @@ void BKTKInterpreterReset (BKTKInterpreter * interpreter)
 	interpreter -> lineTime        = 0;
 	interpreter -> lineno          = 0;
 	interpreter -> stepTickCount   = BK_INTR_STEP_TICKS;
+	interpreter -> octaveSize      = DEFAULT_OCTAVE_SIZE;
 }
 
 BKClass const BKTKInterpreterClass =

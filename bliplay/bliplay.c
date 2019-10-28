@@ -622,6 +622,8 @@ static void print_info (BKTKContext const * ctx)
 	print_message ("  tick rate: %d/%d\n", ctx -> info.tickRate.factor, ctx -> info.tickRate.divisor);
 	print_message ("sample rate: %d\n", ctx -> renderContext -> sampleRate);
 	print_message ("   channels: %d\n", ctx -> renderContext -> numChannels);
+	print_message ("        edo: %d\n", ctx -> info.octaveSize);
+
 }
 
 static BKInt should_overwrite_output (char const * filename)

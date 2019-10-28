@@ -372,6 +372,7 @@ static BKInt BKTKContextCreateTracks (BKTKContext * ctx, BKTKCompiler * compiler
 		track -> object.object.flags |= ctx -> object.flags;
 		track -> interpreter.opcode = track -> byteCode.first -> data;
 		track -> interpreter.opcodePtr = track -> interpreter.opcode;
+		track -> interpreter.octaveSize = compiler -> octaveSize;
 		track -> ctx = ctx;
 	}
 
@@ -439,6 +440,8 @@ BKInt BKTKContextCreate (BKTKContext * ctx, BKTKCompiler * compiler)
 		ctx -> info.tickRate.factor = 1;
 		ctx -> info.tickRate.divisor = BK_DEFAULT_CLOCK_RATE;
 	}
+
+	ctx -> info.octaveSize = compiler -> octaveSize;
 
 	BKTKCompilerReset (compiler);
 

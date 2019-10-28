@@ -84,6 +84,7 @@ a:c4;s:4;r % a comment at the end
 - [Sample Range Command `dn`](#sample-range-command-dn)
     - [Reversing Samples](#reversing-samples)
 - [Samples](#samples)
+- [Octave Division `octave`](#octave-division)
 
 ## Attack Command `a`
 
@@ -792,7 +793,7 @@ This command adds a delayed mute command `m` relative to the current time positi
 pw:<count>
 ```
 
-This commands sets the number of phases after which a [waveform](#waveform-command-w) should reset. This can be used as an interesting effect, for example, using with [noise](noise):
+This command sets the number of phases after which a [waveform](#waveform-command-w) should reset. This can be used as an interesting effect, for example, using with [noise](noise):
 
 ```blip
 % use noise
@@ -1390,4 +1391,29 @@ The commands [`dr`](#sample-repeat-command-dr), [`ds`](#sample-sustain-range-com
     % set sample repeat mode
     dr:pal
 ]
+```
+
+## Octave Division
+
+This command defines the note names for an octave and divides it into equal parts.
+
+For example, [14-edo](https://en.xen.wiki/w/14edo) can be defined as the following:
+
+```blip
+octave:c:c#:d:d#:e:e#:f:f#:g:g#:h:h#:a:a#
+```
+
+The default [12-edo](https://en.xen.wiki/w/12edo) looks like the following:
+
+```blip
+octave:c:c#:d:d#:e:f:f#:g:g#:a:a#:b
+```
+
+### Tuning Notes
+
+Individual notes can be tuned relative to their position in the octave. This changes the pitch of notes in every octave.
+
+```blip
+% raise note 'e' by 10 cents and lower note 'g#' by 15 cents
+octave:c:c#:d:d#:e+10:f:f#:g:g#-15:a:a#:b
 ```

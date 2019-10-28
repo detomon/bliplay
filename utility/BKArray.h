@@ -68,7 +68,6 @@ extern BKInt BKArrayReserve (BKArray * arr, BKUSize size);
 
 /**
  * Resize the array to given size and empty appended items.
- * If the given size is less than the current array length, nothing is done.
  *
  * @param arr The array to resize.
  * @param size to new array size.
@@ -133,6 +132,22 @@ BK_INLINE void * BKArrayItemAt (BKArray const * arr, size_t index);
  * @param arr The array to empty.
  */
 BK_INLINE void BKArrayEmpty (BKArray * arr);
+
+/**
+ * Sort items with function.
+ *
+ * @param arr The array to sort.
+ * @param sort Sort function.
+ */
+extern void BKArraySort (BKArray * arr, int (*compare)(void const* a, void const* b));
+
+/**
+ * Search with B-Search.
+ *
+ * @param arr The array to search.
+ * @param search Search function.
+ */
+extern void * BKArraySearch (BKArray const * arr, void const* key, int (*compare)(void const* a, void const* b));
 
 
 // --- Inline implementations
