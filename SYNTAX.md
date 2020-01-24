@@ -735,7 +735,7 @@ e:tr
 at:<ticks>
 ```
 
-This command delays the next attack command `a` by a given number of *ticks* or [step fraction](#step-fractions) relative to the current time position. This can be used to add *swing*.
+This command delays the next attack command `a` by a given number of *ticks* or [step fraction](#step-fractions) relative to the current time position. This can be used to add *swing*. It is reset by the next `s` command.
 
 ```blip
         % play note
@@ -758,7 +758,7 @@ at:1/3; a:f4;s:1;r;s:1
 rt:<ticks>
 ```
 
-This command adds a delayed release command `r` relative to the current time position in number of *ticks* or [step fraction](#step-fractions). This can be used to play short notes.
+This command adds a delayed release command `r` relative to the current time position in number of *ticks* or [step fraction](#step-fractions). This can be used to play short notes. It is reset by the next `s` command.
 
 ```blip
 % play note for 1/3 step
@@ -785,7 +785,7 @@ at:1/3; rt:2/3; a:c4;s:1
 mt:<ticks>
 ```
 
-This command adds a delayed mute command `m` relative to the current time position in number of *ticks* or [step fraction](#step-fractions). This command behaves like `rt` if no instrument is set. If an [instrument](#instruments) is set, then the intrument's release sequence is not played.
+This command adds a delayed mute command `m` relative to the current time position in number of *ticks* or [step fraction](#step-fractions). This command behaves like `rt` if no instrument is set. If an [instrument](#instruments) is set, then the intrument's release sequence is not played. It is reset by the next `s` command.
 
 ## Phase Wrap Command `pw`
 
@@ -1063,7 +1063,7 @@ An instrument definition using a pitch and volume sequence may look like this:
 i:lead1
 
 % play note
-a:c3;s:4;r
+a:c3;s:4;r;s:4
 ```
 
 The attack phase can be omitted, so that the sequence consists only of a sustain and release phase:
