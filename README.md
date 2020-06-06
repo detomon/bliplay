@@ -43,7 +43,8 @@ r
 4. [Playing Files](#4-playing-files)
 5. [Exporting Files](#5-exporting-files)
 6. [Related Projects](#6-related-projects)
-7. [License](#license)
+7. [Using with Docker](#7-using-with-docker)
+8. [License](#license)
 
 ## 1. Checkout
 
@@ -128,6 +129,22 @@ Script which uses a spreadsheet in order to render and play the files dynamicall
 ### [bliplay-wasm](https://github.com/detomon/bliplay-wasm)
 
 A WebAssembly implementation of the player.
+
+## 7. Using with Docker
+
+A precompiled version can be used with Docker. There is no support for direct audio output, though.
+
+Load/run container and mount local directory `/absolute/path/to/bliplay/examples` at container path `/examples`:
+
+```sh
+docker run -it -v /absolute/path/to/bliplay/examples:/examples detomon/bliplay-alpine
+```
+
+Render file `examples/killer-squid.blip` to `killer-squid.wav` on local directory.
+
+```sh
+/ # bliplay -o examples/killer-squid.wav examples/killer-squid.blip
+```
 
 ## License
 
