@@ -1356,6 +1356,8 @@ dn:-1:0
 
 Samples are audio snippets which can be loaded from `.wav` files. The number of channels has to be either 2 (stereo) or 1 (mono). Only the PCM format with either 8 or 16 bits is supported.
 
+The sample rate has to match the current sample rate (default: 44100). The pitch is expected to be tuned to A4, i.e., playing a sample with `a:a4` plays it with its original speed.
+
 They are defined with `sample:<name>` and enclose the definition in square brackets `[...]`. Where `<name>` is an arbitary unique name.
 
 The command `load:<type>:<file>` loads an audio file. Where `<type>` is `wav` and `<file>` is the file path. For security reasons, files can only be loaded from the same directory or a sub-directory. Files loading from a parent directory, for example, `../sample.wav` is not allowed.
@@ -1390,6 +1392,18 @@ The commands [`dr`](#sample-repeat-command-dr), [`ds`](#sample-sustain-range-com
     ds:23567:32342
     % set sample repeat mode
     dr:pal
+]
+```
+
+The command `pt` can be used to add a pitch offset to the sample definition. This will be added to the played note:
+
+```blip
+% define sample 'voice'
+[sample:voice
+    % load wave from file 'voice.wav'
+    load:wav:voice.wav
+    % lower the sample pitch by one octave by default
+    pt:-1200
 ]
 ```
 
