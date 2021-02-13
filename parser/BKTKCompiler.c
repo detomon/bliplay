@@ -34,7 +34,6 @@
 #define OCTAVE_SIZE_MAX 100
 
 #define VOLUME_UNIT (BK_MAX_VOLUME / 255)
-#define PITCH_UNIT (BK_FINT20_UNIT / 100)
 
 enum BKCompilerEnvelopeType
 {
@@ -1452,7 +1451,7 @@ static BKInt BKTKCompilerCompileSample (BKTKCompiler * compiler, BKTKParserNode 
 			}
 			case BKTKMiscPitch: {
 				arg1 = nodeArgInt (node, 0, 0);
-				(*sample) -> pitch = arg1 * PITCH_UNIT;
+				(*sample) -> pitch = arg1;
 				break;
 			}
 			case BKTKMiscSampleRange: {
