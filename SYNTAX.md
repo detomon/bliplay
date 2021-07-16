@@ -1289,7 +1289,7 @@ This commands sets the [sample](#samples)'s repeat mode.
 | `rep` | Repeat sustain range. The [sample's sustain range](#sample-sustain-range-command-dn) is repeated as long as the note is set. Its release phase is played after the note is released with `r`. |
 | `pal` | Repeat sustain range using palindrome. The [sample's sustain range](#sample-sustain-range-command-dn) is played back and forth as long as the note is set. Its release range is played after the note is released with `r`. |
 
-> This command must placed **after** the sample was set with `d`.
+> This command must be placed **after** the sample was set with `d`.
 
 ## Sample Sustain Range Command `ds`
 
@@ -1313,7 +1313,7 @@ The range can be reset by setting both values to 0:
 ds:0:0
 ```
 
-> This command must placed **after** the sample was set with `d`.
+> This command must be placed **after** the sample was set with `d`.
 
 ## Sample Range Command `dn`
 
@@ -1330,7 +1330,7 @@ dn:2865:56795
 
 This will set the range to the frames from `2865` to `56795-1`. `56795 ` itself is not included in the range. So the range has a total length of `56795 - 2865 = 53930`.
 
-> This command must placed **after** the sample was set with `d`.
+> This command must be placed **after** the sample was set with `d`.
 
 ### Reversing Samples
 
