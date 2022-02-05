@@ -53,7 +53,7 @@ It is added as a submodule.  To fetch its source,
 use the following command when cloning the **bliplay** repository:
 
 ```sh
-git clone --recursive https://github.com/detomon/bliplay.git
+git clone --recursive git@github.com:detomon/bliplay.git
 ```
 
 or afterwards with:
