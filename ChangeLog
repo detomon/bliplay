@@ -1,3 +1,9 @@
+Changes in bliplay 3.2.2:
+  Release date: 2022-02-05
+
+* Fix wrong sample pitch preset
+* Fix potential string overflow
+
 Changes in bliplay 3.2.1:
   Release date: 2020-04-11
 
