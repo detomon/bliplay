@@ -29,7 +29,8 @@ AM_CFLAGS="$AM_CFLAGS -Wall \
 	-Wmissing-declarations \
 	-Wstrict-prototypes \
 	-Wformat-security \
-	-Winline"
+	-Winline \
+	-D_FORTIFY_SOURCE=1"
 
 # Use C11 standard.
 CHECK_COMPILE_FLAG([-std=c11], [AM_CFLAGS])

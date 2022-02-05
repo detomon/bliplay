@@ -945,7 +945,7 @@ static BKInt BKTKCompilerCompileCommand (BKTKCompiler * compiler, BKTKParserNode
 			}
 
 			for (BKUInt i = 0; i < node -> argCount; i++) {
-				char name[8] = {0};
+				char name[9] = {0};
 				BKInt pitch = 0;
 				struct noteidx* note = BKArrayItemAt (&compiler -> notesTable, i);
 				BKString const* arg = nodeArgString (node, i);
