@@ -42,11 +42,7 @@
 #include <unistd.h>
 
 #if defined(BK_USE_SDL) && defined(BK_SDL_VERSION)
-#	if BK_SDL_VERSION == 2
-#		include <SDL2/SDL.h>
-#	else
-#		include <SDL/SDL.h>
-#	endif
+#include "SDL.h"
 #endif
 
 #include "BKTK.h"
