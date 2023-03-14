@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	examples/killer-squid.blip \
 	examples/short-fused-bombs.blip \
 	examples/template.blip \
-	examples/wysiwyg.blip.blip
+	examples/wysiwyg.blip
 
 EXTRA_INSTALL = \
 	editor_themes
