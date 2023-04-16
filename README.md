@@ -1,6 +1,6 @@
 # bliplay
 
-[![Build Status](https://api.travis-ci.org/detomon/bliplay.svg?branch=master)](https://travis-ci.org/detomon/bliplay)
+[![Build Status](https://github.com/detomon/BlipKit/actions/workflows/c.yml/badge.svg?branch=master)](https://github.com/detomon/BlipKit/actions/workflows/c.yml)
 
 **bliplay** is a plaintext-based chiptunes sound player.
 
