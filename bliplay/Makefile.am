@@ -13,4 +13,4 @@ bliplay_LDADD = \
 	$(srcdir)/../parser/libbliparser.a \
 	$(srcdir)/../utility/libutility.a \
 	$(srcdir)/../BlipKit/src/libblipkit.a \
-	@SDL_CFLAGS@ -lm
+	@SDL_LDADD@ -lm
