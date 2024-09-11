@@ -624,12 +624,13 @@ static void print_info (BKTKContext const * ctx)
 
 static BKInt should_overwrite_output (char const * filename)
 {
-	char line [8];
+	char line [8] = {0};
 
 	print_notice ("Output file already exists. Overwrite? [Y/n] ");
 
-	strcpy (line, "");
-	fgets (line, sizeof (line), stdin);
+	if (!fgets (line, sizeof (line), stdin)) {
+		return 0;
+	}
 
 	if (line [0] == 'Y') {
 		return 1;
