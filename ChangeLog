@@ -1,3 +1,10 @@
+Changes in bliplay 3.2.4:
+  Release date: 2024-12-15
+
+* Update build files
+* Fix compiler warning
+* Use new BlipKit version 0.17.7
+
 Changes in bliplay 3.2.3:
   Release date: 2023-04-16
 
