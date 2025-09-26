@@ -1,6 +1,6 @@
 # `.blip` File Format
 
-The `.blip` file format is a plaintext format intended to create chiptunes music. It consists of commands which are compiled and then executed by an interpreter. For example, the code for generating a tone would look like this:
+The `.blip` file format is a plaintext format intended to create chiptunes music. It consists of commands, which are compiled and then executed by an interpreter. For example, the code for generating a tone would look like this:
 
 ```blip
 a:c4
@@ -8,15 +8,15 @@ s:4
 r
 ```
 
-Where `a:c4` sets (attacks) the note C on octave 4, `s:4` advances the time by 4 steps and `r` releases the note. One step has a specific time unit which can be changed.
+Where `a:c4` sets (attacks) the note C on octave 4, `s:4` advances the time by 4 steps and `r` releases the note. One step has a specific time unit that can be changed.
 
-The command name and its arguments are separated by colons `:`. To write more compact code, commands can be seperated by semicolons and written on the same line:
+The command name and its arguments are separated by colons `:`. To write more compact code, commands may be separated by semicolons and written on the same line:
 
 ```blip
 a:c4;s:4;r
 ```
 
-Terminating semicolons are not required. Either line breaks or semicolons terminate a command. Whitespace is allowed around separator characters like `:` or `;`, so this is valid too:
+Terminating semicolons are not required. Either line breaks or semicolons terminate a command. Whitespace is allowed around separator characters such as `:` or `;`, so this is valid too:
 
 ```blip
 a:c4; s : 4; r
@@ -219,7 +219,7 @@ r
 
 ### Calculating BPM
 
-The follwing formula can be used to calculate the number of beats per minute from the number of step ticks:
+The following formula can be used to calculate the number of beats per minute from the number of step ticks:
 
 ```
 bpm = tr * 60 / st / 4
@@ -248,12 +248,12 @@ The followng table lists the default waveforms:
 
 | Waveform | Names | [Master Volume](#master-volume-command-vm) |
 |---|---|---|
-| [Square](#square-wave) | `square`, `sqr` | 0.15 (38) |
-| [Triangle](#triangle-wave) | `triangle`, `tri` | 0.3 (76) |
-| [Sawtooth](#sawtooth-wave) | `sawtooth`, `was` | 0.15 (38)  |
-| [Noise](#noise) | `noise`, `noi` | 0.15 (38) |
-| [Sine](#sine-wave) | `sine`, `sin` | 0.3 (76) |
-| [Samples](#samples) | `sample`, `smp` | 0.3 (76) |
+| [Square](#square-wave) | `square`, `sqr` | 38 (0.15) |
+| [Triangle](#triangle-wave) | `triangle`, `tri` | 76 (0.3) |
+| [Sawtooth](#sawtooth-wave) | `sawtooth`, `was` | 38  (0.15) |
+| [Noise](#noise) | `noise`, `noi` | 38 (0.15) |
+| [Sine](#sine-wave) | `sine`, `sin` | 76 (0.3) |
+| [Samples](#samples) | `sample`, `smp` | 76 (0.3) |
 
 It is also possible to define [custom waveforms](#custom-waveforms). Use the command `w:<name>` to set a custom waveform:
 
@@ -278,8 +278,8 @@ square, sqr
 The square wave has 16 phases. The length of the high period (duty cycle) and can be changed with the [duty cycle command](#duty-cycle-command-dc).
 
 ```
-max | # # # # 
-    | # # # # 
+max | # # # #
+    | # # # #
     | # # # #
     | # # # #
   0 | +-+-+-+-#-#-#-#-#-#-#-#-#-#-#-#
@@ -337,7 +337,7 @@ max | #
 noise, noi
 ```
 
-Noise is actually a square wave whose amplitudes are randomly high or low. Its values are generated with a 16 bit linear recurrences random number generator. This means, that the noise pattern repeats after 2^16 phases.
+Noise is actually a square wave whose amplitudes are randomly high or low. Its values are generated with a 16 bit linear recurrences random number generator. This means that the noise pattern repeats after 2^16 phases.
 
 ```
 max | #   # #   #     # # #   #   #
@@ -372,7 +372,7 @@ max |               # # #
     |                                         # # # # # # # # #
     |                                         # # # # # # # # #
     |                                           # # # # # # #
-min |                                               # # #                
+min |                                               # # #
 ```
 
 ## Duty Cycle Command `dc`
@@ -523,7 +523,7 @@ The effect command enables and changes various effects. Time units used for the 
 
 ### Step Fractions
 
-This time unit is defined as fraction of a *step*. The notation may by more handy to use than *ticks*. It has the syntax: `<nominator>/<denoninator>`. For example:
+This time unit is defined as fraction of a *step*. The notation may by more handy to use than *ticks*. It has the syntax: `<nominator>/<denominator>`. For example:
 
 | Step fraction | Description |
 |---|---|
@@ -596,7 +596,7 @@ r
 e:ps
 ```
 
-If the effect is disable before the panning value has reached its new value, the panning value jumps to the target value.
+If the effect is disabled before the panning value has reached its new value, the panning value jumps to the target value.
 
 ### Portamento Effect `e:pr`
 
@@ -604,7 +604,7 @@ If the effect is disable before the panning value has reached its new value, the
 e:pr:<ticks>
 ```
 
-This effect slides the current note to the new note set with `a`. If currently no note is set, it has no effect. If the newly set note is an arpeggio sequence, it slides to the first note in the sequence. For example:
+This effect slides the current note to the new note set by `a`. If no note is currently set, it has no effect. If the newly set note is an arpeggio sequence, it slides to the first note in the sequence. For example:
 
 ```blip
 % slide note in 4 steps
@@ -639,9 +639,9 @@ If the effect is disable before the note has reached its new value, the note jum
 e:tr:<ticks>:<amount>
 ```
 
-This effect periodically decreases the volume by a certain amount.
+This effect periodically lowers the volume by a certain amount.
 
-A tremolo cycle consists of 2 phases: decrease and increase. Each phase has the duration given by `<ticks>`. The volume in the decrease phase is reduced by the value given with `<amount>`. For example:
+A tremolo cycle consists of 2 phases: decrease and increase. Each phase has the duration given by `<ticks>`. The volume in the decrease phase is lowered by the value given with `<amount>`. For example:
 
 ```blip
 % reduce volume by 127 every 1/2 step
@@ -660,7 +660,7 @@ e:tr
 e:tr:<ticks>:<amount>:<slide ticks>
 ```
 
-It is possible to slide the effect values itself to new values by providing a third parameter. For example:
+It is possible to slide the effect values themselves to new values by providing a third parameter. For example:
 
 ```blip
 % change volume by 127 every 1/2 step
@@ -687,9 +687,9 @@ e:tr
 e:vb:<ticks>:<amount>
 ```
 
-This effect periodically decreases and increases the pitch by a certain amount. It is independent from the pitch command `pt`.
+This effect periodically lowers and raises the pitch by a certain amount. It is independent of the pitch command `pt`.
 
-A vibrato cycle consists of 4 phases: increase by amount, decrease to 0, decrease by amount, increase to 0 again. Each phase has the duration given by `<ticks>`. The pitch in each phase is changed by the value given with `<amount>`, which has the unit [cents](#fine-tuning-notes). For example:
+A vibrato cycle consists of 4 phases: increase by the amount, decrease to 0, decrease by the amount, increase to 0 again. Each phase has the duration given by `<ticks>`. The pitch in each phase is changed by the value given with `<amount>`, which has the unit [cents](#fine-tuning-notes). For example:
 
 ```blip
 % change pitch every 1/2 step by 2 half-tones
@@ -699,7 +699,7 @@ e:vb:1/2:200
 a:c4;s:8;r
 
 % disable the effect
-e:tr
+e:vb
 ```
 
 #### Sliding Vibrato Values
@@ -708,7 +708,7 @@ e:tr
 e:vb:<ticks>:<amount>:<slide ticks>
 ```
 
-It is possible to slide the effect values itself to new values by providing a third parameter. For example:
+It is possible to slide the effect values themselves to new values by providing a third parameter. For example:
 
 ```blip
 % change pitch every 1/2 step by 2 half-tones
@@ -726,7 +726,7 @@ e:vb:1/8:50:8/1
 s:16
 
 % disable the effect
-e:tr
+e:vb
 ```
 
 ## Attack Ticks Command `at`
@@ -822,7 +822,7 @@ The master volume sets the volume of a [track](#tracks) and has a value between 
 
 When changing the master volume for, one has to consider that the amplitudes of multiple tracks are added together and may result in an overflowing amplitude.
 
-Every default [waveform](#waveform-command-w) has its specific master volume which will be reset when a new waveform is set.
+Every default [waveform](#waveform-command-w) has its specific master volume, which will be reset when a new waveform is set.
 
 ## Tick Rate Command `tr`
 
@@ -846,7 +846,7 @@ tr:7/960
 [grp:<number> ...]
 ```
 
-Commands or patterns which are used several times can be grouped with command groups. Groups are defined with `grp:<number>` and enclose their commands in square brackets `[...]`. Where `<number>` is a number between 0 and 255 that can be defined freely, but only used once per [track](tracks).
+Commands or patterns, which are used several times can be grouped with command groups. Groups are defined with `grp:<number>` and enclose their commands in square brackets `[...]`. Where `<number>` is a number between 0 and 255 that can be defined freely, but only used once per [track](tracks).
 
 Groups can be *called* like functions with `g:<group>` and can call other groups as well.
 
@@ -891,7 +891,7 @@ Calling a [globally](#global-track) defined group `3`:
 g:3g
 ```
 
-Calling a group `3` defined in [track](#tracks) `4`:
+Calling a group `3` defined within [track](#tracks) `4`:
 
 ```blip
 g:3t4
@@ -939,11 +939,11 @@ Tracks are defined with `track:<wave>` and enclose commands (including [groups](
 ]
 ```
 
-Tracks can be assigned to slots (like groups) as well, using the syntax `[track:<wave>:<number> ...]`. This is usually not needed, although it can be usefull when calling [groups of different tracks](#calling-group-from-other-tracks).
+Tracks can be assigned to slots (like groups) as well, using the syntax `[track:<wave>:<number> ...]`. This is usually not needed, although it can be useful when calling [groups of different tracks](#calling-group-from-other-tracks).
 
 ### Global Track
 
-The global track is a separate track, which contains all commands, that are not inside a `[track ...]` declaration.
+The global track is a separate track, which contains all commands that are not inside a `[track ...]` declaration.
 
 ## Custom Waveforms
 
@@ -1003,9 +1003,9 @@ i
 [instr:<name> ...]
 ```
 
-Instruments define envelopes for certain values like volume or pitch. They are defined with `instr:<name>` and enclose the definition in square brackets `[...]`. Where `<name>` is an arbitary unique name.
+Instruments define envelopes for certain values such as volume or pitch. They are defined with `instr:<name>` and enclose the definition in square brackets `[...]`. Where `<name>` is an arbitary unique name.
 
-Instruments can have multiple sequences, which are lists of values changing the value of their corresponding type. Sequences have 3 phases which consist of an arbitary number of values. Each sequence phase (value) is played for 4 *ticks*.
+Instruments can have multiple sequences, which are lists of values changing the value of their corresponding type. Sequences have 3 phases, which consist of an arbitary number of values. Each sequence phase (value) is played for 4 *ticks*.
 
 The following sequence types are defined:
 
@@ -1022,9 +1022,9 @@ The following sequence types are defined:
 <name>:{attack}:<:{sustain}:>:{release}
 ```
 
-- **Attack phase**: the first part before the `<` which is played after a note is set with `a`.
-- **Sustain phase**: the part between the enclosing `<` and `>` which is played repeatedly as long as the note is set.
-- **Release phase**: the part after the `>` which is played after the note is release with `r`.
+- **Attack phase**: the first part before the `<`, which is played after a note is set with `a`.
+- **Sustain phase**: the part between the enclosing `<` and `>`, which is played repeatedly as long as the note is set.
+- **Release phase**: the part after the `>`, which is played after the note is release with `r`.
 
 A pitch sequence definition may look like this:
 
@@ -1074,7 +1074,7 @@ The attack phase can be omitted, so that the sequence consists only of a sustain
 a:<:0:-1200:>:0:0:0:1200
 ```
 
-The release phase can be omitted, so that the sequence consists only of an attack and sustain phase. In such a sequence, the last value which was active in the sustain phase is hold until all other sequences have completed their release phase.
+The release phase can be omitted, so that the sequence consists only of an attack and sustain phase. In such a sequence, the last value, which was active in the sustain phase is hold until all other sequences have completed their release phase.
 
 ```blip
 % define pitch sequence without release phase
@@ -1273,7 +1273,7 @@ i:lead1
 a:c4;s:8;r
 ```
 
-Samples can't be disabled, but set to a new sample or replaced with a waveform. 
+Samples can't be disabled, but set to a new sample or replaced with a waveform.
 
 ## Sample Repeat Command `dr`
 
@@ -1289,7 +1289,7 @@ This commands sets the [sample](#samples)'s repeat mode.
 | `rep` | Repeat sustain range. The [sample's sustain range](#sample-sustain-range-command-dn) is repeated as long as the note is set. Its release phase is played after the note is released with `r`. |
 | `pal` | Repeat sustain range using palindrome. The [sample's sustain range](#sample-sustain-range-command-dn) is played back and forth as long as the note is set. Its release range is played after the note is released with `r`. |
 
-> This command must be placed **after** the sample was set with `d`.
+> This command must be placed **after** the sample has been set with `d`.
 
 ## Sample Sustain Range Command `ds`
 
@@ -1297,7 +1297,7 @@ This commands sets the [sample](#samples)'s repeat mode.
 ds:<start>:<end>
 ```
 
-This commmand sets the [sample](#samples)'s sustain range. The values are the absolute frame offsets from the start of the sample defined by `dn`. By default, the full sample range is defined as the sustain range.
+This command sets the [sample](#samples)'s sustain range. The values are the absolute frame offsets from the start of the sample defined by `dn`. By default, the full sample range is defined as the sustain range.
 
 ```blip
 % define sustain range
@@ -1321,7 +1321,7 @@ ds:0:0
 dn:<start>:<end>
 ```
 
-This commmand sets the [sample](#samples)'s playable range. The values are the absolute frame offsets from the start of the sample. By default, the full sample range is played.
+This command sets the [sample](#samples)'s playable range. The values are the absolute frame offsets from the start of the sample. By default, the full sample range is played.
 
 ```blip
 % define sustain range
@@ -1354,7 +1354,7 @@ dn:-1:0
 [sample:<name> ...]
 ```
 
-Samples are audio snippets which can be loaded from `.wav` files. The number of channels has to be either 2 (stereo) or 1 (mono). Only the PCM format with either 8 or 16 bits is supported.
+Samples are audio snippets, which can be loaded from `.wav` files. The number of channels has to be either 2 (stereo) or just 1 (mono). Only the PCM format with either 8 or 16 bits is supported.
 
 The sample rate has to match the current sample rate (default: 44100). The pitch is expected to be tuned to A4, i.e., playing a sample with `a:a4` plays it with its original speed.
 
